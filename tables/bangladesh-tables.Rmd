@@ -119,8 +119,8 @@ h1_cdi <- h1_table %>%
   group_by(`Exposure Source`, `Outcome Domain`) %>%
   mutate(`Outcome Domain` = case_when(row_number() == 1 ~ `Outcome Domain`), 
          `Exposure Source` = case_when(row_number() == 1 ~ `Exposure Source`)) %>% 
-  select(-`Exposure Source`) %>% 
   ungroup() %>% 
+  select(-`Exposure Source`) %>% 
   tibble()
 
 h1_cdi
