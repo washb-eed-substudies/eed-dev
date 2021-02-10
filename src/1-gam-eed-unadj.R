@@ -98,6 +98,9 @@ for(i in 1:nrow(H1_models)){
   H1_plot_data <-  rbind(H1_plot_data, data.frame(Xvar=res$X, Yvar=res$Y, adj=0, simul_plot$pred))
 }
 
+# correct p-value
+H1_res <- H1_res %>%  
+  mutate(corrected.Pval=p.adjust(Pval, method="BH"))
 
 #Save models
 saveRDS(H1_models, here("models/H1_models.RDS"))
@@ -152,6 +155,9 @@ for(i in 1:nrow(H2_models)){
   H2_plot_data <-  rbind(H2_plot_data, data.frame(Xvar=res$X, Yvar=res$Y, adj=0, simul_plot$pred))
 }
 
+# correct p-value
+H2_res <- H2_res %>%  
+  mutate(corrected.Pval=p.adjust(Pval, method="BH"))
 
 #Save models
 saveRDS(H2_models, here("models/H2_models.RDS"))
@@ -204,6 +210,9 @@ for(i in 1:nrow(H3_models)){
   H3_plot_data <-  rbind(H3_plot_data, data.frame(Xvar=res$X, Yvar=res$Y, adj=0, simul_plot$pred))
 }
 
+# correct p-value
+H3_res <- H3_res %>%  
+  mutate(corrected.Pval=p.adjust(Pval, method="BH"))
 
 #Save models
 saveRDS(H3_models, here("models/H3_models.RDS"))
@@ -223,7 +232,7 @@ saveRDS(H3_plot_data, here("figure-data/H3_unadj_spline_data.RDS"))
 #### Hypothesis 4 ####
 #Telomere length at year 2 v. development at year 2
 Xvars <- c("TS_t3_Z")            
-Yvars <- c("z_comm_easq", "z_motor_easq", "z_personal_easq", "z_combined_easq", 
+Yvars <- c("z_age2mo_com_no4", "z_age2mo_motor_no4", "z_age2mo_personal_no4", "z_age2mo_combined_no4", 
            "z_cdi_say_t3", "z_cdi_und_t3") 
 
 #Fit models
@@ -254,6 +263,9 @@ for(i in 1:nrow(H4_models)){
   H4_plot_data <-  rbind(H4_plot_data, data.frame(Xvar=res$X, Yvar=res$Y, adj=0, simul_plot$pred))
 }
 
+# correct p-value
+H4_res <- H4_res %>%  
+  mutate(corrected.Pval=p.adjust(Pval, method="BH"))
 
 #Save models
 saveRDS(H4_models, here("models/H4_models.RDS"))

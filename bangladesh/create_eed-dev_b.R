@@ -2,6 +2,7 @@ library(haven)
 library(tidyverse)
 library(lubridate)
 
+rm(list = ls())
 
 # month_at# - month of measurement variables for the anthropometry
 # 
@@ -99,7 +100,9 @@ bg_cdi3 <- read_dta('bangladesh/washb_cdiyr2_std_17jan2021.dta',
 bg_easq <- read_dta('bangladesh/washb_easq_std_22dec2020.dta', 
                     col_select = c(tchild, 
                                    ends_with('id'), 
-                                   starts_with('z_'))) %>%
+                                   starts_with('z_'), 
+                                   agedays, 
+                                   month)) %>%
   mutate(
     dataid = as.numeric(dataid),
     tchild = as.numeric(tchild),
@@ -156,6 +159,14 @@ bg_dev_full <- bg_eed %>%
             by = 'childid') %>% 
   left_join(bg_hhwealth, 
             by = 'dataid')
+
+# ------------------------
+
+bg_dev_full <- bg_dev_full %>% 
+  mutate(birthord = case_when(birthord >= 4 ~ 4, 
+                              is.na(birthord) ~ 5, 
+                              TRUE ~ birthord))
+
 
 saveRDS(bg_dev_full, 'eed-dev_bg.RDS')
 

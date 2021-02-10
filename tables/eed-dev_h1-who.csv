@@ -1,0 +1,11 @@
+"","Outcome Domain","Outcome","Exposure","n","Q1 mean","Q3 mean","Unadjusted Difference (95% CI)","Adjusted Difference (95% CI)","Adjusted P-value"
+"1","WHO Motor Milestone","Milestones 2, 4, 5, 6","Alpha-1 Antitrypsin",786,0.23,0.78,"-0.03(-0.24,0.17)","0.01(-0.16,0.18)",0.92
+"2",NA,"Sum Total","Alpha-1 Antitrypsin",781,0.23,0.78,"0(0,0)","0.02(-0.17,0.22)",0.88
+"3",NA,"Milestones 2, 4, 5, 6","Myeloperoxidase",788,4301.33,19420.79,"0.06(-0.01,0.14)","0.07(0,0.13)",0.17
+"4",NA,"Sum Total","Myeloperoxidase",783,4325.5,19500.99,"0.05(-0.04,0.14)","0.05(-0.02,0.13)",0.35
+"5",NA,"Milestones 2, 4, 5, 6","Neopterin",789,904.58,2320.11,"0.38(0.18,0.57)","0.14(-0.02,0.29)",0.27
+"6",NA,"Sum Total","Neopterin",784,904.58,2320.84,"0.36(0.14,0.58)","0.09(-0.09,0.28)",0.45
+"7","WHO Motor Milestone","Milestones 2, 4, 5, 6","Lactulose concentration",973,0.21,0.98,"-0.1(-0.37,0.18)","-0.15(-0.38,0.09)",0.37
+"8",NA,"Sum Total","Lactulose concentration",965,0.21,0.98,"-0.17(-0.5,0.16)","-0.27(-0.55,0.02)",0.26
+"9",NA,"Milestones 2, 4, 5, 6","Mannitol concentration",973,1.96,8.16,"-0.08(-0.19,0.03)","-0.07(-0.15,0.02)",0.32
+"10",NA,"Sum Total","Mannitol concentration",965,1.97,8.23,"-0.14(-0.28,0)","-0.27(-0.46,-0.08)",0.05

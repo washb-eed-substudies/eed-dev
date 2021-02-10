@@ -1,0 +1,11 @@
+"","Exposure Source","Outcome Domain","Outcome","Exposure","n","Q1 mean","Q3 mean","Unadjusted Difference (95% CI)","Adjusted Difference (95% CI)","Adjusted P-value"
+"1","fecal","Communicative Development Inventories","Expressing","Alpha-1 Antitrypsin",773,0.23,0.79,"0.02(-0.01,0.05)","-0.01(-0.06,0.05)",0.88
+"2",NA,NA,"Understanding","Alpha-1 Antitrypsin",656,0.23,0.8,"-0.03(-0.22,0.17)","-0.12(-0.41,0.18)",0.55
+"3",NA,NA,"Expressing","Myeloperoxidase",775,4305.38,19677.59,"0(-0.08,0.08)","-0.06(-0.19,0.06)",0.45
+"4",NA,NA,"Understanding","Myeloperoxidase",658,4506.62,19581.19,"0(-0.06,0.06)","-0.02(-0.09,0.05)",0.78
+"5",NA,NA,"Expressing","Neopterin",776,901.43,2299.26,"0.13(-0.07,0.33)","0.11(-0.09,0.31)",0.44
+"6",NA,NA,"Understanding","Neopterin",659,920.02,2332.35,"0.33(0.14,0.53)","0.32(0.1,0.53)",0.05
+"7","urine","Communicative Development Inventories","Expressing","Lactulose concentration",958,0.21,0.98,"-0.11(-0.23,0)","-0.14(-0.26,-0.02)",0.17
+"8",NA,NA,"Understanding","Lactulose concentration",809,0.21,0.98,"-0.17(-0.38,0.04)","-0.15(-0.38,0.07)",0.35
+"9",NA,NA,"Expressing","Mannitol concentration",958,1.95,8.23,"-0.07(-0.17,0.03)","-0.1(-0.22,0.02)",0.27
+"10",NA,NA,"Understanding","Mannitol concentration",809,1.99,8.23,"-0.09(-0.18,0)","-0.06(-0.15,0.03)",0.35

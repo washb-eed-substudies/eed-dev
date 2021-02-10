@@ -1,0 +1,5 @@
+"","Outcome Domain","Outcome","Exposure","n","Q1 mean","Q3 mean","Unadjusted Difference (95% CI)","Adjusted Difference (95% CI)","Adjusted P-value"
+"1","Extended Ages and Stages Questionnaire","Combined",NA,756,103.45,236.03,"0.01(-0.03,0.05)","0.01(-0.04,0.07)",0.83
+"2",NA,"Communication Score",NA,757,103.57,235.87,"0(-0.04,0.04)","0.02(-0.03,0.08)",0.63
+"3",NA,"Gross Motor Score",NA,745,103.57,234.9,"0.05(-0.04,0.15)","0.08(-0.08,0.24)",0.63
+"4",NA,"Personal Social Score",NA,756,103.45,236.03,"0(-0.04,0.04)","0(-0.05,0.06)",0.92

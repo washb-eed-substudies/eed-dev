@@ -692,62 +692,161 @@ saveRDS(H2g_adj_res, here("results/adjusted/H2g_adj_res.RDS"))
 #Save plot data
 #saveRDS(H2g_adj_plot_data, paste0(dropboxDir,"results/stress-growth-models/figure-data/H2g_adj_spline_data.RDS"))
 
+
+# --------------------------------------------------------------------------
+#### Hypothesis 3 ####
+# reg1b at t2 v. dev (cdi3, easq) at t3
+
+H3_W <- c(Wvars, 'laz_t2', 'waz_t2',
+          'cesd_sum_ee_t3',	'pss_sum_mom_t3')
+
+
 ##########################
-# adjustment sets 29-30
-## exposure: urine markers t2
-## outcome: cdi t3
+# adjustment set 31
+## exposure: reg1b t2
+## outcome: easq t3
 ##########################
 
-Xvars <- c('L_conc_t2', 'M_conc_t2')           
-Yvars <- c("z_age2mo_cdi_undyr2_all_no4", "z_age2mo_cdi_sayyr2_all_no4")
+Xvars <- c('reg1b2')           
+Yvars <- c("z_age2mo_personal_no4", "z_age2mo_motor_no4", 
+            "z_age2mo_combined_no4", "z_age2mo_com_no4")
 
-H2h_W <- c(H2_W, 'ageday_ut2', 'agedays_cdi3',
-           'month_ut2', 'month_cdi3')
-H2h_W[!(H2h_W %in% colnames(d))]
+H3a_W <- c(H3_W, 'ageday_st2', 'agedays_easq',
+           'month_st2', 'month_easq')
+H3a_W[!(H3a_W %in% colnames(d))]
 
 #Fit models
-H2h_adj_models <- NULL
+H3a_adj_models <- NULL
 for(i in Xvars){
   for(j in Yvars){
     print(i)
     print(j)
-    res_adj <- fit_RE_gam(d=d, X=i, Y=j,  W=H2h_W)
+    res_adj <- fit_RE_gam(d=d, X=i, Y=j,  W=H3a_W)
     res <- data.frame(X=i, Y=j, fit=I(list(res_adj$fit)), dat=I(list(res_adj$dat)))
-    H2h_adj_models <- bind_rows(H2h_adj_models, res)
+    H3a_adj_models <- bind_rows(H3a_adj_models, res)
   }
 }
 
 
 
 #Get primary contrasts
-H2h_adj_res <- NULL
-for(i in 1:nrow(H2h_adj_models)){
-  res <- data.frame(X=H2h_adj_models$X[i], Y=H2h_adj_models$Y[i])
-  preds <- predict_gam_diff(fit=H2h_adj_models$fit[i][[1]], d=H2h_adj_models$dat[i][[1]], quantile_diff=c(0.25,0.75), Xvar=res$X, Yvar=res$Y)
-  H2h_adj_res <-  bind_rows(H2h_adj_res , preds$res)
+H3a_adj_res <- NULL
+for(i in 1:nrow(H3a_adj_models)){
+  res <- data.frame(X=H3a_adj_models$X[i], Y=H3a_adj_models$Y[i])
+  preds <- predict_gam_diff(fit=H3a_adj_models$fit[i][[1]], d=H3a_adj_models$dat[i][[1]], quantile_diff=c(0.25,0.75), Xvar=res$X, Yvar=res$Y)
+  H3a_adj_res <-  bind_rows(H3a_adj_res , preds$res)
 }
 
 #Make list of plots
-H2h_adj_plot_list <- NULL
-H2h_adj_plot_data <- NULL
-for(i in 1:nrow(H2h_adj_models)){
-  res <- data.frame(X=H2h_adj_models$X[i], Y=H2h_adj_models$Y[i])
-  simul_plot <- gam_simul_CI(H2h_adj_models$fit[i][[1]], H2h_adj_models$dat[i][[1]], xlab=res$X, ylab=res$Y, title="")
-  H2h_adj_plot_list[[i]] <-  simul_plot$p
-  H2h_adj_plot_data <-  rbind(H2h_adj_plot_data, data.frame(Xvar=res$X, Yvar=res$Y, adj=0, simul_plot$pred %>% subset(., select = c(Y,X,id,fit,se.fit,uprP, lwrP,uprS,lwrS))))
+H3a_adj_plot_list <- NULL
+H3a_adj_plot_data <- NULL
+for(i in 1:nrow(H3a_adj_models)){
+  res <- data.frame(X=H3a_adj_models$X[i], Y=H3a_adj_models$Y[i])
+  simul_plot <- gam_simul_CI(H3a_adj_models$fit[i][[1]], H3a_adj_models$dat[i][[1]], xlab=res$X, ylab=res$Y, title="")
+  H3a_adj_plot_list[[i]] <-  simul_plot$p
+  H3a_adj_plot_data <-  rbind(H3a_adj_plot_data, data.frame(Xvar=res$X, Yvar=res$Y, adj=0, simul_plot$pred %>% subset(., select = c(Y,X,id,fit,se.fit,uprP, lwrP,uprS,lwrS))))
 }
 
 
 #Save models
-#saveRDS(H2h_adj_models, paste0(dropboxDir,"results/stress-growth-models/models/H2h_adj_models.RDS"))
+#saveRDS(H3a_adj_models, paste0(dropboxDir,"results/stress-growth-models/models/H3a_adj_models.RDS"))
 
 #Save results
-saveRDS(H2h_adj_res, here("results/adjusted/H2h_adj_res.RDS"))
+saveRDS(H3a_adj_res, here("results/adjusted/H3a_adj_res.RDS"))
 
 
 #Save plots
-#saveRDS(H2h_adj_plot_list, paste0(dropboxDir,"results/stress-growth-models/figure-objects/H2h_adj_splines.RDS"))
+#saveRDS(H3a_adj_plot_list, paste0(dropboxDir,"results/stress-growth-models/figure-objects/H3a_adj_splines.RDS"))
 
 #Save plot data
-#saveRDS(H2h_adj_plot_data, paste0(dropboxDir,"results/stress-growth-models/figure-data/H2h_adj_spline_data.RDS"))
+#saveRDS(H3a_adj_plot_data, paste0(dropboxDir,"results/stress-growth-models/figure-data/H3a_adj_spline_data.RDS"))
+
+##########################
+# adjustment sets 32
+## exposure: reg1b t2
+## outcome: cdi t3
+##########################
+
+Xvars <- c('reg1b2')           
+Yvars <- c("z_age2mo_cdi_undyr2_all_no4", "z_age2mo_cdi_sayyr2_all_no4")
+
+H3b_W <- c(H3_W, 'ageday_st2', 'agedays_cdi3',
+           'month_st2', 'month_cdi3')
+H3b_W[!(H3b_W %in% colnames(d))]
+
+#Fit models
+H3b_adj_models <- NULL
+for(i in Xvars){
+  for(j in Yvars){
+    print(i)
+    print(j)
+    res_adj <- fit_RE_gam(d=d, X=i, Y=j,  W=H3b_W)
+    res <- data.frame(X=i, Y=j, fit=I(list(res_adj$fit)), dat=I(list(res_adj$dat)))
+    H3b_adj_models <- bind_rows(H3b_adj_models, res)
+  }
+}
+
+
+
+#Get primary contrasts
+H3b_adj_res <- NULL
+for(i in 1:nrow(H3b_adj_models)){
+  res <- data.frame(X=H3b_adj_models$X[i], Y=H3b_adj_models$Y[i])
+  preds <- predict_gam_diff(fit=H3b_adj_models$fit[i][[1]], d=H3b_adj_models$dat[i][[1]], quantile_diff=c(0.25,0.75), Xvar=res$X, Yvar=res$Y)
+  H3b_adj_res <-  bind_rows(H3b_adj_res , preds$res)
+}
+
+#Make list of plots
+H3b_adj_plot_list <- NULL
+H3b_adj_plot_data <- NULL
+for(i in 1:nrow(H3b_adj_models)){
+  res <- data.frame(X=H3b_adj_models$X[i], Y=H3b_adj_models$Y[i])
+  simul_plot <- gam_simul_CI(H3b_adj_models$fit[i][[1]], H3b_adj_models$dat[i][[1]], xlab=res$X, ylab=res$Y, title="")
+  H3b_adj_plot_list[[i]] <-  simul_plot$p
+  H3b_adj_plot_data <-  rbind(H3b_adj_plot_data, data.frame(Xvar=res$X, Yvar=res$Y, adj=0, simul_plot$pred %>% subset(., select = c(Y,X,id,fit,se.fit,uprP, lwrP,uprS,lwrS))))
+}
+
+
+#Save models
+#saveRDS(H3b_adj_models, paste0(dropboxDir,"results/stress-growth-models/models/H3b_adj_models.RDS"))
+
+#Save results
+saveRDS(H3b_adj_res, here("results/adjusted/H3b_adj_res.RDS"))
+
+
+#Save plots
+#saveRDS(H3b_adj_plot_list, paste0(dropboxDir,"results/stress-growth-models/figure-objects/H3b_adj_splines.RDS"))
+
+#Save plot data
+#saveRDS(H3b_adj_plot_data, paste0(dropboxDir,"results/stress-growth-models/figure-data/H3b_adj_spline_data.RDS"))
+
+# --------------------------------------------------------------------------
+# combine dataframes for each hypothesis
+
+# get object names
+for(hyp in paste0("H", 1:3)){
+  print(str_subset(ls(), str_glue("^{hyp}.*res$")))
+}
+
+bind_rows(H1a_adj_res, H1b_adj_res, H1c_adj_res, H1d_adj_res) %>% 
+  mutate(corrected.Pval=p.adjust(Pval, method="BH")) %>% 
+  saveRDS("results/adjusted/H1_all_adj_res.RDS")
+
+bind_rows(H2a_adj_res, H2b_adj_res, H2c_adj_res, 
+          H2d_adj_res, H2e_adj_res, H2f_adj_res,
+          H2g_adj_res,H2h_adj_res) %>%
+  mutate(corrected.Pval=p.adjust(Pval, method="BH")) %>% 
+  saveRDS("results/adjusted/H2_all_adj_res.RDS")
+
+bind_rows(H3a_adj_res, H3b_adj_res) %>% 
+  mutate(corrected.Pval=p.adjust(Pval, method="BH")) %>% 
+  saveRDS("results/adjusted/H3_all_adj_res.RDS")
+
+
+
+
+
+
+
+
 
