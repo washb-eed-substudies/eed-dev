@@ -322,3 +322,44 @@ print(xtable(h3_easq), type="html", file=here("tables/eed-dev_h3-easq.html"))
 write.csv(h3_cdi, file=here('tables/eed-dev_h3-cdi.csv'))
 print(xtable(h3_cdi), type="html", file=here("tables/eed-dev_h3-cdi.html"))
 ```
+
+## Significant Hypotheses
+
+All analyses in one table. 
+
+```{r}
+all_hyp <- bind_rows(
+  h1_table %>% 
+    mutate(hyp = 1), 
+  h2_table %>% 
+    mutate(hyp = 2), 
+  h3_table%>% 
+    mutate(hyp = 3)
+) 
+
+all_hyp
+```
+
+```{r}
+all_hyp %>% 
+  filter(`Adjusted P-value` < 0.06) # rounding
+```
+
+Random Aggregations 
+
+```{r}
+all_hyp %>% 
+  group_by(`Exposure Source`) %>% 
+  mutate(direction = case_when(str_starts(`Adjusted Difference (95% CI)`, 
+                                          '-') ~ '-', TRUE ~ '+')) %>% 
+  count(direction)
+```
+
+```{r}
+all_hyp %>% 
+  group_by(hyp) %>% 
+  mutate(direction = case_when(str_starts(`Adjusted Difference (95% CI)`, 
+                                          '-') ~ '-', TRUE ~ '+')) %>% 
+  count(direction)
+```
+
