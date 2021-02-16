@@ -24,7 +24,8 @@ exp_rename <- tribble(
   'mpo',   'Myeloperoxidase',      'fecal', 
   'neo',   'Neopterin',            'fecal', 
   'L_conc_t', 'Lactulose concentration', 'urine', 
-  'M_conc_t', 'Mannitol concentration', 'urine'
+  'M_conc_t', 'Mannitol concentration', 'urine',
+  'reg1b', 'Regenerating Gene 1-Beta', 'fecal'
 )
 
 # create df of outcome names
