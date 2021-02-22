@@ -162,10 +162,41 @@ bg_dev_full <- bg_eed %>%
 
 # ------------------------
 
-bg_dev_full <- bg_dev_full %>% 
-  mutate(birthord = case_when(birthord >= 4 ~ 4, 
-                              is.na(birthord) ~ 5, 
-                              TRUE ~ birthord))
+# bg_dev_full_f <- 
+  
+  bg_dev_full %>% 
+  mutate(birthord = case_when(birthord == 1 ~ 'first', 
+                              birthord >= 2 ~ 'second or greater', 
+                              is.na(birthord) ~ 'missing', 
+                              TRUE ~ 999),
+          momedu_n = factor(momedu, levels = c('No education', 'Primary (1-5y)', 'Secondary (>5y)'), 
+                            ordered = TRUE)) %>% 
+  count(momedu_n)
+
+
+k_full <- k_full %>% 
+  mutate(sex = case_when(sex == 'Male' ~ 'male', 
+                         sex == 0 ~ 'female', 
+                         is.na(sex) ~ 'missing',
+                         TRUE ~ '999'), 
+         birthord = case_when(nulliparous == 1 ~ 'first', # never given birth before -> first born 
+                              nulliparous == 0 ~ 'second or greater', 
+                              is.na(nulliparous) ~ 'missing'), # has given birth before -> second or greater
+         HHS = case_when(between(HHS, 1, 3) ~ as.character(HHS), 
+                         TRUE ~ 'missing'),
+         momheight = scale(momheight, center = TRUE, scale = TRUE),
+         momheight = cut(momheight, 
+                         c(min(momheight, na.rm = T), -2, -1, 0, 1, 2, max(momheight, na.rm = T)),
+                         right = FALSE,
+                         include.lowest = TRUE))
+
+# create factor variables
+
+factor.vars = c('sex', 'birthord', 'momedu', 'momheight', 'HHS', 'floor', 'roof')
+
+k_full <- k_full %>% 
+  mutate(across(.cols = all_of(factor.vars), 
+                .fns = ~ as.factor(replace_na(as.character(.), 'missing')))) 
 
 
 saveRDS(bg_dev_full, 'eed-dev_bg.RDS')
