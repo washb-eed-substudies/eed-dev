@@ -2,19 +2,7 @@ library(haven)
 library(tidyverse)
 library(lubridate, include = c('month'))
 
-
-`%notin%` = Negate(dplyr::`%>%`)
-
-# month_at# - month of measurement variables for the anthropometry
-# 
-# ageday_st1 = age at time of stool measurement @ age 3 months
-# monsoon_st1 = monsoon season at time of stool measurement @ age 3 months
-# 
-# ageday_at1 = age at time of anthropometry measurement @ age 3 months
-# monsoon_at1 = monsoon season at time of anthropometry measurement @ age 3 months
-# 
-# ageday_ut1 = age at time of urine measurement @ age 3 months
-# monsoon_ut1 = monsoon season at time of urine measurement @ age 3 months
+rm(list = ls())
 
 # exposure (eed)
 k_urine <- read_csv('./kenya/washb-kenya-eed-urine.csv')
@@ -75,7 +63,7 @@ k_easq <- read_dta('./kenya/washk_development_allkids_CA_20171121.dta') %>%
   select(-c('sex', 'roof', 'Ncomp', 'floor')) %>% 
   rename(month_easq = month) 
 
-
+# ----
 # covariates
 
 k_cov <- read_csv('kenya/washb-kenya-enrol.csv')
@@ -84,8 +72,17 @@ k_anthro <- read_csv('kenya/kenya-dm-ee-anthro-ee.csv') %>%
   select(childid, laz_t1, waz_t1, 
          laz_t2, waz_t2)
 
-k_phq_pss <- read_dta('kenya/washk_phq_pss_20210203.dta')
+# surveys
 
+source('kenya/k_phq_pss_with_quant.R')
+
+# ----
+# wealth index 
+
+k_hhwealth <- read_csv('kenya/kenya-wealth-index.csv') %>% 
+  select(childid, hhid, clusterid, hh_index = HHwealth.PC1)
+
+# ----
 
 k_full <- k_eed %>% 
   left_join(k_mm,
@@ -100,17 +97,55 @@ k_full <- k_eed %>%
   left_join(k_anthro, 
             by = 'childid', 
             suffix = c('', '_dup')) %>% 
-  select(-ends_with('_dup'))
+  left_join(k_phq_pss_final, 
+            by = 'childid', 
+            suffix = c('', '_dup')) %>% 
+  left_join(k_hhwealth, 
+            by = 'childid', 
+            suffix = c('', '_dup')) %>% 
+  select(-ends_with('_dup')) 
 
 
+# actually clean data to match SAP categories 
+
+k_full <- k_full %>% 
+  mutate(sex = case_when(sex == 'Male' ~ 'male', 
+                         sex == 0 ~ 'female', 
+                         is.na(sex) ~ 'missing',
+                         TRUE ~ '999'), 
+         birthord = case_when(nulliparous == 1 ~ 'first', # never given birth before -> first born 
+                              nulliparous == 0 ~ 'second or greater', 
+                              is.na(nulliparous) ~ 'missing'), # has given birth before -> second or greater
+         HHS = case_when(between(HHS, 1, 3) ~ as.character(HHS), 
+                         TRUE ~ 'missing'),
+         momheight = scale(momheight, center = TRUE, scale = TRUE),
+         momheight = cut(momheight, 
+                         c(min(momheight, na.rm = T), -2, -1, 0, 1, 2, max(momheight, na.rm = T)),
+                         right = FALSE,
+                         include.lowest = TRUE))
+
+# create factor variables
+
+factor.vars = c('sex', 'birthord', 'momedu', 'momheight', 'HHS', 'floor', 'roof')
+
+k_full <- k_full %>% 
+  mutate(across(.cols = all_of(factor.vars), 
+                .fns = ~ as.factor(replace_na(as.character(.), 'missing')))) 
+  
 
 
+saveRDS(k_full, 'eed-dev_k.RDS')
 
+# ----
+# check EED subset
 
+all_eed_kids <- read_csv('kenya/washb-kenya-allkids-ee-med-age-no-dob.csv')
 
+setdiff(k_full$childid, all_eed_kids$childid)
+# setdiff(all_eed_kids$childid, k_full$childid)
 
-
-
+setdiff(k_stool$childid, all_eed_kids$childid)
+setdiff(k_urine$childid, all_eed_kids$childid)
 
 
 

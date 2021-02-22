@@ -227,13 +227,19 @@ saveRDS(H3_res, here("results/unadjusted/H3_res.RDS"))
 #Save plot data
 saveRDS(H3_plot_data, here("figure-data/H3_unadj_spline_data.RDS"))
 
+# ------------------------------------------------------------------------
+####### kenya hypotheses ####### 
+# ------------------------------------------------------------------------
 
+d <- readRDS('eed-dev_k.RDS')
 
 #### Hypothesis 4 ####
-#Telomere length at year 2 v. development at year 2
-Xvars <- c("TS_t3_Z")            
-Yvars <- c("z_age2mo_com_no4", "z_age2mo_motor_no4", "z_age2mo_personal_no4", "z_age2mo_combined_no4", 
-           "z_cdi_say_t3", "z_cdi_und_t3") 
+# eed t1 v. dev t2 (who)
+
+Xvars <- c('aat1', 'mpo1', 'neo1', 
+           'Lact1', 'Mann1')            
+Yvars <- c('who_sum_total', 'who_sub_total')
+
 
 #Fit models
 H4_models <- NULL
@@ -281,7 +287,60 @@ saveRDS(H4_res, here("results/unadjusted/H4_res.RDS"))
 saveRDS(H4_plot_data, here("figure-data/H4_unadj_spline_data.RDS"))
 
 
+#### Hypothesis 5 ####
+# eed t1/t2 v. dev t3 (easq)
 
+Xvars <- c('aat1', 'mpo1', 'neo1', 
+           'Lact1', 'Mann1',
+           'aat2', 'mpo2', 'neo2', 
+           'Lact2', 'Mann2')            
+Yvars <- c('comtotz', 'mottotz', 'pstotz', 'globaltotz')
+
+
+#Fit models
+H5_models <- NULL
+for(i in Xvars){
+  for(j in Yvars){
+    res_unadj <- fit_RE_gam(d=d, X=i, Y=j,  W=NULL)
+    res <- data.frame(X=i, Y=j, fit=I(list(res_unadj$fit)), dat=I(list(res_unadj$dat)))
+    H5_models <- bind_rows(H5_models, res)
+  }
+}
+
+#Get primary contrasts
+H5_res <- NULL
+for(i in 1:nrow(H5_models)){
+  res <- data.frame(X=H5_models$X[i], Y=H5_models$Y[i])
+  preds <- predict_gam_diff(fit=H5_models$fit[i][[1]], d=H5_models$dat[i][[1]], quantile_diff=c(0.25,0.75), Xvar=res$X, Yvar=res$Y)
+  H5_res <-  bind_rows(H5_res , preds$res)
+}
+
+#Make list of plots
+H5_plot_list <- NULL
+H5_plot_data <- NULL
+for(i in 1:nrow(H5_models)){
+  res <- data.frame(X=H5_models$X[i], Y=H5_models$Y[i])
+  simul_plot <- gam_simul_CI(H5_models$fit[i][[1]], H5_models$dat[i][[1]], xlab=res$X, ylab=res$Y, title="")
+  H5_plot_list[[i]] <-  simul_plot$p
+  H5_plot_data <-  rbind(H5_plot_data, data.frame(Xvar=res$X, Yvar=res$Y, adj=0, simul_plot$pred))
+}
+
+# correct p-value
+H5_res <- H5_res %>%  
+  mutate(corrected.Pval=p.adjust(Pval, method="BH"))
+
+#Save models
+saveRDS(H5_models, here("models/H5_models.RDS"))
+
+#Save results
+saveRDS(H5_res, here("results/unadjusted/H5_res.RDS"))
+
+
+#Save plots
+#saveRDS(H5_plot_list, here("figure-objects/H5_unadj_splines.RDS"))
+
+#Save plot data
+saveRDS(H5_plot_data, here("figure-data/H5_unadj_spline_data.RDS"))
 
 
 # ---------------------------------------------------
