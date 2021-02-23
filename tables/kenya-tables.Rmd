@@ -23,8 +23,8 @@ exp_rename <- tribble(
   'aat',   'Alpha-1 Antitrypsin', 'fecal',
   'mpo',   'Myeloperoxidase',      'fecal', 
   'neo',   'Neopterin',            'fecal', 
-  'L_conc_t', 'Lactulose concentration', 'urine', 
-  'M_conc_t', 'Mannitol concentration', 'urine',
+  'Lact', 'Lactulose concentration', 'urine', 
+  'Mann', 'Mannitol concentration', 'urine',
   'reg1b', 'Regenerating Gene 1-Beta', 'fecal'
 )
 
@@ -37,7 +37,7 @@ outcome_rename <- tribble(
   'personal', 'Personal Social Score', 'Extended Ages and Stages Questionnaire', 
   'motor', 'Gross Motor Score', 'Extended Ages and Stages Questionnaire', 
   'combined', 'Combined', 'Extended Ages and Stages Questionnaire', 
-  'com_no4', 'Communication Score', 'Extended Ages and Stages Questionnaire', 
+  'communication', 'Communication Score', 'Extended Ages and Stages Questionnaire', 
   'cdi_und', 'Understanding', 'Communicative Development Inventories', 
   'cdi_say', 'Expressing' , 'Communicative Development Inventories'
 )
@@ -45,9 +45,9 @@ outcome_rename <- tribble(
 
 ```
 
-## Hypothesis 1
+## Hypothesis 4
 
-```{r h1_setup, include = F}
+```{r h4_setup, include = F}
 # read in data
 h4_adj <- readRDS(here('results/adjusted/H4_all_adj_res.RDS')) %>% 
   mutate_if(is.numeric, round, 2)
@@ -55,14 +55,15 @@ h4_unadj <- readRDS(here('results/unadjusted/H4_res.RDS'))%>%
   mutate_if(is.numeric, round, 2)
 
 
-all_h1 <- h1_adj %>% 
-  left_join(h1_unadj, 
+all_h4 <- h4_adj %>% 
+  left_join(h4_unadj, 
             by = c('X', 'Y'), 
             suffix = c('_adj', '_unadj')) %>% 
   mutate(X = str_remove(X, '[0-9]'), 
-         Y = case_when(str_detect(Y, 'com_no4') ~ 'com_no4',
-                       str_detect(Y, 'cdi_und') ~ 'cdi_und',
-                       str_detect(Y, 'cdi_say') ~ 'cdi_say',
+         Y = case_when(str_detect(Y, 'comtotz') ~ 'communication',
+                       str_detect(Y, 'mottotz') ~ 'motor',
+                       str_detect(Y, 'pstotz') ~ 'personal',
+                       str_detect(Y, 'global') ~ 'combined',
                        TRUE ~ Y)) %>% 
   left_join(exp_rename, 
             by = c('X' = 'var')) %>% 
@@ -75,21 +76,22 @@ all_h1 <- h1_adj %>%
 ### Full Table 2
 
 ```{r echo = F}
-h1_table <- data.table(
-  "Outcome Domain" = all_h1$outcome_domain,
-  "Outcome" = all_h1$outcome,
-  "Exposure Source" = all_h1$exp_domain,
-  "Exposure" = all_h1$exposure, 
-  "n" = all_h1$N_adj, # uses N from adjusted model
-  "Q1 mean" = all_h1$q1_adj,
-  "Q3 mean" = all_h1$q3_adj,
-  "Unadjusted Difference (95% CI)" = paste0(all_h1$point.diff_unadj, "(", all_h1$lb.diff_unadj, ',', all_h1$ub.diff_unadj,')'), 
-  # "Unadjusted P-value" = all_h1$corrected.Pval_unadj, 
-  "Adjusted Difference (95% CI)" = paste0(all_h1$point.diff_adj, "(", all_h1$lb.diff_adj, ',', all_h1$ub.diff_adj,')'), 
-  "Adjusted P-value" = all_h1$corrected.Pval_adj
+h4_table <- data.table(
+  "Outcome Domain" = all_h4$outcome_domain,
+  "Outcome" = all_h4$outcome,
+  "Exposure Source" = all_h4$exp_domain,
+  "Exposure" = all_h4$exposure, 
+  "n" = all_h4$N_adj, # uses N from adjusted model
+  "Q1 mean" = all_h4$q1_adj,
+  "Q3 mean" = all_h4$q3_adj,
+  "Unadjusted Difference (95% CI)" = paste0(all_h4$point.diff_unadj, "(", all_h4$lb.diff_unadj, ',', all_h4$ub.diff_unadj,')'), 
+  "Unadjusted P-value" = all_h4$Pval_unadj,
+  "Adjusted Difference (95% CI)" = paste0(all_h4$point.diff_adj, "(", all_h4$lb.diff_adj, ',', all_h4$ub.diff_adj,')'), 
+  "Adjusted P-value" = all_h4$Pval_adj, 
+  "FDR Corrected P-value" = all_h4$corrected.Pval_adj
 )
 
-h1_table
+h4_table
 ```
 
 ### By Outcome Domain
@@ -98,7 +100,7 @@ h1_table
 
 ```{r}
 # sort(unique(h1_table$`Outcome Domain`))
-h1_who <- h1_table %>% 
+h4_who <- h4_table %>% 
   filter(`Outcome Domain` == "WHO Motor Milestone") %>%
   arrange(`Exposure Source`, Exposure, `Outcome Domain`, Outcome) %>% 
   group_by(`Exposure Source`, `Outcome Domain`) %>%
@@ -108,55 +110,37 @@ h1_who <- h1_table %>%
   select(-`Exposure Source`) %>% 
   tibble()
 
-h1_who
-```
-
-#### Communicative Development Inventories
-
-```{r}
-h1_cdi <- h1_table %>% 
-  filter(`Outcome Domain` == "Communicative Development Inventories") %>%
-  arrange(`Exposure Source`, Exposure, `Outcome Domain`, Outcome) %>% 
-  group_by(`Exposure Source`, `Outcome Domain`) %>%
-  mutate(`Outcome Domain` = case_when(row_number() == 1 ~ `Outcome Domain`), 
-         `Exposure Source` = case_when(row_number() == 1 ~ `Exposure Source`)) %>% 
-  ungroup() %>% 
-  select(-`Exposure Source`) %>% 
-  tibble()
-
-h1_cdi
+h4_who
 ```
 
 ```{r}
 #save table
-write.csv(h1_who, file=here('tables/eed-dev_h1-who.csv'))
-print(xtable(h1_who), type="html", file=here("tables/eed-dev_h1-who.html"))
+write.csv(h4_who, file=here('tables/eed-dev_h4-who.csv'))
+print(xtable(h4_who), type="html", file=here("tables/eed-dev_h4-who.html"))
 
-write.csv(h1_cdi, file=here('tables/eed-dev_h1-cdi.csv'))
-print(xtable(h1_cdi), type="html", file=here("tables/eed-dev_h1-cdi.html"))
+write.csv(h4_cdi, file=here('tables/eed-dev_h4-cdi.csv'))
+print(xtable(h4_cdi), type="html", file=here("tables/eed-dev_h4-cdi.html"))
 ```
 
-## Hypothesis 2
+## Hypothesis 5
 
-```{r h2_setup, include = F}
+```{r h5_setup, include = F}
 # read in data
-h2_adj <- readRDS(here('results/adjusted/H2_all_adj_res.RDS')) %>% 
+h5_adj <- readRDS(here('results/adjusted/h5_all_adj_res.RDS')) %>% 
   mutate_if(is.numeric, round, 2)
-h2_unadj <- readRDS(here('results/unadjusted/H2_res.RDS'))%>% 
+h5_unadj <- readRDS(here('results/unadjusted/h5_res.RDS'))%>% 
   mutate_if(is.numeric, round, 2)
 
 
-all_h2 <- h2_adj %>% 
-  left_join(h2_unadj, 
+all_h5 <- h5_adj %>% 
+  left_join(h5_unadj, 
             by = c('X', 'Y'), 
             suffix = c('_adj', '_unadj')) %>% 
   mutate(X = str_remove(X, '[0-9]'), 
-         Y = case_when(str_detect(Y, 'com_no4') ~ 'com_no4',
-                       str_detect(Y, 'cdi_und') ~ 'cdi_und',
-                       str_detect(Y, 'cdi_say') ~ 'cdi_say',
-                       str_detect(Y, 'personal') ~ 'personal',
-                       str_detect(Y, 'motor') ~ 'motor',
-                       str_detect(Y, 'combined') ~ 'combined',
+         Y = case_when(str_detect(Y, 'comtotz') ~ 'communication',
+                       str_detect(Y, 'mottotz') ~ 'motor',
+                       str_detect(Y, 'pstotz') ~ 'personal',
+                       str_detect(Y, 'global') ~ 'combined',
                        TRUE ~ Y)) %>% 
   left_join(exp_rename, 
             by = c('X' = 'var')) %>% 
@@ -169,21 +153,22 @@ all_h2 <- h2_adj %>%
 ### Full Table 3
 
 ```{r echo = F}
-h2_table <- data.table(
-  "Outcome Domain" = all_h2$outcome_domain,
-  "Outcome" = all_h2$outcome,
-  "Exposure Source" = all_h2$exp_domain,
-  "Exposure" = all_h2$exposure, 
-  "n" = all_h2$N_adj, # uses N from adjusted model
-  "Q1 mean" = all_h2$q1_adj,
-  "Q3 mean" = all_h2$q3_adj,
-  "Unadjusted Difference (95% CI)" = paste0(all_h2$point.diff_unadj, "(", all_h2$lb.diff_unadj, ',', all_h2$ub.diff_unadj,')'), 
-  # "Unadjusted P-value" = all_h2$corrected.Pval_unadj, 
-  "Adjusted Difference (95% CI)" = paste0(all_h2$point.diff_adj, "(", all_h2$lb.diff_adj, ',', all_h2$ub.diff_adj,')'), 
-  "Adjusted P-value" = all_h2$corrected.Pval_adj
+h5_table <- data.table(
+  "Outcome Domain" = all_h5$outcome_domain,
+  "Outcome" = all_h5$outcome,
+  "Exposure Source" = all_h5$exp_domain,
+  "Exposure" = all_h5$exposure, 
+  "n" = all_h5$N_adj, # uses N from adjusted model
+  "Q1 mean" = all_h5$q1_adj,
+  "Q3 mean" = all_h5$q3_adj,
+  "Unadjusted Difference (95% CI)" = paste0(all_h5$point.diff_unadj, "(", all_h5$lb.diff_unadj, ',', all_h5$ub.diff_unadj,')'), 
+  "Unadjusted P-value" = all_h5$Pval_unadj,
+  "Adjusted Difference (95% CI)" = paste0(all_h5$point.diff_adj, "(", all_h5$lb.diff_adj, ',', all_h5$ub.diff_adj,')'), 
+  "Adjusted P-value" = all_h5$Pval_adj, 
+  "FDR Corrected P-value" = all_h5$corrected.Pval_adj
 )
 
-h2_table
+h5_table
 ```
 
 ### By Outcome Domain
@@ -191,8 +176,8 @@ h2_table
 #### Extended Ages and Stages Questionnaire
 
 ```{r}
-# sort(unique(h1_table$`Outcome Domain`))
-h2_easq <- h2_table %>% 
+# sort(unique(h4_table$`Outcome Domain`))
+h5_easq <- h5_table %>% 
   filter(`Outcome Domain` == "Extended Ages and Stages Questionnaire") %>%
   arrange(`Exposure Source`, Exposure, `Outcome Domain`, Outcome) %>% 
   group_by(`Exposure Source`, `Outcome Domain`) %>%
@@ -202,13 +187,13 @@ h2_easq <- h2_table %>%
   select(-`Exposure Source`) %>% 
   tibble()
 
-h2_easq
+h5_easq
 ```
 
 #### Communicative Development Inventories
 
 ```{r}
-h2_cdi <- h2_table %>% 
+h5_cdi <- h5_table %>% 
   filter(`Outcome Domain` == "Communicative Development Inventories") %>%
   arrange(`Exposure Source`, Exposure, `Outcome Domain`, Outcome) %>% 
   group_by(`Exposure Source`, `Outcome Domain`) %>%
@@ -218,111 +203,18 @@ h2_cdi <- h2_table %>%
   select(-`Exposure Source`) %>% 
   tibble()
 
-h2_cdi
+h5_cdi
 ```
 
 ```{r}
 #save table
-write.csv(h2_easq, file=here('tables/eed-dev_h2-who.csv'))
-print(xtable(h2_easq), type="html", file=here("tables/eed-dev_h2-easq.html"))
+write.csv(h5_easq, file=here('tables/eed-dev_h5-who.csv'))
+print(xtable(h5_easq), type="html", file=here("tables/eed-dev_h5-easq.html"))
 
-write.csv(h2_cdi, file=here('tables/eed-dev_h2-cdi.csv'))
-print(xtable(h2_cdi), type="html", file=here("tables/eed-dev_h2-cdi.html"))
+write.csv(h5_cdi, file=here('tables/eed-dev_h5-cdi.csv'))
+print(xtable(h5_cdi), type="html", file=here("tables/eed-dev_h5-cdi.html"))
 ```
 
-## Hypothesis 3
-
-```{r h3_setup, include = F}
-# read in data
-h3_adj <- readRDS(here('results/adjusted/h3_all_adj_res.RDS')) %>% 
-  mutate_if(is.numeric, round, 2)
-h3_unadj <- readRDS(here('results/unadjusted/h3_res.RDS'))%>% 
-  mutate_if(is.numeric, round, 2)
-
-
-all_h3 <- h3_adj %>% 
-  left_join(h3_unadj, 
-            by = c('X', 'Y'), 
-            suffix = c('_adj', '_unadj')) %>% 
-  mutate(X = str_remove(X, '[0-9]'), 
-         Y = case_when(str_detect(Y, 'com_no4') ~ 'com_no4',
-                       str_detect(Y, 'cdi_und') ~ 'cdi_und',
-                       str_detect(Y, 'cdi_say') ~ 'cdi_say',
-                       str_detect(Y, 'personal') ~ 'personal',
-                       str_detect(Y, 'motor') ~ 'motor',
-                       str_detect(Y, 'combined') ~ 'combined',
-                       TRUE ~ Y)) %>% 
-  left_join(exp_rename, 
-            by = c('X' = 'var')) %>% 
-  left_join(outcome_rename, 
-            by = c('Y' = 'var'))
-
-# use adjusted values except for unadjust CI and pval
-```
-
-### Full Table 4
-
-```{r echo = F}
-h3_table <- data.table(
-  "Outcome Domain" = all_h3$outcome_domain,
-  "Outcome" = all_h3$outcome,
-  "Exposure Source" = all_h3$exp_domain,
-  "Exposure" = all_h3$exposure, 
-  "n" = all_h3$N_adj, # uses N from adjusted model
-  "Q1 mean" = all_h3$q1_adj,
-  "Q3 mean" = all_h3$q3_adj,
-  "Unadjusted Difference (95% CI)" = paste0(all_h3$point.diff_unadj, "(", all_h3$lb.diff_unadj, ',', all_h3$ub.diff_unadj,')'), 
-  # "Unadjusted P-value" = all_h3$corrected.Pval_unadj, 
-  "Adjusted Difference (95% CI)" = paste0(all_h3$point.diff_adj, "(", all_h3$lb.diff_adj, ',', all_h3$ub.diff_adj,')'), 
-  "Adjusted P-value" = all_h3$corrected.Pval_adj
-)
-
-h3_table
-```
-
-### By Outcome Domain
-
-#### Extended Ages and Stages Questionnaire
-
-```{r}
-# sort(unique(h1_table$`Outcome Domain`))
-h3_easq <- h3_table %>% 
-  filter(`Outcome Domain` == "Extended Ages and Stages Questionnaire") %>%
-  arrange(`Exposure Source`, Exposure, `Outcome Domain`, Outcome) %>% 
-  group_by(`Exposure Source`, `Outcome Domain`) %>%
-  mutate(`Outcome Domain` = case_when(row_number() == 1 ~ `Outcome Domain`), 
-         `Exposure Source` = case_when(row_number() == 1 ~ `Exposure Source`)) %>% 
-  ungroup() %>% 
-  select(-`Exposure Source`) %>% 
-  tibble()
-
-h3_easq
-```
-
-#### Communicative Development Inventories
-
-```{r}
-h3_cdi <- h3_table %>% 
-  filter(`Outcome Domain` == "Communicative Development Inventories") %>%
-  arrange(`Exposure Source`, Exposure, `Outcome Domain`, Outcome) %>% 
-  group_by(`Exposure Source`, `Outcome Domain`) %>%
-  mutate(`Outcome Domain` = case_when(row_number() == 1 ~ `Outcome Domain`), 
-         `Exposure Source` = case_when(row_number() == 1 ~ `Exposure Source`)) %>% 
-  ungroup() %>% 
-  select(-`Exposure Source`) %>% 
-  tibble()
-
-h3_cdi
-```
-
-```{r}
-#save table
-write.csv(h3_easq, file=here('tables/eed-dev_h3-who.csv'))
-print(xtable(h3_easq), type="html", file=here("tables/eed-dev_h3-easq.html"))
-
-write.csv(h3_cdi, file=here('tables/eed-dev_h3-cdi.csv'))
-print(xtable(h3_cdi), type="html", file=here("tables/eed-dev_h3-cdi.html"))
-```
 
 ## Significant Hypotheses
 
@@ -330,12 +222,10 @@ All analyses in one table.
 
 ```{r}
 all_hyp <- bind_rows(
-  h1_table %>% 
+  h4_table %>% 
     mutate(hyp = 1), 
-  h2_table %>% 
-    mutate(hyp = 2), 
-  h3_table%>% 
-    mutate(hyp = 3)
+  h5_table %>% 
+    mutate(hyp = 2)
 ) 
 
 all_hyp
