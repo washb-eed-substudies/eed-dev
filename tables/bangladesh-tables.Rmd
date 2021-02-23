@@ -84,9 +84,10 @@ h1_table <- data.table(
   "Q1 mean" = all_h1$q1_adj,
   "Q3 mean" = all_h1$q3_adj,
   "Unadjusted Difference (95% CI)" = paste0(all_h1$point.diff_unadj, "(", all_h1$lb.diff_unadj, ',', all_h1$ub.diff_unadj,')'), 
-  # "Unadjusted P-value" = all_h1$corrected.Pval_unadj, 
+  "Unadjusted P-value" = all_h1$Pval_unadj,
   "Adjusted Difference (95% CI)" = paste0(all_h1$point.diff_adj, "(", all_h1$lb.diff_adj, ',', all_h1$ub.diff_adj,')'), 
-  "Adjusted P-value" = all_h1$corrected.Pval_adj
+  "Adjusted P-value" = all_h1$Pval_adj, 
+  "FDR Corrected P-value" = all_h1$corrected.Pval_adj
 )
 
 h1_table
@@ -178,9 +179,10 @@ h2_table <- data.table(
   "Q1 mean" = all_h2$q1_adj,
   "Q3 mean" = all_h2$q3_adj,
   "Unadjusted Difference (95% CI)" = paste0(all_h2$point.diff_unadj, "(", all_h2$lb.diff_unadj, ',', all_h2$ub.diff_unadj,')'), 
-  # "Unadjusted P-value" = all_h2$corrected.Pval_unadj, 
+  "Unadjusted P-value" = all_h2$Pval_unadj,
   "Adjusted Difference (95% CI)" = paste0(all_h2$point.diff_adj, "(", all_h2$lb.diff_adj, ',', all_h2$ub.diff_adj,')'), 
-  "Adjusted P-value" = all_h2$corrected.Pval_adj
+  "Adjusted P-value" = all_h2$Pval_adj, 
+  "FDR Corrected P-value" = all_h2$corrected.Pval_adj
 )
 
 h2_table
@@ -272,9 +274,10 @@ h3_table <- data.table(
   "Q1 mean" = all_h3$q1_adj,
   "Q3 mean" = all_h3$q3_adj,
   "Unadjusted Difference (95% CI)" = paste0(all_h3$point.diff_unadj, "(", all_h3$lb.diff_unadj, ',', all_h3$ub.diff_unadj,')'), 
-  # "Unadjusted P-value" = all_h3$corrected.Pval_unadj, 
+  "Unadjusted P-value" = all_h3$Pval_unadj,
   "Adjusted Difference (95% CI)" = paste0(all_h3$point.diff_adj, "(", all_h3$lb.diff_adj, ',', all_h3$ub.diff_adj,')'), 
-  "Adjusted P-value" = all_h3$corrected.Pval_adj
+  "Adjusted P-value" = all_h3$Pval_adj, 
+  "FDR Corrected P-value" = all_h3$corrected.Pval_adj
 )
 
 h3_table
@@ -340,6 +343,11 @@ all_hyp <- bind_rows(
 
 all_hyp
 ```
+
+```{r}
+saveRDS(all_hyp, 'all_bangladesh_tables.RDS')
+```
+
 
 ```{r}
 all_hyp %>% 

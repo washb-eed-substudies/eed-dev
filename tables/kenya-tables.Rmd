@@ -211,6 +211,11 @@ all_hyp
 ```
 
 ```{r}
+saveRDS(all_hyp, 'all_kenya_tables.RDS')
+```
+
+
+```{r}
 all_hyp %>% 
   filter(`Adjusted P-value` < 0.06) # rounding
 ```
