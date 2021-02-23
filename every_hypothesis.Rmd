@@ -1,0 +1,54 @@
+---
+title: "EED-Development Tables"
+subtitle: "WASH Benefits, Bangladesh" 
+date: "`r format(Sys.Date(), '%d %B %Y')`"
+output: 
+  html_notebook:
+    theme: sandstone
+---
+
+```{r setup, include = F}
+library(tidyverse)
+```
+
+
+
+```{r}
+bg_tables <- readRDS('tables/all_bangladesh_tables.RDS')
+k_tables <- readRDS('tables/all_kenya_tables.RDS')
+
+```
+
+
+
+```{r}
+every_hyp <- bind_rows(
+  bg_tables, 
+  k_tables
+) 
+
+
+every_hyp %>% 
+  arrange(hyp)
+```
+
+```{r}
+sig_hyp <- every_hyp %>% 
+  filter(`Unadjusted P-value` <= 0.05 | `Adjusted P-value` <= 0.05 | `FDR Corrected P-value` <= 0.05 ) %>% 
+  mutate(significant_unadj = ifelse(`Unadjusted P-value` <= 0.05, "Unadj.", NA), 
+         significant_adj = ifelse(`Adjusted P-value` <= 0.05, 'Adj.', NA), 
+         significant_fdr = ifelse(`FDR Corrected P-value` <= 0.05, 'FDR', NA)) %>% 
+  unite("signif", significant_unadj, significant_adj, significant_fdr, sep = ', ', na.rm = TRUE)  %>% 
+  select(`Outcome Domain`, Outcome, Exposure, contains("P-value"), hyp, signif)
+```
+
+```{r}
+sig_hyp
+
+sig_hyp %>% 
+  arrange(`Outcome Domain`, Outcome)
+
+sig_hyp %>% 
+  arrange(Exposure)
+```
+
