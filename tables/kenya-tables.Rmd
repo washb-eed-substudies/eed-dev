@@ -117,9 +117,6 @@ h4_who
 #save table
 write.csv(h4_who, file=here('tables/eed-dev_h4-who.csv'))
 print(xtable(h4_who), type="html", file=here("tables/eed-dev_h4-who.html"))
-
-write.csv(h4_cdi, file=here('tables/eed-dev_h4-cdi.csv'))
-print(xtable(h4_cdi), type="html", file=here("tables/eed-dev_h4-cdi.html"))
 ```
 
 ## Hypothesis 5
@@ -190,29 +187,11 @@ h5_easq <- h5_table %>%
 h5_easq
 ```
 
-#### Communicative Development Inventories
-
-```{r}
-h5_cdi <- h5_table %>% 
-  filter(`Outcome Domain` == "Communicative Development Inventories") %>%
-  arrange(`Exposure Source`, Exposure, `Outcome Domain`, Outcome) %>% 
-  group_by(`Exposure Source`, `Outcome Domain`) %>%
-  mutate(`Outcome Domain` = case_when(row_number() == 1 ~ `Outcome Domain`), 
-         `Exposure Source` = case_when(row_number() == 1 ~ `Exposure Source`)) %>% 
-  ungroup() %>% 
-  select(-`Exposure Source`) %>% 
-  tibble()
-
-h5_cdi
-```
 
 ```{r}
 #save table
 write.csv(h5_easq, file=here('tables/eed-dev_h5-who.csv'))
 print(xtable(h5_easq), type="html", file=here("tables/eed-dev_h5-easq.html"))
-
-write.csv(h5_cdi, file=here('tables/eed-dev_h5-cdi.csv'))
-print(xtable(h5_cdi), type="html", file=here("tables/eed-dev_h5-cdi.html"))
 ```
 
 
@@ -223,9 +202,9 @@ All analyses in one table.
 ```{r}
 all_hyp <- bind_rows(
   h4_table %>% 
-    mutate(hyp = 1), 
+    mutate(hyp = 4), 
   h5_table %>% 
-    mutate(hyp = 2)
+    mutate(hyp = 5)
 ) 
 
 all_hyp
