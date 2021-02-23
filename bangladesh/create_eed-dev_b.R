@@ -175,7 +175,8 @@ bg_dev_full <- bg_dev_full %>%
 
 # create factor variables
 
-factor.vars = c('sex', 'birthord', 'momedu', 'momheight', 'hfiacat', 'floor', 'walls', 'roof')
+factor.vars = c('sex', 'birthord', 'momedu', 'momheight', 'hfiacat', 'floor', 
+                'walls', 'roof', 'cesd_sum_t2', "cesd_sum_ee_t3", "pss_sum_mom_t3", 'life_viol_any_t3')
 
 bg_dev_full <- bg_dev_full %>% 
   mutate(across(.cols = all_of(factor.vars), 

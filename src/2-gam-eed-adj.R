@@ -820,6 +820,395 @@ saveRDS(H3b_adj_res, here("results/adjusted/H3b_adj_res.RDS"))
 #Save plot data
 #saveRDS(H3b_adj_plot_data, paste0(dropboxDir,"results/stress-growth-models/figure-data/H3b_adj_spline_data.RDS"))
 
+
+# ------------------------------------------------------------------------
+####### kenya hypotheses ####### 
+
+d <- readRDS('eed-dev_k.RDS')
+
+#Set list of adjustment variables
+#Make vectors of adjustment variable names
+Wvars<-c("sex","birthord", "momage","momheight","momedu", 
+         "HHS", "Nlt18","Ncomp", "water_time", 
+         "floor", 'roof', "hh_index", 
+         "tr",
+         
+         'laz_t1', 'waz_t1')
+
+Wvars[!(Wvars %in% colnames(d))]
+
+# ------------------------------------------------------------------------
+# --------------------------------------------------------------------------
+#### Hypothesis 4 ####
+# eed markers at t2 v. dev (who mm) at t2
+
+H4_W <- c(Wvars,
+          'laz_t1', 'waz_t1',
+          'aged1',	'agedays_motor', 
+          'month_mm')
+
+
+##########################
+# adjustment sets 33-35
+## exposure: fecal markers t1
+## outcome: who mm t2
+##########################
+
+Xvars <- c('aat1', 'mpo1', 'neo1')           
+Yvars <- c("who_sub_total", "who_sum_total")
+
+H4a_W <- c(H4_W, 'month_st1')
+H4a_W[!(H4a_W %in% colnames(d))]
+
+#Fit models
+H4a_adj_models <- NULL
+for(i in Xvars){
+  for(j in Yvars){
+    print(i)
+    print(j)
+    res_adj <- fit_RE_gam(d=d, X=i, Y=j,  W=H4a_W)
+    res <- data.frame(X=i, Y=j, fit=I(list(res_adj$fit)), dat=I(list(res_adj$dat)))
+    H4a_adj_models <- bind_rows(H4a_adj_models, res)
+  }
+}
+
+
+
+#Get primary contrasts
+H4a_adj_res <- NULL
+for(i in 1:nrow(H4a_adj_models)){
+  res <- data.frame(X=H4a_adj_models$X[i], Y=H4a_adj_models$Y[i])
+  preds <- predict_gam_diff(fit=H4a_adj_models$fit[i][[1]], d=H4a_adj_models$dat[i][[1]], quantile_diff=c(0.25,0.75), Xvar=res$X, Yvar=res$Y)
+  H4a_adj_res <-  bind_rows(H4a_adj_res , preds$res)
+}
+
+#Make list of plots
+H4a_adj_plot_list <- NULL
+H4a_adj_plot_data <- NULL
+for(i in 1:nrow(H4a_adj_models)){
+  res <- data.frame(X=H4a_adj_models$X[i], Y=H4a_adj_models$Y[i])
+  simul_plot <- gam_simul_CI(H4a_adj_models$fit[i][[1]], H4a_adj_models$dat[i][[1]], xlab=res$X, ylab=res$Y, title="")
+  H4a_adj_plot_list[[i]] <-  simul_plot$p
+  H4a_adj_plot_data <-  rbind(H4a_adj_plot_data, data.frame(Xvar=res$X, Yvar=res$Y, adj=0, simul_plot$pred %>% subset(., select = c(Y,X,id,fit,se.fit,uprP, lwrP,uprS,lwrS))))
+}
+
+
+#Save models
+#saveRDS(H4a_adj_models, paste0(dropboxDir,"results/stress-growth-models/models/H4a_adj_models.RDS"))
+
+#Save results
+saveRDS(H4a_adj_res, here("results/adjusted/H4a_adj_res.RDS"))
+
+
+#Save plots
+#saveRDS(H4a_adj_plot_list, paste0(dropboxDir,"results/stress-growth-models/figure-objects/H4a_adj_splines.RDS"))
+
+#Save plot data
+#saveRDS(H4a_adj_plot_data, paste0(dropboxDir,"results/stress-growth-models/figure-data/H4a_adj_spline_data.RDS"))
+
+##########################
+# adjustment sets 36-37
+## exposure: urine markers t1
+## outcome: who mm t2
+##########################
+
+Xvars <- c('Lact1', 'Mann1')           
+Yvars <- c("who_sub_total", "who_sum_total")
+
+H4b_W <- c(H4_W, 'month_ut1')
+H4b_W[!(H4b_W %in% colnames(d))]
+
+#Fit models
+H4b_adj_models <- NULL
+for(i in Xvars){
+  for(j in Yvars){
+    print(i)
+    print(j)
+    res_adj <- fit_RE_gam(d=d, X=i, Y=j,  W=H4b_W)
+    res <- data.frame(X=i, Y=j, fit=I(list(res_adj$fit)), dat=I(list(res_adj$dat)))
+    H4b_adj_models <- bind_rows(H4b_adj_models, res)
+  }
+}
+
+
+
+#Get primary contrasts
+H4b_adj_res <- NULL
+for(i in 1:nrow(H4b_adj_models)){
+  res <- data.frame(X=H4b_adj_models$X[i], Y=H4b_adj_models$Y[i])
+  preds <- predict_gam_diff(fit=H4b_adj_models$fit[i][[1]], d=H4b_adj_models$dat[i][[1]], quantile_diff=c(0.25,0.75), Xvar=res$X, Yvar=res$Y)
+  H4b_adj_res <-  bind_rows(H4b_adj_res , preds$res)
+}
+
+#Make list of plots
+H4b_adj_plot_list <- NULL
+H4b_adj_plot_data <- NULL
+for(i in 1:nrow(H4b_adj_models)){
+  res <- data.frame(X=H4b_adj_models$X[i], Y=H4b_adj_models$Y[i])
+  simul_plot <- gam_simul_CI(H4b_adj_models$fit[i][[1]], H4b_adj_models$dat[i][[1]], xlab=res$X, ylab=res$Y, title="")
+  H4b_adj_plot_list[[i]] <-  simul_plot$p
+  H4b_adj_plot_data <-  rbind(H4b_adj_plot_data, data.frame(Xvar=res$X, Yvar=res$Y, adj=0, simul_plot$pred %>% subset(., select = c(Y,X,id,fit,se.fit,uprP, lwrP,uprS,lwrS))))
+}
+
+
+#Save models
+#saveRDS(H4b_adj_models, paste0(dropboxDir,"results/stress-growth-models/models/H4b_adj_models.RDS"))
+
+#Save results
+saveRDS(H4b_adj_res, here("results/adjusted/H4b_adj_res.RDS"))
+
+
+#Save plots
+#saveRDS(H4b_adj_plot_list, paste0(dropboxDir,"results/stress-growth-models/figure-objects/H4b_adj_splines.RDS"))
+
+#Save plot data
+#saveRDS(H4b_adj_plot_data, paste0(dropboxDir,"results/stress-growth-models/figure-data/H4b_adj_spline_data.RDS"))
+
+# --------------------------------------------------------------------------
+#### Hypothesis 5 ####
+# eed markers at t1/t2 v. dev (easq) at t3
+
+H5_W <- c(Wvars,
+          'laz_t1', 'waz_t1',
+          'laz_t2', 'waz_t2',
+          'childage_dev',	'month_easq', 
+          'quantile_phq',	'quantile_pss')
+
+
+##########################
+# adjustment sets 38-40
+## exposure: fecal markers t1
+## outcome: easq t2
+##########################
+
+Xvars <- c('aat1', 'mpo1', 'neo1')           
+Yvars <- c("comtotz", "mottotz", "pstotz", "globaltotz")
+
+H5a_W <- c(H5_W, 'aged1', 'month_st1')
+H5a_W[!(H5a_W %in% colnames(d))]
+
+#Fit models
+H5a_adj_models <- NULL
+for(i in Xvars){
+  for(j in Yvars){
+    print(i)
+    print(j)
+    res_adj <- fit_RE_gam(d=d, X=i, Y=j,  W=H5a_W)
+    res <- data.frame(X=i, Y=j, fit=I(list(res_adj$fit)), dat=I(list(res_adj$dat)))
+    H5a_adj_models <- bind_rows(H5a_adj_models, res)
+  }
+}
+
+
+
+#Get primary contrasts
+H5a_adj_res <- NULL
+for(i in 1:nrow(H5a_adj_models)){
+  res <- data.frame(X=H5a_adj_models$X[i], Y=H5a_adj_models$Y[i])
+  preds <- predict_gam_diff(fit=H5a_adj_models$fit[i][[1]], d=H5a_adj_models$dat[i][[1]], quantile_diff=c(0.25,0.75), Xvar=res$X, Yvar=res$Y)
+  H5a_adj_res <-  bind_rows(H5a_adj_res , preds$res)
+}
+
+#Make list of plots
+H5a_adj_plot_list <- NULL
+H5a_adj_plot_data <- NULL
+for(i in 1:nrow(H5a_adj_models)){
+  res <- data.frame(X=H5a_adj_models$X[i], Y=H5a_adj_models$Y[i])
+  simul_plot <- gam_simul_CI(H5a_adj_models$fit[i][[1]], H5a_adj_models$dat[i][[1]], xlab=res$X, ylab=res$Y, title="")
+  H5a_adj_plot_list[[i]] <-  simul_plot$p
+  H5a_adj_plot_data <-  rbind(H5a_adj_plot_data, data.frame(Xvar=res$X, Yvar=res$Y, adj=0, simul_plot$pred %>% subset(., select = c(Y,X,id,fit,se.fit,uprP, lwrP,uprS,lwrS))))
+}
+
+
+#Save models
+#saveRDS(H5a_adj_models, paste0(dropboxDir,"results/stress-growth-models/models/H5a_adj_models.RDS"))
+
+#Save results
+saveRDS(H5a_adj_res, here("results/adjusted/H5a_adj_res.RDS"))
+
+
+#Save plots
+#saveRDS(H5a_adj_plot_list, paste0(dropboxDir,"results/stress-growth-models/figure-objects/H5a_adj_splines.RDS"))
+
+#Save plot data
+#saveRDS(H5a_adj_plot_data, paste0(dropboxDir,"results/stress-growth-models/figure-data/H5a_adj_spline_data.RDS"))
+
+##########################
+# adjustment sets 36-37
+## exposure: urine markers t1
+## outcome: easq t2
+##########################
+
+Xvars <- c('Lact1', 'Mann1')           
+Yvars <- c("comtotz", "mottotz", "pstotz", "globaltotz")
+
+H5b_W <- c(H5_W, 'aged1', 'month_ut1')
+H5b_W[!(H5b_W %in% colnames(d))]
+
+#Fit models
+H5b_adj_models <- NULL
+for(i in Xvars){
+  for(j in Yvars){
+    print(i)
+    print(j)
+    res_adj <- fit_RE_gam(d=d, X=i, Y=j,  W=H5b_W)
+    res <- data.frame(X=i, Y=j, fit=I(list(res_adj$fit)), dat=I(list(res_adj$dat)))
+    H5b_adj_models <- bind_rows(H5b_adj_models, res)
+  }
+}
+
+
+
+#Get primary contrasts
+H5b_adj_res <- NULL
+for(i in 1:nrow(H5b_adj_models)){
+  res <- data.frame(X=H5b_adj_models$X[i], Y=H5b_adj_models$Y[i])
+  preds <- predict_gam_diff(fit=H5b_adj_models$fit[i][[1]], d=H5b_adj_models$dat[i][[1]], quantile_diff=c(0.25,0.75), Xvar=res$X, Yvar=res$Y)
+  H5b_adj_res <-  bind_rows(H5b_adj_res , preds$res)
+}
+
+#Make list of plots
+H5b_adj_plot_list <- NULL
+H5b_adj_plot_data <- NULL
+for(i in 1:nrow(H5b_adj_models)){
+  res <- data.frame(X=H5b_adj_models$X[i], Y=H5b_adj_models$Y[i])
+  simul_plot <- gam_simul_CI(H5b_adj_models$fit[i][[1]], H5b_adj_models$dat[i][[1]], xlab=res$X, ylab=res$Y, title="")
+  H5b_adj_plot_list[[i]] <-  simul_plot$p
+  H5b_adj_plot_data <-  rbind(H5b_adj_plot_data, data.frame(Xvar=res$X, Yvar=res$Y, adj=0, simul_plot$pred %>% subset(., select = c(Y,X,id,fit,se.fit,uprP, lwrP,uprS,lwrS))))
+}
+
+
+#Save models
+#saveRDS(H5b_adj_models, paste0(dropboxDir,"results/stress-growth-models/models/H5b_adj_models.RDS"))
+
+#Save results
+saveRDS(H5b_adj_res, here("results/adjusted/H5b_adj_res.RDS"))
+
+
+#Save plots
+#saveRDS(H5b_adj_plot_list, paste0(dropboxDir,"results/stress-growth-models/figure-objects/H5b_adj_splines.RDS"))
+
+#Save plot data
+#saveRDS(H5b_adj_plot_data, paste0(dropboxDir,"results/stress-growth-models/figure-data/H5b_adj_spline_data.RDS"))
+
+
+##########################
+# adjustment sets 43-45
+## exposure: fecal markers t2
+## outcome: easq t3
+##########################
+
+Xvars <- c('aat1', 'mpo1', 'neo1')           
+Yvars <- c("comtotz", "mottotz", "pstotz", "globaltotz")
+
+H5c_W <- c(H5_W, 'aged2', 'month_st2')
+H5c_W[!(H5c_W %in% colnames(d))]
+
+#Fit models
+H5c_adj_models <- NULL
+for(i in Xvars){
+  for(j in Yvars){
+    print(i)
+    print(j)
+    res_adj <- fit_RE_gam(d=d, X=i, Y=j,  W=H5c_W)
+    res <- data.frame(X=i, Y=j, fit=I(list(res_adj$fit)), dat=I(list(res_adj$dat)))
+    H5c_adj_models <- bind_rows(H5c_adj_models, res)
+  }
+}
+
+
+
+#Get primary contrasts
+H5c_adj_res <- NULL
+for(i in 1:nrow(H5c_adj_models)){
+  res <- data.frame(X=H5c_adj_models$X[i], Y=H5c_adj_models$Y[i])
+  preds <- predict_gam_diff(fit=H5c_adj_models$fit[i][[1]], d=H5c_adj_models$dat[i][[1]], quantile_diff=c(0.25,0.75), Xvar=res$X, Yvar=res$Y)
+  H5c_adj_res <-  bind_rows(H5c_adj_res , preds$res)
+}
+
+#Make list of plots
+H5c_adj_plot_list <- NULL
+H5c_adj_plot_data <- NULL
+for(i in 1:nrow(H5c_adj_models)){
+  res <- data.frame(X=H5c_adj_models$X[i], Y=H5c_adj_models$Y[i])
+  simul_plot <- gam_simul_CI(H5c_adj_models$fit[i][[1]], H5c_adj_models$dat[i][[1]], xlab=res$X, ylab=res$Y, title="")
+  H5c_adj_plot_list[[i]] <-  simul_plot$p
+  H5c_adj_plot_data <-  rbind(H5c_adj_plot_data, data.frame(Xvar=res$X, Yvar=res$Y, adj=0, simul_plot$pred %>% subset(., select = c(Y,X,id,fit,se.fit,uprP, lwrP,uprS,lwrS))))
+}
+
+
+#Save models
+#saveRDS(H5c_adj_models, paste0(dropboxDir,"results/stress-growth-models/models/H5c_adj_models.RDS"))
+
+#Save results
+saveRDS(H5c_adj_res, here("results/adjusted/H5c_adj_res.RDS"))
+
+
+#Save plots
+#saveRDS(H5c_adj_plot_list, paste0(dropboxDir,"results/stress-growth-models/figure-objects/H5c_adj_splines.RDS"))
+
+#Save plot data
+#saveRDS(H5c_adj_plot_data, paste0(dropboxDir,"results/stress-growth-models/figure-data/H5c_adj_spline_data.RDS"))
+
+##########################
+# adjustment sets 46-47
+## exposure: urine markers t2
+## outcome: easq t3
+##########################
+
+Xvars <- c('Lact2', 'Mann2')           
+Yvars <- c("comtotz", "mottotz", "pstotz", "globaltotz")
+
+H5d_W <- c(H5_W, 'aged2', 'month_ut2')
+H5d_W[!(H5d_W %in% colnames(d))]
+
+#Fit models
+H5d_adj_models <- NULL
+for(i in Xvars){
+  for(j in Yvars){
+    print(i)
+    print(j)
+    res_adj <- fit_RE_gam(d=d, X=i, Y=j,  W=H5d_W)
+    res <- data.frame(X=i, Y=j, fit=I(list(res_adj$fit)), dat=I(list(res_adj$dat)))
+    H5d_adj_models <- bind_rows(H5d_adj_models, res)
+  }
+}
+
+
+
+#Get primary contrasts
+H5d_adj_res <- NULL
+for(i in 1:nrow(H5d_adj_models)){
+  res <- data.frame(X=H5d_adj_models$X[i], Y=H5d_adj_models$Y[i])
+  preds <- predict_gam_diff(fit=H5d_adj_models$fit[i][[1]], d=H5d_adj_models$dat[i][[1]], quantile_diff=c(0.25,0.75), Xvar=res$X, Yvar=res$Y)
+  H5d_adj_res <-  bind_rows(H5d_adj_res , preds$res)
+}
+
+#Make list of plots
+H5d_adj_plot_list <- NULL
+H5d_adj_plot_data <- NULL
+for(i in 1:nrow(H5d_adj_models)){
+  res <- data.frame(X=H5d_adj_models$X[i], Y=H5d_adj_models$Y[i])
+  simul_plot <- gam_simul_CI(H5d_adj_models$fit[i][[1]], H5d_adj_models$dat[i][[1]], xlab=res$X, ylab=res$Y, title="")
+  H5d_adj_plot_list[[i]] <-  simul_plot$p
+  H5d_adj_plot_data <-  rbind(H5d_adj_plot_data, data.frame(Xvar=res$X, Yvar=res$Y, adj=0, simul_plot$pred %>% subset(., select = c(Y,X,id,fit,se.fit,uprP, lwrP,uprS,lwrS))))
+}
+
+
+#Save models
+#saveRDS(H5d_adj_models, paste0(dropboxDir,"results/stress-growth-models/models/H5d_adj_models.RDS"))
+
+#Save results
+saveRDS(H5d_adj_res, here("results/adjusted/H5d_adj_res.RDS"))
+
+
+#Save plots
+#saveRDS(H5d_adj_plot_list, paste0(dropboxDir,"results/stress-growth-models/figure-objects/H5d_adj_splines.RDS"))
+
+#Save plot data
+#saveRDS(H5d_adj_plot_data, paste0(dropboxDir,"results/stress-growth-models/figure-data/H5d_adj_spline_data.RDS"))
+
+
 # --------------------------------------------------------------------------
 # combine dataframes for each hypothesis
 
@@ -834,13 +1223,22 @@ bind_rows(H1a_adj_res, H1b_adj_res, H1c_adj_res, H1d_adj_res) %>%
 
 bind_rows(H2a_adj_res, H2b_adj_res, H2c_adj_res, 
           H2d_adj_res, H2e_adj_res, H2f_adj_res,
-          H2g_adj_res,H2h_adj_res) %>%
+          H2g_adj_res) %>%
   mutate(corrected.Pval=p.adjust(Pval, method="BH")) %>% 
   saveRDS("results/adjusted/H2_all_adj_res.RDS")
 
 bind_rows(H3a_adj_res, H3b_adj_res) %>% 
   mutate(corrected.Pval=p.adjust(Pval, method="BH")) %>% 
   saveRDS("results/adjusted/H3_all_adj_res.RDS")
+
+bind_rows(H4a_adj_res, H4b_adj_res) %>% 
+  mutate(corrected.Pval=p.adjust(Pval, method="BH")) %>% 
+  saveRDS("results/adjusted/H4_all_adj_res.RDS")
+
+bind_rows(H5a_adj_res, H5b_adj_res, H5c_adj_res, 
+          H5d_adj_res) %>%
+  mutate(corrected.Pval=p.adjust(Pval, method="BH")) %>% 
+  saveRDS("results/adjusted/H5_all_adj_res.RDS")
 
 
 
