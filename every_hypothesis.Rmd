@@ -3,12 +3,16 @@ title: "EED-Development Tables"
 subtitle: "WASH Benefits, Bangladesh" 
 date: "`r format(Sys.Date(), '%d %B %Y')`"
 output: 
+  pdf_document: 
   html_notebook:
     theme: sandstone
+classoption: landscape
+geometry: margin=0.5in
 ---
 
 ```{r setup, include = F}
 library(tidyverse)
+library(kableExtra)
 ```
 
 
@@ -29,26 +33,52 @@ every_hyp <- bind_rows(
 
 
 every_hyp %>% 
-  arrange(hyp)
+  arrange(hyp) %>%
+  kable(booktabs = TRUE) %>% 
+  kable_styling(latex_options="scale_down")
 ```
+
+Significant Hypotheses
 
 ```{r}
 sig_hyp <- every_hyp %>% 
   filter(`Unadjusted P-value` <= 0.05 | `Adjusted P-value` <= 0.05 | `FDR Corrected P-value` <= 0.05 ) %>% 
   mutate(significant_unadj = ifelse(`Unadjusted P-value` <= 0.05, "Unadj.", NA), 
          significant_adj = ifelse(`Adjusted P-value` <= 0.05, 'Adj.', NA), 
-         significant_fdr = ifelse(`FDR Corrected P-value` <= 0.05, 'FDR', NA)) %>% 
+         significant_fdr = ifelse(`FDR Corrected P-value` <= 0.05, 'FDR', NA), 
+         dir = case_when(str_starts(`Adjusted Difference (95% CI)`, 
+                                          '-') ~ '-', TRUE ~ '+')) %>% 
   unite("signif", significant_unadj, significant_adj, significant_fdr, sep = ', ', na.rm = TRUE)  %>% 
-  select(`Outcome Domain`, Outcome, Exposure, contains("P-value"), hyp, signif)
+  select(`Outcome Domain`, Outcome, Exposure, n, `Adjusted Difference (95% CI)`,	`Unadj. P-value` = `Unadjusted P-value`, 
+         `Adj. P-value` = `Adjusted P-value`, `FDR P-value` = `FDR Corrected P-value`, hyp, signif, dir)
 ```
 
+Long Tables
+
 ```{r}
-sig_hyp
+sig_hyp %>% 
+  kable(booktabs = TRUE, longtable = TRUE) %>% 
+  kable_styling(latex_options=c("hold_position", "repeat_header", "scale_down"))
+```
+
+Tables Arranged
+
+```{r}
+sig_hyp %>% 
+  arrange(`Outcome Domain`, Outcome) %>% 
+  kable(booktabs = TRUE) %>% 
+  kable_styling(latex_options="scale_down")
 
 sig_hyp %>% 
-  arrange(`Outcome Domain`, Outcome)
-
+  arrange(Exposure) %>% 
+  kable(booktabs = TRUE) %>% 
+  kable_styling(latex_options="scale_down")
+```
+```{r}
 sig_hyp %>% 
-  arrange(Exposure)
+  filter(signif != "Unadj.") %>% 
+  arrange(hyp, Exposure) %>% 
+  kable(booktabs = TRUE) %>% 
+  kable_styling(latex_options="scale_down")
 ```
 
