@@ -19,7 +19,6 @@ Xvars <- c('aat1', 'mpo1', 'neo1',
 Yvars <- c("z_age2mo_personal_no4", "z_age2mo_motor_no4", "z_age2mo_combined_no4", "z_age2mo_com_no4", 
            "z_age2mo_personal_all", "z_age2mo_motor_all", "z_age2mo_combined_all", "z_age2mo_com_all") 
 
-h2_missing <- paired_missing(Xvars, Yvars)
 
 #Fit models
 H2_models <- NULL
@@ -51,9 +50,16 @@ for(i in 1:nrow(H2_models)){
 
 # correct p-value
 H2_res <- H2_res %>%  
-  mutate(data_grp = str_split_fixed(Y, "_", 4)[, 4]) %>% 
-  group_by(data_grp) %>% 
-  mutate(corrected.Pval=p.adjust(Pval, method="BH"))
+  separate(Y, into = c(NA, NA, 'dom', 'data_grp'), sep = "_") %>% 
+  group_by(dom, X) %>% 
+  # mutate(corrected.Pval=p.adjust(Pval, method="BH")) %>% 
+  select(dom:N, point.diff, Pval) %>% 
+  pivot_wider(id_cols = c(dom, X), 
+              names_from = data_grp, 
+              values_from = c(N, point.diff, Pval)) %>% 
+  mutate(sensitivity = point.diff_no4 - point.diff_all/point.diff_no4)
+
+
 
 # --------------------------------------------------------------------------
 ############################################################################
@@ -284,4 +290,20 @@ for(i in 1:nrow(H2f_adj_models)){
 }
 
 
+H2_adj_all <- bind_rows(H2a_adj_res, H2b_adj_res,
+          H2e_adj_res, H2f_adj_res) %>% 
+  separate(Y, into = c(NA, NA, 'dom', 'data_grp'), sep = "_") %>% 
+  group_by(dom, X) %>% 
+  # mutate(corrected.Pval=p.adjust(Pval, method="BH")) %>% 
+  select(dom:N, point.diff, Pval) %>% 
+  pivot_wider(id_cols = c(dom, X), 
+              names_from = data_grp, 
+              values_from = c(N, point.diff, Pval)) %>% 
+  mutate(sensitivity = point.diff_no4 - point.diff_all/point.diff_no4)
 
+
+writexl::write_xlsx(list(
+  'unadj' = H2_res, 
+  'adj' = H2_adj_all), 
+  'results/easq-sensitivity-analysis.xlsx'
+)
