@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.21 (TeX Live 2020) (preloaded format=pdflatex 2021.3.11)  11 MAR 2021 22:18
+This is pdfTeX, Version 3.14159265-2.6-1.40.21 (TeX Live 2020) (preloaded format=pdflatex 2021.3.11)  11 MAR 2021 22:32
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -494,7 +494,14 @@ ef
 File: l3backend-pdftex.def 2021-03-02 L3 backend support: PDF output (pdfTeX)
 \l__color_backend_stack_int=\count306
 \l__pdf_internal_box=\box68
-) (./every_hypothesis.aux)
+) (./every_hypothesis.aux
+
+LaTeX Warning: Label `tab:unnamed-chunk-4' multiply defined.
+
+
+LaTeX Warning: Label `tab:unnamed-chunk-5' multiply defined.
+
+)
 \openout1 = `every_hypothesis.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 130.
@@ -662,27 +669,27 @@ LaTeX Font Info:    External font `lmex10' loaded for size
 LaTeX Warning: Float too large for page by 452.3994pt on input line 322.
 
 
-Overfull \hbox (228.88292pt too wide) in alignment at lines 356--360
+Overfull \hbox (53.05287pt too wide) in alignment at lines 355--360
  [] [] [] [] [] [] [] [] [] [] [] 
  []
 
 
-Overfull \hbox (228.88292pt too wide) in alignment at lines 360--365
+Overfull \hbox (53.05287pt too wide) in alignment at lines 360--365
  [] [] [] [] [] [] [] [] [] [] [] 
  []
 
 
-Overfull \hbox (228.88292pt too wide) in alignment at lines 365--367
+Overfull \hbox (53.05287pt too wide) in alignment at lines 365--367
  [] [] [] [] [] [] [] [] [] [] [] 
  []
 
 
-Overfull \hbox (228.88292pt too wide) in alignment at lines 367--369
+Overfull \hbox (53.05287pt too wide) in alignment at lines 367--369
  [] [] [] [] [] [] [] [] [] [] [] 
  []
 
 
-Overfull \hbox (228.88292pt too wide) in alignment at lines 369--393
+Overfull \hbox (53.05287pt too wide) in alignment at lines 369--381
  [] [] [] [] [] [] [] [] [] [] [] 
  []
 
@@ -690,30 +697,69 @@ Overfull \hbox (228.88292pt too wide) in alignment at lines 369--393
 
 {/usr/local/texlive/2020basic/texmf-var/fonts/map/pdftex/updmap/pdftex.map}] [2
 ]
-Overfull \hbox (228.88292pt too wide) in alignment at lines 393--401
+Overfull \hbox (41.26466pt too wide) in alignment at lines 396--401
  [] [] [] [] [] [] [] [] [] [] [] 
  []
 
-[3] [4] [5] [6] (./every_hypothesis.aux) ) 
+
+Overfull \hbox (41.26466pt too wide) in alignment at lines 401--406
+ [] [] [] [] [] [] [] [] [] [] [] 
+ []
+
+
+Overfull \hbox (41.26466pt too wide) in alignment at lines 406--408
+ [] [] [] [] [] [] [] [] [] [] [] 
+ []
+
+
+Overfull \hbox (41.26466pt too wide) in alignment at lines 408--410
+ [] [] [] [] [] [] [] [] [] [] [] 
+ []
+
+
+Overfull \hbox (41.26466pt too wide) in alignment at lines 410--430
+ [] [] [] [] [] [] [] [] [] [] [] 
+ []
+
+[3] [4pdfTeX warning (ext4): destination with the same identifier (name{table.3
+}) has been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  
+l.489 \begin{Shaded}
+                    ] [5pdfTeX warning (ext4): destination with the same identi
+fier (name{table.4}) has been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  
+l.578 \end{document}
+                    ] [6pdfTeX warning (ext4): destination with the same identi
+fier (name{table.5}) has been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  
+l.578 \end{document}
+                    ] (./every_hypothesis.aux)
+
+LaTeX Warning: There were multiply-defined labels.
+
+ ) 
 Here is how much of TeX's memory you used:
- 14400 strings out of 480471
- 214322 string characters out of 5893437
- 781972 words of memory out of 5000000
- 31335 multiletter control sequences out of 15000+600000
- 443468 words of font info for 85 fonts, out of 8000000 for 9000
+ 14416 strings out of 480471
+ 214497 string characters out of 5893437
+ 777297 words of memory out of 5000000
+ 31342 multiletter control sequences out of 15000+600000
+ 446641 words of font info for 88 fonts, out of 8000000 for 9000
  319 hyphenation exceptions out of 8191
- 85i,10n,88p,591b,437s stack positions out of 5000i,500n,10000p,200000b,80000s
-{/usr/local/texlive/2020basic/texmf-d
-ist/fonts/enc/dvips/lm/lm-ec.enc}{/usr/local/texlive/2020basic/texmf-dist/fonts
-/enc/dvips/lm/lm-ts1.enc}</usr/local/texlive/2020basic/texmf-dist/fonts/type1/p
-ublic/lm/lmr10.pfb></usr/local/texlive/2020basic/texmf-dist/fonts/type1/public/
-lm/lmr12.pfb></usr/local/texlive/2020basic/texmf-dist/fonts/type1/public/lm/lmr
-17.pfb></usr/local/texlive/2020basic/texmf-dist/fonts/type1/public/lm/lmtt10.pf
-b>
-Output written on every_hypothesis.pdf (6 pages, 124322 bytes).
+ 85i,10n,88p,591b,464s stack positions out of 5000i,500n,10000p,200000b,80000s
+{/usr/local/texlive/2020basic/texmf-dist/fonts/enc/dvips/lm/lm-ec.enc}{/usr/l
+ocal/texlive/2020basic/texmf-dist/fonts/enc/dvips/lm/lm-ts1.enc}</usr/local/tex
+live/2020basic/texmf-dist/fonts/type1/public/lm/lmr10.pfb></usr/local/texlive/2
+020basic/texmf-dist/fonts/type1/public/lm/lmr12.pfb></usr/local/texlive/2020bas
+ic/texmf-dist/fonts/type1/public/lm/lmr17.pfb></usr/local/texlive/2020basic/tex
+mf-dist/fonts/type1/public/lm/lmr7.pfb></usr/local/texlive/2020basic/texmf-dist
+/fonts/type1/public/lm/lmtt10.pfb>
+Output written on every_hypothesis.pdf (6 pages, 157937 bytes).
 PDF statistics:
- 56 PDF objects out of 1000 (max. 8388607)
- 43 compressed objects within 1 object stream
- 8 named destinations out of 1000 (max. 500000)
- 20481 words of extra memory for PDF output out of 20736 (max. 10000000)
+ 64 PDF objects out of 1000 (max. 8388607)
+ 50 compressed objects within 1 object stream
+ 12 named destinations out of 1000 (max. 500000)
+ 22529 words of extra memory for PDF output out of 24883 (max. 10000000)
 
