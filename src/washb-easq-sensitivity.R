@@ -57,7 +57,7 @@ H2_res <- H2_res %>%
   pivot_wider(id_cols = c(dom, X), 
               names_from = data_grp, 
               values_from = c(N, point.diff, Pval)) %>% 
-  mutate(sensitivity = point.diff_no4 - point.diff_all/point.diff_no4)
+  mutate(sensitivity = point.diff_all - point.diff_no4/point.diff_all)
 
 
 
@@ -299,7 +299,7 @@ H2_adj_all <- bind_rows(H2a_adj_res, H2b_adj_res,
   pivot_wider(id_cols = c(dom, X), 
               names_from = data_grp, 
               values_from = c(N, point.diff, Pval)) %>% 
-  mutate(sensitivity = point.diff_no4 - point.diff_all/point.diff_no4)
+  mutate(sensitivity =  point.diff_all - point.diff_no4/point.diff_all)
 
 
 writexl::write_xlsx(list(
