@@ -49,11 +49,11 @@ for(i in 1:nrow(H2_models)){
 }
 
 # correct p-value
-H2_res <- H2_res %>%  
+H2_res_all <- H2_res %>%  
   separate(Y, into = c(NA, NA, 'dom', 'data_grp'), sep = "_") %>% 
   group_by(dom, X) %>% 
   # mutate(corrected.Pval=p.adjust(Pval, method="BH")) %>% 
-  select(dom:N, point.diff, Pval) %>% 
+  # select(dom:N, point.diff, Pval) %>% 
   pivot_wider(id_cols = c(dom, X), 
               names_from = data_grp, 
               values_from = c(N, point.diff, Pval)) %>% 
@@ -295,7 +295,7 @@ H2_adj_all <- bind_rows(H2a_adj_res, H2b_adj_res,
   separate(Y, into = c(NA, NA, 'dom', 'data_grp'), sep = "_") %>% 
   group_by(dom, X) %>% 
   # mutate(corrected.Pval=p.adjust(Pval, method="BH")) %>% 
-  select(dom:N, point.diff, Pval) %>% 
+  # select(dom:N, point.diff, Pval) %>% 
   pivot_wider(id_cols = c(dom, X), 
               names_from = data_grp, 
               values_from = c(N, point.diff, Pval)) %>% 
