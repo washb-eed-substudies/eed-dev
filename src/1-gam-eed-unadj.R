@@ -122,7 +122,7 @@ Xvars <- c('aat1', 'mpo1', 'neo1',
            'L_conc_t1', 'M_conc_t1',
            'aat2', 'mpo2', 'neo2', 
            'L_conc_t2', 'M_conc_t2')            
-Yvars <- c("z_age2mo_personal_no4", "z_age2mo_motor_no4", "z_age2mo_combined_no4", "z_age2mo_com_no4", 
+Yvars <- c("z_age2mo_personal_all", "z_age2mo_motor_all", "z_age2mo_combined_all", "z_age2mo_com_all", 
            "z_age2mo_cdi_undyr2_all_no4", "z_age2mo_cdi_sayyr2_all_no4") 
 
 h2_missing <- paired_missing(Xvars, Yvars)
@@ -176,7 +176,7 @@ saveRDS(H2_plot_data, here("figure-data/H2_unadj_spline_data.RDS"))
 #### Hypothesis 3 ####
 # reg1b at t2 v. dev (cdi3, easq) at time 3
 Xvars <- c("reg1b2")            
-Yvars <- c("z_age2mo_personal_no4", "z_age2mo_motor_no4", "z_age2mo_combined_no4", "z_age2mo_com_no4", 
+Yvars <- c("z_age2mo_personal_all", "z_age2mo_motor_all", "z_age2mo_combined_all", "z_age2mo_com_all", 
            "z_age2mo_cdi_undyr2_all_no4", "z_age2mo_cdi_sayyr2_all_no4") 
 
 h3_missing <- paired_missing(Xvars, Yvars)
