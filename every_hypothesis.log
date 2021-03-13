@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.21 (TeX Live 2020) (preloaded format=pdflatex 2021.3.11)  11 MAR 2021 22:32
+This is pdfTeX, Version 3.14159265-2.6-1.40.21 (TeX Live 2020) (preloaded format=pdflatex 2021.3.11)  12 MAR 2021 17:05
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -666,59 +666,59 @@ LaTeX Font Info:    External font `lmex10' loaded for size
 LaTeX Font Info:    External font `lmex10' loaded for size
 (Font)              <5> on input line 321.
 
-LaTeX Warning: Float too large for page by 452.3994pt on input line 322.
+LaTeX Warning: Float too large for page by 431.59167pt on input line 322.
 
 
-Overfull \hbox (53.05287pt too wide) in alignment at lines 355--360
- [] [] [] [] [] [] [] [] [] [] [] 
+Overfull \hbox (69.03886pt too wide) in alignment at lines 355--360
+ [] [] [] [] [] [] [] [] [] [] [] [] 
  []
 
 
-Overfull \hbox (53.05287pt too wide) in alignment at lines 360--365
- [] [] [] [] [] [] [] [] [] [] [] 
+Overfull \hbox (69.03886pt too wide) in alignment at lines 360--365
+ [] [] [] [] [] [] [] [] [] [] [] [] 
  []
 
 
-Overfull \hbox (53.05287pt too wide) in alignment at lines 365--367
- [] [] [] [] [] [] [] [] [] [] [] 
+Overfull \hbox (69.03886pt too wide) in alignment at lines 365--367
+ [] [] [] [] [] [] [] [] [] [] [] [] 
  []
 
 
-Overfull \hbox (53.05287pt too wide) in alignment at lines 367--369
- [] [] [] [] [] [] [] [] [] [] [] 
+Overfull \hbox (69.03886pt too wide) in alignment at lines 367--369
+ [] [] [] [] [] [] [] [] [] [] [] [] 
  []
 
 
-Overfull \hbox (53.05287pt too wide) in alignment at lines 369--381
- [] [] [] [] [] [] [] [] [] [] [] 
+Overfull \hbox (69.03886pt too wide) in alignment at lines 369--381
+ [] [] [] [] [] [] [] [] [] [] [] [] 
  []
 
 [1
 
 {/usr/local/texlive/2020basic/texmf-var/fonts/map/pdftex/updmap/pdftex.map}] [2
 ]
-Overfull \hbox (41.26466pt too wide) in alignment at lines 396--401
- [] [] [] [] [] [] [] [] [] [] [] 
+Overfull \hbox (57.25066pt too wide) in alignment at lines 396--401
+ [] [] [] [] [] [] [] [] [] [] [] [] 
  []
 
 
-Overfull \hbox (41.26466pt too wide) in alignment at lines 401--406
- [] [] [] [] [] [] [] [] [] [] [] 
+Overfull \hbox (57.25066pt too wide) in alignment at lines 401--406
+ [] [] [] [] [] [] [] [] [] [] [] [] 
  []
 
 
-Overfull \hbox (41.26466pt too wide) in alignment at lines 406--408
- [] [] [] [] [] [] [] [] [] [] [] 
+Overfull \hbox (57.25066pt too wide) in alignment at lines 406--408
+ [] [] [] [] [] [] [] [] [] [] [] [] 
  []
 
 
-Overfull \hbox (41.26466pt too wide) in alignment at lines 408--410
- [] [] [] [] [] [] [] [] [] [] [] 
+Overfull \hbox (57.25066pt too wide) in alignment at lines 408--410
+ [] [] [] [] [] [] [] [] [] [] [] [] 
  []
 
 
-Overfull \hbox (41.26466pt too wide) in alignment at lines 410--430
- [] [] [] [] [] [] [] [] [] [] [] 
+Overfull \hbox (57.25066pt too wide) in alignment at lines 410--430
+ [] [] [] [] [] [] [] [] [] [] [] [] 
  []
 
 [3] [4pdfTeX warning (ext4): destination with the same identifier (name{table.3
@@ -744,7 +744,7 @@ LaTeX Warning: There were multiply-defined labels.
 Here is how much of TeX's memory you used:
  14416 strings out of 480471
  214497 string characters out of 5893437
- 777297 words of memory out of 5000000
+ 789643 words of memory out of 5000000
  31342 multiletter control sequences out of 15000+600000
  446641 words of font info for 88 fonts, out of 8000000 for 9000
  319 hyphenation exceptions out of 8191
@@ -756,7 +756,7 @@ live/2020basic/texmf-dist/fonts/type1/public/lm/lmr10.pfb></usr/local/texlive/2
 ic/texmf-dist/fonts/type1/public/lm/lmr17.pfb></usr/local/texlive/2020basic/tex
 mf-dist/fonts/type1/public/lm/lmr7.pfb></usr/local/texlive/2020basic/texmf-dist
 /fonts/type1/public/lm/lmtt10.pfb>
-Output written on every_hypothesis.pdf (6 pages, 157937 bytes).
+Output written on every_hypothesis.pdf (6 pages, 157938 bytes).
 PDF statistics:
  64 PDF objects out of 1000 (max. 8388607)
  50 compressed objects within 1 object stream

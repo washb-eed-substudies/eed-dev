@@ -59,7 +59,8 @@ all_h4 <- h4_adj %>%
   left_join(h4_unadj, 
             by = c('X', 'Y'), 
             suffix = c('_adj', '_unadj')) %>% 
-  mutate(X = str_remove(X, '[0-9]'), 
+  mutate(t = str_extract(X, '[0-9]'),
+         X = str_remove(X, '[0-9]'), 
          Y = case_when(str_detect(Y, 'comtotz') ~ 'communication',
                        str_detect(Y, 'mottotz') ~ 'motor',
                        str_detect(Y, 'pstotz') ~ 'personal',
@@ -81,6 +82,7 @@ h4_table <- data.table(
   "Outcome" = all_h4$outcome,
   "Exposure Source" = all_h4$exp_domain,
   "Exposure" = all_h4$exposure, 
+  "t" = all_h4$t,
   "n" = all_h4$N_adj, # uses N from adjusted model
   "Q1 mean" = all_h4$q1_adj,
   "Q3 mean" = all_h4$q3_adj,
@@ -133,7 +135,8 @@ all_h5 <- h5_adj %>%
   left_join(h5_unadj, 
             by = c('X', 'Y'), 
             suffix = c('_adj', '_unadj')) %>% 
-  mutate(X = str_remove(X, '[0-9]'), 
+  mutate(t = str_extract(X, '[0-9]'),
+         X = str_remove(X, '[0-9]'), 
          Y = case_when(str_detect(Y, 'comtotz') ~ 'communication',
                        str_detect(Y, 'mottotz') ~ 'motor',
                        str_detect(Y, 'pstotz') ~ 'personal',
@@ -155,6 +158,7 @@ h5_table <- data.table(
   "Outcome" = all_h5$outcome,
   "Exposure Source" = all_h5$exp_domain,
   "Exposure" = all_h5$exposure, 
+  't' = all_h5$t,
   "n" = all_h5$N_adj, # uses N from adjusted model
   "Q1 mean" = all_h5$q1_adj,
   "Q3 mean" = all_h5$q3_adj,

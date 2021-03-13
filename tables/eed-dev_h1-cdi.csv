@@ -1,11 +1,11 @@
-"","Outcome Domain","Outcome","Exposure","n","Q1 mean","Q3 mean","Unadjusted Difference (95% CI)","Unadjusted P-value","Adjusted Difference (95% CI)","Adjusted P-value","FDR Corrected P-value"
-"1","Communicative Development Inventories","Expressing","Alpha-1 Antitrypsin",793,0.23,0.8,"0.02(-0.01,0.05)",0.24,"0.01(-0.03,0.05)",0.62,0.69
-"2",NA,"Understanding","Alpha-1 Antitrypsin",797,0.23,0.8,"-0.03(-0.22,0.17)",0.79,"0.02(-0.02,0.05)",0.38,0.48
-"3",NA,"Expressing","Myeloperoxidase",795,4244.68,19500.99,"0(-0.08,0.08)",0.95,"0.04(-0.02,0.1)",0.19,0.32
-"4",NA,"Understanding","Myeloperoxidase",799,4198.28,19174.39,"0(-0.06,0.06)",0.96,"-0.08(-0.3,0.14)",0.47,0.56
-"5",NA,"Expressing","Neopterin",796,896.65,2320.84,"0.13(-0.07,0.33)",0.2,"0.12(-0.08,0.33)",0.25,0.36
-"6",NA,"Understanding","Neopterin",800,896.65,2320.84,"0.33(0.14,0.53)",0,"0.3(0.11,0.49)",0,0.05
-"7","Communicative Development Inventories","Expressing","Lactulose concentration",976,0.21,0.99,"-0.11(-0.23,0)",0.05,"-0.14(-0.27,-0.02)",0.02,0.16
-"8",NA,"Understanding","Lactulose concentration",979,0.21,0.99,"-0.17(-0.38,0.04)",0.11,"-0.19(-0.4,0.02)",0.07,0.27
-"9",NA,"Expressing","Mannitol concentration",976,1.96,8.29,"-0.07(-0.17,0.03)",0.14,"-0.09(-0.21,0.02)",0.12,0.27
-"10",NA,"Understanding","Mannitol concentration",979,1.96,8.25,"-0.09(-0.18,0)",0.05,"-0.09(-0.19,0.01)",0.09,0.27
+"","Outcome Domain","Outcome","Exposure","t","n","Q1 mean","Q3 mean","Unadjusted Difference (95% CI)","Unadjusted P-value","Adjusted Difference (95% CI)","Adjusted P-value","FDR Corrected P-value"
+"1","Communicative Development Inventories","Expressing","Alpha-1 Antitrypsin","1",793,0.23,0.8,"0.02(-0.01,0.05)",0.24,"0.01(-0.03,0.05)",0.62,0.69
+"2",NA,"Understanding","Alpha-1 Antitrypsin","1",797,0.23,0.8,"-0.03(-0.22,0.17)",0.79,"0.02(-0.02,0.05)",0.38,0.48
+"3",NA,"Expressing","Myeloperoxidase","1",795,4244.68,19500.99,"0(-0.08,0.08)",0.95,"0.04(-0.02,0.1)",0.19,0.32
+"4",NA,"Understanding","Myeloperoxidase","1",799,4198.28,19174.39,"0(-0.06,0.06)",0.96,"-0.08(-0.3,0.14)",0.47,0.56
+"5",NA,"Expressing","Neopterin","1",796,896.65,2320.84,"0.13(-0.07,0.33)",0.2,"0.12(-0.08,0.33)",0.25,0.36
+"6",NA,"Understanding","Neopterin","1",800,896.65,2320.84,"0.33(0.14,0.53)",0,"0.3(0.11,0.49)",0,0.05
+"7","Communicative Development Inventories","Expressing","Lactulose concentration","1",976,0.21,0.99,"-0.11(-0.23,0)",0.05,"-0.14(-0.27,-0.02)",0.02,0.16
+"8",NA,"Understanding","Lactulose concentration","1",979,0.21,0.99,"-0.17(-0.38,0.04)",0.11,"-0.19(-0.4,0.02)",0.07,0.27
+"9",NA,"Expressing","Mannitol concentration","1",976,1.96,8.29,"-0.07(-0.17,0.03)",0.14,"-0.09(-0.21,0.02)",0.12,0.27
+"10",NA,"Understanding","Mannitol concentration","1",979,1.96,8.25,"-0.09(-0.18,0)",0.05,"-0.09(-0.19,0.01)",0.09,0.27

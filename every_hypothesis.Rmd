@@ -49,7 +49,7 @@ sig_hyp <- every_hyp %>%
          dir = case_when(str_starts(`Adjusted Difference (95% CI)`, 
                                           '-') ~ '-', TRUE ~ '+')) %>% 
   unite("signif", significant_unadj, significant_adj, significant_fdr, sep = ', ', na.rm = TRUE)  %>% 
-  select(`Outcome Domain`, Outcome, Exposure, n, `Adjusted Difference (95% CI)`,	`Unadj. P-value` = `Unadjusted P-value`, 
+  select(`Outcome Domain`, Outcome, Exposure, n, t, `Adjusted Difference (95% CI)`,	`Unadj. P-value` = `Unadjusted P-value`,
          `Adj. P-value` = `Adjusted P-value`, `FDR P-value` = `FDR Corrected P-value`, hyp, signif, dir)
 ```
 
