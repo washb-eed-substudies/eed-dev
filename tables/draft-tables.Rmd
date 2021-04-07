@@ -1,0 +1,174 @@
+---
+title: "EED-Development Draft Tables"
+subtitle: "WASH Benefits, Bangladesh" 
+date: "`r format(Sys.Date(), '%d %B %Y')`"
+output: 
+  html_notebook:
+    theme: sandstone
+---
+
+```{r setup, include = F}
+rm(list = ls())
+
+knitr::opts_chunk$set(echo = FALSE)
+
+library(tidyverse)
+library(kableExtra)
+library(stringr)
+library(tableone)
+library(flextable)
+library(officer)
+library(here)
+```
+
+# Import Data
+
+```{r}
+bg_tables <- readRDS(here('tables/all_bangladesh_tables.RDS')) %>% 
+  mutate_if(is.numeric, round, 2) %>% 
+  mutate(across(contains('P-value'), 
+                ~ case_when(.x <= 0.05 ~ paste0(.x, "*"), 
+                            TRUE ~ as.character(.x))))
+k_tables <- readRDS(here('tables/all_kenya_tables.RDS')) %>% 
+  mutate_if(is.numeric, round, 2) %>% 
+  mutate(across(contains('P-value'), 
+                ~ case_when(.x <= 0.05 ~ paste0(.x, "*"), 
+                            TRUE ~ as.character(.x))))
+```
+
+# Create Dataframes
+
+```{r who}
+bg_who <- bg_tables %>% 
+  filter(str_starts(`Outcome Domain`, 'WHO'))
+
+k_who <- k_tables %>% 
+  filter(str_starts(`Outcome Domain`, 'WHO'))
+```
+
+```{r bg cdi}
+bg_cdi <- bg_tables %>% 
+  filter(str_starts(`Outcome Domain`, 'Communicative Development'), 
+         t == 1)
+```
+
+```{r k easq}
+k_easq <- k_tables %>% 
+  filter(str_starts(`Outcome Domain`, 'Extended'), 
+         str_starts(`Exposure`, 'lact|mann|alpha'), 
+         t == 1)
+```
+
+# Table 1
+
+```{r}
+bg <- readRDS(here('eed-dev_bg.RDS')) %>% 
+  rename(hh_index = HHwealth) %>% 
+  mutate(across(c(cesd_sum_t2, cesd_sum_ee_t3, 
+                  pss_sum_mom_t3), 
+                as.numeric), 
+         life_viol_any_t3 = case_when(as.character(life_viol_any_t3) == "missing" ~ NA_character_, 
+                                      TRUE ~ as.character(life_viol_any_t3)),
+         across(c(sex, life_viol_any_t3), 
+                as.factor), 
+         country = 'Bangladesh')
+
+k <- readRDS(here('eed-dev_k.RDS')) %>% 
+  mutate(across(c(quantile_phq, quantile_pss), 
+                as.numeric), 
+         across(c(sex), 
+                as.factor), 
+         country = 'Kenya')
+
+both = bind_rows(bg, k)
+
+
+myVars <- c("tr", "laz_t1", "waz_t1", "laz_t2", "waz_t2", 
+            "cesd_sum_t2", "cesd_sum_ee_t3", "pss_sum_mom_t3",
+            "quantile_phq", "quantile_pss", 
+            "sex", "life_viol_any_t3", "birthord", "momage", "momheight", 
+            "momedu", "hfiacat", "Nlt18", "Ncomp", "watmin", "walls", 
+            "floor", "roof", "hh_index")
+
+tab1 <- CreateTableOne(vars = myVars, data = both, strata = 'country', test = FALSE)
+
+print(tab1, nonnormal = myVars)
+```
+
+# Flextables
+
+```{r}
+keep_cols <- c('Outcome', 'Exposure', 't', 'n', 
+                       'Q1 mean', 'Q3 mean', 'Adjusted Difference (95% CI)', 
+                       'Adjusted P-value', 'FDR Corrected P-value', 
+                       'hyp')
+
+flex_format <- function(ft){
+  ft %>% 
+  hline(part="header", border=fp_border(color="black")) %>% 
+  hline_bottom(part="body", border=fp_border(color="black")) %>% 
+  hline_top(part="header", border=fp_border(color="black")) %>% 
+  # align(align = "center", part = "all") %>% 
+  # align(j = c(1, 2), align = "left", part="all") %>% 
+  autofit(part = "all") %>% 
+  fit_to_width(max_width=8) %>% 
+  add_footer_row(top=F, 
+                values = "N, 25th Percentile, and 75th Percentile are from the adjusted analyses", length(keep_cols))
+}
+```
+
+
+## Bangladesh
+
+```{r}
+flextable(bg_cdi, 
+          col_keys = keep_cols) %>% 
+  flex_format() %>% 
+  set_caption("Communicative Development Inventories (Bangladesh)", style = "Table Caption",
+              autonum = run_autonum())
+```
+
+```{r}
+flextable(bg_who, 
+          col_keys = keep_cols) %>% 
+  flex_format() %>% 
+  set_caption("WHO Motor Milestones (Bangladesh)", style = "Table Caption",
+              autonum = run_autonum())
+```
+
+## Kenya
+
+```{r}
+flextable(k_who, 
+          col_keys = keep_cols) %>% 
+  flex_format() %>% 
+  set_caption("WHO Motor Milestones (Kenya)", style = "Table Caption",
+              autonum = run_autonum())
+```
+
+
+```{r}
+flextable(k_easq, 
+          col_keys = keep_cols) %>% 
+  flex_format() %>% 
+  set_caption("Extended Ages and Stages Questionnaire (Kenya)", style = "Table Caption",
+              autonum = run_autonum())
+```
+
+# Full Tables
+```{r}
+flextable(bg_tables, 
+          col_keys = keep_cols) %>% 
+  flex_format() %>% 
+  set_caption("Bangladesh Analyses", style = "Table Caption",
+              autonum = run_autonum())
+```
+
+```{r}
+flextable(k_tables, 
+          col_keys = keep_cols) %>% 
+  flex_format() %>% 
+  set_caption("Kenya Analyses", style = "Table Caption",
+              autonum = run_autonum())
+```
+
