@@ -22,7 +22,13 @@ k_eed <- k_urine %>%
   mutate(month_st1 = month(parse_date(stool_bl_date, format = '%m/%d/%y')), 
          month_ut1 = month(parse_date(urine_bl_date, format = '%m/%d/%y')), 
          month_st2 = month(parse_date(stool_ml_date, format = '%m/%d/%y')), 
-         month_ut2 = month(parse_date(urine_ml_date, format = '%m/%d/%y')))
+         month_ut2 = month(parse_date(urine_ml_date, format = '%m/%d/%y')), 
+         ln_Lact1 = log(Lact1), 
+         ln_Lact2 = log(Lact2), 
+         ln_Lact3 = log(Lact3), 
+         ln_Mann1 = log(Mann1), 
+         ln_Mann2 = log(Mann2), 
+         ln_Mann3 = log(Mann3))
 
 # outcomes
 # year 1
@@ -66,7 +72,8 @@ k_easq <- read_dta('./kenya/washk_development_allkids_CA_20171121.dta') %>%
 # ----
 # covariates
 
-k_cov <- read_csv('kenya/washb-kenya-enrol.csv')
+k_cov <- read_csv('kenya/washb-kenya-enrol.csv') %>% 
+  rename(tr_enrol = tr)
 
 k_anthro <- read_csv('kenya/kenya-dm-ee-anthro-ee.csv') %>% 
   select(childid, laz_t1, waz_t1, 

@@ -1,41 +1,33 @@
 "","Outcome Domain","Outcome","Exposure","n","t","Q1 mean","Q3 mean","Unadjusted Difference (95% CI)","Unadjusted P-value","Adjusted Difference (95% CI)","Adjusted P-value","FDR Corrected P-value"
-"1","Extended Ages and Stages Questionnaire","Combined","Alpha-1 Antitrypsin",694,"1",0.23,0.81,"NA(NA,NA)",NA,"-0.04(-0.12,0.04)",0.32,0.81
-"2",NA,"Combined","Alpha-1 Antitrypsin",857,"2",0.25,0.89,"NA(NA,NA)",NA,"-0.01(-0.09,0.07)",0.85,0.99
-"3",NA,"Communication Score","Alpha-1 Antitrypsin",694,"1",0.23,0.81,"NA(NA,NA)",NA,"0.01(-0.03,0.04)",0.66,0.95
-"4",NA,"Communication Score","Alpha-1 Antitrypsin",859,"2",0.25,0.89,"NA(NA,NA)",NA,"0.01(-0.06,0.08)",0.79,0.98
-"5",NA,"Gross Motor Score","Alpha-1 Antitrypsin",687,"1",0.24,0.81,"NA(NA,NA)",NA,"-0.02(-0.05,0.02)",0.36,0.81
-"6",NA,"Gross Motor Score","Alpha-1 Antitrypsin",849,"2",0.25,0.89,"NA(NA,NA)",NA,"0(-0.07,0.07)",0.99,0.99
-"7",NA,"Personal Social Score","Alpha-1 Antitrypsin",696,"1",0.23,0.81,"NA(NA,NA)",NA,"-0.01(-0.2,0.17)",0.89,0.99
-"8",NA,"Personal Social Score","Alpha-1 Antitrypsin",860,"2",0.25,0.89,"NA(NA,NA)",NA,"0.01(-0.06,0.08)",0.79,0.98
-"9",NA,"Combined","Myeloperoxidase",695,"1",4378.55,20199.17,"NA(NA,NA)",NA,"-0.03(-0.11,0.04)",0.38,0.81
-"10",NA,"Combined","Myeloperoxidase",857,"2",2787.01,10439.24,"NA(NA,NA)",NA,"-0.02(-0.07,0.03)",0.36,0.81
-"11",NA,"Communication Score","Myeloperoxidase",695,"1",4378.55,20199.17,"NA(NA,NA)",NA,"-0.03(-0.25,0.18)",0.79,0.98
-"12",NA,"Communication Score","Myeloperoxidase",859,"2",2792.42,10352.33,"NA(NA,NA)",NA,"0(-0.05,0.04)",0.89,0.99
-"13",NA,"Gross Motor Score","Myeloperoxidase",688,"1",4492.04,20234.34,"NA(NA,NA)",NA,"-0.12(-0.37,0.13)",0.36,0.81
-"14",NA,"Gross Motor Score","Myeloperoxidase",849,"2",2764.79,10366.81,"NA(NA,NA)",NA,"-0.01(-0.05,0.04)",0.81,0.98
-"15",NA,"Personal Social Score","Myeloperoxidase",697,"1",4361.1,20173.21,"NA(NA,NA)",NA,"-0.06(-0.14,0.01)",0.1,0.81
-"16",NA,"Personal Social Score","Myeloperoxidase",860,"2",2795.13,10462.68,"NA(NA,NA)",NA,"0(-0.05,0.05)",0.92,0.99
-"17",NA,"Combined","Neopterin",696,"1",923.4,2360.63,"NA(NA,NA)",NA,"0.12(-0.06,0.3)",0.18,0.81
-"18",NA,"Combined","Neopterin",857,"2",644.5,2025.18,"NA(NA,NA)",NA,"0.06(0,0.12)",0.06,0.81
-"19",NA,"Communication Score","Neopterin",696,"1",921.1,2355.02,"NA(NA,NA)",NA,"0.12(-0.06,0.3)",0.21,0.81
-"20",NA,"Communication Score","Neopterin",859,"2",646.63,2026.99,"NA(NA,NA)",NA,"0.05(-0.01,0.11)",0.14,0.81
-"21",NA,"Gross Motor Score","Neopterin",689,"1",924.15,2332.48,"NA(NA,NA)",NA,"0.09(-0.07,0.25)",0.27,0.81
-"22",NA,"Gross Motor Score","Neopterin",849,"2",639.82,2028.79,"NA(NA,NA)",NA,"0.02(-0.04,0.08)",0.6,0.91
-"23",NA,"Personal Social Score","Neopterin",698,"1",921.92,2357.9,"NA(NA,NA)",NA,"0.04(-0.05,0.13)",0.37,0.81
-"24",NA,"Personal Social Score","Neopterin",860,"2",638.65,2026.08,"NA(NA,NA)",NA,"0.04(-0.02,0.1)",0.2,0.81
-"25","Extended Ages and Stages Questionnaire","Combined","Lactulose concentration",863,"1",0.21,0.97,"NA(NA,NA)",NA,"0.09(-0.14,0.31)",0.46,0.83
-"26",NA,"Combined","Lactulose concentration",841,"2",0.15,0.61,"NA(NA,NA)",NA,"-0.14(-0.33,0.05)",0.14,0.81
-"27",NA,"Communication Score","Lactulose concentration",864,"1",0.21,0.97,"NA(NA,NA)",NA,"0(-0.01,0.02)",0.64,0.94
-"28",NA,"Communication Score","Lactulose concentration",843,"2",0.15,0.61,"NA(NA,NA)",NA,"-0.03(-0.21,0.14)",0.73,0.98
-"29",NA,"Gross Motor Score","Lactulose concentration",858,"1",0.21,0.98,"NA(NA,NA)",NA,"0.11(-0.02,0.25)",0.1,0.81
-"30",NA,"Gross Motor Score","Lactulose concentration",836,"2",0.15,0.61,"NA(NA,NA)",NA,"-0.08(-0.18,0.01)",0.08,0.81
-"31",NA,"Personal Social Score","Lactulose concentration",865,"1",0.21,0.97,"NA(NA,NA)",NA,"0.06(-0.23,0.35)",0.69,0.97
-"32",NA,"Personal Social Score","Lactulose concentration",844,"2",0.15,0.61,"NA(NA,NA)",NA,"-0.03(-0.21,0.16)",0.78,0.98
-"33",NA,"Combined","Mannitol concentration",863,"1",1.99,8.22,"NA(NA,NA)",NA,"0.13(-0.07,0.33)",0.22,0.81
-"34",NA,"Combined","Mannitol concentration",841,"2",1.06,4.86,"NA(NA,NA)",NA,"0(-0.06,0.06)",0.94,0.99
-"35",NA,"Communication Score","Mannitol concentration",864,"1",1.99,8.26,"NA(NA,NA)",NA,"0.11(-0.11,0.32)",0.33,0.81
-"36",NA,"Communication Score","Mannitol concentration",843,"2",1.06,4.84,"NA(NA,NA)",NA,"0.01(-0.05,0.07)",0.85,0.99
-"37",NA,"Gross Motor Score","Mannitol concentration",858,"1",2,8.31,"NA(NA,NA)",NA,"0.01(-0.03,0.06)",0.52,0.85
-"38",NA,"Gross Motor Score","Mannitol concentration",836,"2",1.06,4.84,"NA(NA,NA)",NA,"-0.16(-0.29,-0.02)",0.02,0.81
-"39",NA,"Personal Social Score","Mannitol concentration",865,"1",2,8.23,"NA(NA,NA)",NA,"0(-0.05,0.05)",0.94,0.99
-"40",NA,"Personal Social Score","Mannitol concentration",844,"2",1.06,4.84,"NA(NA,NA)",NA,"0(-0.06,0.07)",0.97,0.99
+"1","Extended Ages and Stages Questionnaire","Combined","alpha-1 antitrypsin",697,"1",0.23472,0.81281,"0(-0.04,0.05)",0.89,"-0.01226(-0.08427,0.05975)",0.75158,0.92276
+"2",NA,"Combined","alpha-1 antitrypsin",697,"1",0.23472,0.81281,"0.01(-0.03,0.06)",0.61,"-0.00458(-0.07521,0.06606)",0.90684,0.98655
+"3",NA,"Combined","alpha-1 antitrypsin",862,"2",0.2528,0.88781,"0.11(-0.08,0.29)",0.26,"-0.01176(-0.17605,0.15253)",0.89691,0.98655
+"4",NA,"Combined","alpha-1 antitrypsin",862,"2",0.2528,0.88781,"0.11(-0.06,0.27)",0.21,"0.0109(-0.05568,0.07747)",0.76118,0.92276
+"5",NA,"Gross Motor Score","alpha-1 antitrypsin",693,"1",0.23538,0.81281,"-0.05(-0.28,0.17)",0.66,"-0.01103(-0.05202,0.02996)",0.61021,0.92276
+"6",NA,"Gross Motor Score","alpha-1 antitrypsin",857,"2",0.25148,0.89005,"-0.02(-0.08,0.05)",0.67,"-0.01695(-0.08785,0.05395)",0.65228,0.92276
+"7",NA,"Personal Social Score","alpha-1 antitrypsin",697,"1",0.23472,0.81281,"0.08(-0.09,0.26)",0.33,"0.00406(-0.18744,0.19556)",0.96994,0.98655
+"8",NA,"Personal Social Score","alpha-1 antitrypsin",862,"2",0.2528,0.88781,"0.15(-0.04,0.34)",0.12,"0.01206(-0.0618,0.08592)",0.76181,0.92276
+"9",NA,"Combined","myeloperoxidase",698,"1",4348.29435,20129.5795,"-0.03(-0.1,0.03)",0.37,"-0.01174(-0.08582,0.06235)",0.76897,0.92276
+"10",NA,"Combined","myeloperoxidase",698,"1",4348.29435,20129.5795,"-0.04(-0.1,0.03)",0.25,"0.00741(-0.21574,0.23055)",0.95275,0.98655
+"11",NA,"Combined","myeloperoxidase",862,"2",2789.7135,10421.1335,"0(-0.04,0.04)",0.87,"-0.01737(-0.06678,0.03203)",0.5007,0.87358
+"12",NA,"Combined","myeloperoxidase",862,"2",2789.7135,10421.1335,"-0.01(-0.05,0.03)",0.68,"-0.0105(-0.05759,0.03659)",0.67511,0.92276
+"13",NA,"Gross Motor Score","myeloperoxidase",694,"1",4483.272,20212.147,"0.05(-0.2,0.3)",0.69,"0.00285(-0.02265,0.02834)",0.83798,0.98105
+"14",NA,"Gross Motor Score","myeloperoxidase",857,"2",2787.006,10366.808,"0(0,0)",1,"-0.02566(-0.07538,0.02406)",0.3164,0.87358
+"15",NA,"Personal Social Score","myeloperoxidase",698,"1",4348.29435,20129.5795,"-0.06(-0.13,0.01)",0.07,"-0.03962(-0.13633,0.0571)",0.43004,0.87358
+"16",NA,"Personal Social Score","myeloperoxidase",862,"2",2789.7135,10421.1335,"0.01(-0.03,0.05)",0.66,"0.0011(-0.05085,0.05305)",0.97004,0.98655
+"17",NA,"Combined","neopterin",699,"1",921.03,2356.4575,"0.21(0.04,0.38)",0.02,"0.14384(-0.0219,0.30959)",0.08863,0.87358
+"18",NA,"Combined","neopterin",699,"1",921.03,2356.4575,"0.2(0.01,0.39)",0.04,"0.12001(-0.05079,0.29082)",0.16925,0.87358
+"19",NA,"Combined","neopterin",862,"2",640.98975,2027.88775,"-0.03(-0.21,0.15)",0.73,"0.02938(-0.05324,0.112)",0.4957,0.87358
+"20",NA,"Combined","neopterin",862,"2",640.98975,2027.88775,"0.04(-0.01,0.09)",0.12,"0.0541(-0.00519,0.11339)",0.07333,0.87358
+"21",NA,"Gross Motor Score","neopterin",695,"1",921.03,2343.0282,"0.1(-0.05,0.26)",0.19,"0.10362(-0.06827,0.27551)",0.23983,0.87358
+"22",NA,"Gross Motor Score","neopterin",857,"2",639.821,2028.79,"0.01(-0.04,0.06)",0.64,"-0.07298(-0.19456,0.0486)",0.24185,0.87358
+"23",NA,"Personal Social Score","neopterin",699,"1",921.03,2356.4575,"0.16(0,0.31)",0.05,"0.04653(-0.0439,0.13696)",0.31784,0.87358
+"24",NA,"Personal Social Score","neopterin",862,"2",640.98975,2027.88775,"0(-0.19,0.2)",0.98,"0.02278(-0.05923,0.10478)",0.59834,0.92276
+"25","Extended Ages and Stages Questionnaire","Combined","lactulose concentration",867,"1",-1.56556,-0.03308,"-0.01(-0.11,0.08)",0.77,"0.04167(-0.05894,0.14227)",0.4248,0.87358
+"26",NA,"Combined","lactulose concentration",867,"1",-1.56556,-0.03308,"0.05(-0.11,0.2)",0.56,"0.03498(-0.06316,0.13312)",0.49464,0.87358
+"27",NA,"Gross Motor Score","lactulose concentration",862,"1",-1.55941,-0.02612,"0.01(-0.07,0.1)",0.8,"0.122(-0.0088,0.2528)",0.06714,0.87358
+"28",NA,"Personal Social Score","lactulose concentration",867,"1",-1.56556,-0.03308,"0.09(-0.13,0.32)",0.42,"0.06013(-0.18181,0.30207)",0.63894,0.92276
+"29",NA,"Combined","mannitol concentration",867,"1",0.68932,2.10653,"-0.02(-0.11,0.07)",0.7,"0.04662(-0.07971,0.17296)",0.47888,0.87358
+"30",NA,"Combined","mannitol concentration",867,"1",0.68932,2.10653,"0(-0.09,0.09)",0.99,"0.04415(-0.06333,0.15163)",0.4287,0.87358
+"31",NA,"Gross Motor Score","mannitol concentration",862,"1",0.69335,2.11783,"0(-0.08,0.09)",0.92,"0.08103(-0.05002,0.21209)",0.22767,0.87358
+"32",NA,"Personal Social Score","mannitol concentration",867,"1",0.68932,2.10653,"-0.07(-0.16,0.03)",0.18,"-0.02242(-0.14262,0.09779)",0.72784,0.92276

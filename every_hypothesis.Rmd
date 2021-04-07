@@ -47,7 +47,10 @@ sig_hyp <- every_hyp %>%
          significant_adj = ifelse(`Adjusted P-value` <= 0.05, 'Adj.', NA), 
          significant_fdr = ifelse(`FDR Corrected P-value` <= 0.05, 'FDR', NA), 
          dir = case_when(str_starts(`Adjusted Difference (95% CI)`, 
-                                          '-') ~ '-', TRUE ~ '+')) %>% 
+                                    '-') ~ '-', 
+                         str_detect(`Adjusted Difference (95% CI)`, 
+                                    "0,0") ~ "", 
+                         TRUE ~ '+')) %>% 
   unite("signif", significant_unadj, significant_adj, significant_fdr, sep = ', ', na.rm = TRUE)  %>% 
   select(`Outcome Domain`, Outcome, Exposure, n, t, `Adjusted Difference (95% CI)`,	`Unadj. P-value` = `Unadjusted P-value`,
          `Adj. P-value` = `Adjusted P-value`, `FDR P-value` = `FDR Corrected P-value`, hyp, signif, dir)

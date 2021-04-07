@@ -20,12 +20,12 @@ unadj_mods <- dir(here('results/unadjusted/'))
 # to merge actual names
 exp_rename <- tribble(
   ~var,     ~exposure,       ~exp_domain,
-  'aat',   'Alpha-1 Antitrypsin', 'fecal',
-  'mpo',   'Myeloperoxidase',      'fecal', 
-  'neo',   'Neopterin',            'fecal', 
-  'L_conc_t', 'Lactulose concentration', 'urine', 
-  'M_conc_t', 'Mannitol concentration', 'urine',
-  'reg1b', 'Regenerating Gene 1-Beta', 'fecal'
+  'aat',   'alpha-1 antitrypsin', 'fecal',
+  'mpo',   'myeloperoxidase',      'fecal', 
+  'neo',   'neopterin',            'fecal', 
+  'ln_L_conc_t', 'lactulose concentration', 'urine', 
+  'ln_M_conc_t', 'mannitol concentration', 'urine',
+  'reg1b', 'regenerating gene 1-beta', 'fecal'
 )
 
 # create df of outcome names
@@ -144,7 +144,7 @@ print(xtable(h1_cdi), type="html", file=here("tables/eed-dev_h1-cdi.html"))
 ```{r h2_setup, include = F}
 # read in data
 h2_adj <- readRDS(here('results/adjusted/H2_all_adj_res.RDS')) %>% 
-  mutate_if(is.numeric, round, 2)
+  mutate_if(is.numeric, round, 5)
 h2_unadj <- readRDS(here('results/unadjusted/H2_res.RDS'))%>% 
   mutate_if(is.numeric, round, 2)
 
@@ -160,7 +160,7 @@ all_h2 <- h2_adj %>%
                        str_detect(Y, 'cdi_say') ~ 'cdi_say',
                        str_detect(Y, 'personal') ~ 'personal',
                        str_detect(Y, 'motor') ~ 'motor',
-                       str_detect(Y, 'combined') ~ 'combined',
+                       str_detect(Y, 'com') ~ 'combined',
                        TRUE ~ Y)) %>% 
   left_join(exp_rename, 
             by = c('X' = 'var')) %>% 
@@ -250,13 +250,14 @@ all_h3 <- h3_adj %>%
   left_join(h3_unadj, 
             by = c('X', 'Y'), 
             suffix = c('_adj', '_unadj')) %>% 
-  mutate(X = str_remove(X, '[0-9]'), 
+  mutate(t = str_sub(X, start = nchar(X)),
+         X = str_sub(X, end = nchar(X)-1), 
          Y = case_when(str_detect(Y, 'com_no4') ~ 'com_no4',
                        str_detect(Y, 'cdi_und') ~ 'cdi_und',
                        str_detect(Y, 'cdi_say') ~ 'cdi_say',
                        str_detect(Y, 'personal') ~ 'personal',
                        str_detect(Y, 'motor') ~ 'motor',
-                       str_detect(Y, 'combined') ~ 'combined',
+                       str_detect(Y, 'com') ~ 'combined',
                        TRUE ~ Y)) %>% 
   left_join(exp_rename, 
             by = c('X' = 'var')) %>% 

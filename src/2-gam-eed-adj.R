@@ -88,7 +88,7 @@ saveRDS(H1a_adj_res, here("results/adjusted/H1a_adj_res.RDS"))
 ## outcome: who mm
 ##########################
 
-Xvars <- c('L_conc_t1', 'M_conc_t1')           
+Xvars <- c('ln_L_conc_t1', 'ln_M_conc_t1')           
 Yvars <- c('who_sum_total', 'who_sub_total')
 
 H1b_W <- c(H1_W, 'ageday_ut1', 'agedays_cdi2', 
@@ -208,7 +208,7 @@ saveRDS(H1c_adj_res, here("results/adjusted/H1c_adj_res.RDS"))
 ## outcome: cdi2
 ##########################
 
-Xvars <- c('L_conc_t1', 'M_conc_t1')           
+Xvars <- c('ln_L_conc_t1', 'ln_M_conc_t1')           
 Yvars <- c('z_age2mo_cdi_undyr1_all_no4', 
            'z_age2mo_cdi_sayyr1_all_no4')
 
@@ -278,8 +278,8 @@ H2_W <- c(Wvars, 'laz_t2', 'waz_t2',
 ##########################
 
 Xvars <- c('aat1', 'mpo1', 'neo1')           
-Yvars <- c("z_age2mo_personal_no4", "z_age2mo_motor_no4", 
-           "z_age2mo_combined_no4", "z_age2mo_com_no4")
+Yvars <- c("z_age2mo_personal_all", "z_age2mo_motor_all", 
+           "z_age2mo_combined_all", "z_age2mo_com_all")
 
 H2a_W <- c(H2_W, 'ageday_st1',	'agedays_easq', 
            'month_st1',	'month_easq')
@@ -337,9 +337,9 @@ saveRDS(H2a_adj_res, here("results/adjusted/H2a_adj_res.RDS"))
 ## outcome: easq t3
 ##########################
 
-Xvars <- c('L_conc_t1', 'M_conc_t1')           
-Yvars <- c("z_age2mo_personal_no4", "z_age2mo_motor_no4", 
-           "z_age2mo_combined_no4", "z_age2mo_com_no4")
+Xvars <- c('ln_L_conc_t1', 'ln_M_conc_t1')           
+Yvars <- c("z_age2mo_personal_all", "z_age2mo_motor_all", 
+           "z_age2mo_combined_all", "z_age2mo_com_all")
 
 H2b_W <- c(H2_W, 'ageday_ut1',	'agedays_easq', 
            'month_ut1',	'month_easq')
@@ -457,7 +457,7 @@ saveRDS(H2c_adj_res, here("results/adjusted/H2c_adj_res.RDS"))
 ## outcome: cdi t3
 ##########################
 
-Xvars <- c('L_conc_t1', 'M_conc_t1')           
+Xvars <- c('ln_L_conc_t1', 'ln_M_conc_t1')           
 Yvars <- c("z_age2mo_cdi_undyr2_all_no4", "z_age2mo_cdi_sayyr2_all_no4")
 
 H2d_W <- c(H2_W, 'ageday_ut1', 'agedays_cdi3',
@@ -519,8 +519,8 @@ saveRDS(H2d_adj_res, here("results/adjusted/H2d_adj_res.RDS"))
 ##########################
 
 Xvars <- c('aat2', 'mpo2', 'neo2')           
-Yvars <- c("z_age2mo_personal_no4", "z_age2mo_motor_no4", 
-           "z_age2mo_combined_no4", "z_age2mo_com_no4")
+Yvars <- c("z_age2mo_personal_all", "z_age2mo_motor_all", 
+           "z_age2mo_combined_all", "z_age2mo_com_all")
 
 H2e_W <- c(H2_W, 'ageday_st2', 'agedays_easq', 
            'month_st2',	'month_easq')
@@ -578,9 +578,9 @@ saveRDS(H2e_adj_res, here("results/adjusted/H2e_adj_res.RDS"))
 ## outcome: easq t3
 ##########################
 
-Xvars <- c('L_conc_t2', 'M_conc_t2')           
-Yvars <- c("z_age2mo_personal_no4", "z_age2mo_motor_no4", 
-           "z_age2mo_combined_no4", "z_age2mo_com_no4")
+Xvars <- c('lm_L_conc_t2', 'ln_M_conc_t2')           
+Yvars <- c("z_age2mo_personal_all", "z_age2mo_motor_all", 
+           "z_age2mo_combined_all", "z_age2mo_com_all")
 
 H2f_W <- c(H2_W, 'ageday_ut2', 'agedays_easq', 
            'month_ut2',	'month_easq')
@@ -708,8 +708,8 @@ H3_W <- c(Wvars, 'laz_t2', 'waz_t2',
 ##########################
 
 Xvars <- c('reg1b2')           
-Yvars <- c("z_age2mo_personal_no4", "z_age2mo_motor_no4", 
-            "z_age2mo_combined_no4", "z_age2mo_com_no4")
+Yvars <- c("z_age2mo_personal_all", "z_age2mo_motor_all", 
+            "z_age2mo_combined_all", "z_age2mo_com_all")
 
 H3a_W <- c(H3_W, 'ageday_st2', 'agedays_easq',
            'month_st2', 'month_easq')
@@ -912,7 +912,7 @@ saveRDS(H4a_adj_res, here("results/adjusted/H4a_adj_res.RDS"))
 ## outcome: who mm t2
 ##########################
 
-Xvars <- c('Lact1', 'Mann1')           
+Xvars <- c('ln_Lact1', 'ln_Mann1')           
 Yvars <- c("who_sub_total", "who_sum_total")
 
 H4b_W <- c(H4_W, 'month_ut1')
@@ -1039,7 +1039,7 @@ saveRDS(H5a_adj_res, here("results/adjusted/H5a_adj_res.RDS"))
 ## outcome: easq t2
 ##########################
 
-Xvars <- c('Lact1', 'Mann1')           
+Xvars <- c('ln_Lact1', 'ln_Mann1')           
 Yvars <- c("comtotz", "mottotz", "pstotz", "globaltotz")
 
 H5b_W <- c(H5_W, 'aged1', 'month_ut1')
@@ -1156,7 +1156,7 @@ saveRDS(H5c_adj_res, here("results/adjusted/H5c_adj_res.RDS"))
 ## outcome: easq t3
 ##########################
 
-Xvars <- c('Lact2', 'Mann2')           
+Xvars <- c('ln_Lact2', 'ln_Mann2')           
 Yvars <- c("comtotz", "mottotz", "pstotz", "globaltotz")
 
 H5d_W <- c(H5_W, 'aged2', 'month_ut2')

@@ -20,12 +20,12 @@ unadj_mods <- dir(here('results/unadjusted/'))
 # to merge actual names
 exp_rename <- tribble(
   ~var,     ~exposure,       ~exp_domain,
-  'aat',   'Alpha-1 Antitrypsin', 'fecal',
-  'mpo',   'Myeloperoxidase',      'fecal', 
-  'neo',   'Neopterin',            'fecal', 
-  'Lact', 'Lactulose concentration', 'urine', 
-  'Mann', 'Mannitol concentration', 'urine',
-  'reg1b', 'Regenerating Gene 1-Beta', 'fecal'
+  'aat',   'alpha-1 antitrypsin', 'fecal',
+  'mpo',   'myeloperoxidase',      'fecal', 
+  'neo',   'neopterin',            'fecal', 
+  'ln_Lact', 'lactulose concentration', 'urine', 
+  'ln_Mann', 'mannitol concentration', 'urine',
+  'reg1b', 'regenerating gene 1-beta', 'fecal'
 )
 
 # create df of outcome names
@@ -126,9 +126,9 @@ print(xtable(h4_who), type="html", file=here("tables/eed-dev_h4-who.html"))
 ```{r h5_setup, include = F}
 # read in data
 h5_adj <- readRDS(here('results/adjusted/h5_all_adj_res.RDS')) %>% 
-  mutate_if(is.numeric, round, 2)
+  mutate_if(is.numeric, round, 4)
 h5_unadj <- readRDS(here('results/unadjusted/h5_res.RDS'))%>% 
-  mutate_if(is.numeric, round, 2)
+  mutate_if(is.numeric, round, 5)
 
 
 all_h5 <- h5_adj %>% 
