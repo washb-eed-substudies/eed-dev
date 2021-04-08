@@ -58,67 +58,11 @@ paired_missing <- function(Xvars = Xvars, Yvars = Yvars){
 #Loop over exposure-outcome pairs
 
 #### Hypothesis 1 ####
-## H1A
-# eed markers at t1 v. dev (who) at t2
-Xvars <- c('aat1', 'mpo1', 'neo1', 
-           'ln_L_conc_t1', 'ln_M_conc_t1')  
-Yvars <- c('who_sum_total', 'who_sub_total')
-
-# h1_missing <- paired_missing(Xvars, Yvars)
-
-
-#Fit models
-H1A_models <- NULL
-for(i in Xvars){
-  for(j in Yvars){
-    res_unadj <- fit_HR_GAM(d=d, X=i, Y=j, age = 'ageday_at1', W=NULL)
-    res <- data.frame(X=i, Y=j, fit=I(list(res_unadj$fit)), dat=I(list(res_unadj$dat)))
-    H1A_models <- bind_rows(H1A_models, res)
-  }
-}
-
-#Get primary contrasts
-H1A_res <- NULL
-for(i in 1:nrow(H1A_models)){
-  res <- data.frame(X=H1A_models$X[i], Y=H1A_models$Y[i])
-  preds <- predict_gam_diff(fit=H1A_models$fit[i][[1]], d=H1A_models$dat[i][[1]], quantile_diff=c(0.25,0.75), Xvar=res$X, Yvar=res$Y)
-  H1A_res <-  bind_rows(H1A_res , preds$res)
-}
-
-#Make list of plots
-H1A_plot_list <- NULL
-H1A_plot_data <- NULL
-for(i in 1:nrow(H1A_models)){
-  res <- data.frame(X=H1A_models$X[i], Y=H1A_models$Y[i])
-  simul_plot <- gam_simul_CI(H1A_models$fit[i][[1]], H1A_models$dat[i][[1]], xlab=res$X, ylab=res$Y, title="")
-  H1A_plot_list[[i]] <-  simul_plot$p
-  H1A_plot_data <-  rbind(H1A_plot_data, data.frame(Xvar=res$X, Yvar=res$Y, adj=0, simul_plot$pred))
-}
-
-# correct p-value
-H1A_res <- H1A_res %>%  
-  mutate(corrected.Pval=p.adjust(Pval, method="BH"))
-
-#Save models
-saveRDS(H1A_models, here("models/H1A_models.RDS"))
-
-#Save results
-saveRDS(H1A_res, here("results/unadjusted/H1A_res.RDS"))
-
-
-#Save plots
-#saveRDS(H1A_plot_list, here("figure-objects/H1A_unadj_splines.RDS"))
-
-#Save plot data
-saveRDS(H1A_plot_data, here("figure-data/H1A_unadj_spline_data.RDS"))
-
-## H1B
-
 # eed markers at t1 v. dev (who, cdi2) at t2
 Xvars <- c('aat1', 'mpo1', 'neo1', 
-           'ln_L_conc_t1', 'ln_M_conc_t1')  
-Yvars <- c('who_sum_total', 'who_sub_total')
-Yvars <- c('z_age2mo_cdi_undyr1_all_no4', 
+           'ln_L_conc_t1', 'ln_M_conc_t1')            
+Yvars <- c('who_sum_total', 'who_sub_total',
+           'z_age2mo_cdi_undyr1_all_no4', 
            'z_age2mo_cdi_sayyr1_all_no4')
 
 
@@ -127,57 +71,49 @@ h1_missing <- paired_missing(Xvars, Yvars)
 
 
 #Fit models
-H1B_models <- NULL
+H1_models <- NULL
 for(i in Xvars){
   for(j in Yvars){
     res_unadj <- fit_RE_gam(d=d, X=i, Y=j,  W=NULL)
     res <- data.frame(X=i, Y=j, fit=I(list(res_unadj$fit)), dat=I(list(res_unadj$dat)))
-    H1B_models <- bind_rows(H1B_models, res)
-  }
-}
-
-for(i in Xvars){
-  for(j in Yvars_who){
-    res_unadj <- fit_HR_GAM(d=d, X=i, Y=j,  W=NULL)
-    res <- data.frame(X=i, Y=j, fit=I(list(res_unadj$fit)), dat=I(list(res_unadj$dat)))
-    H1B_models <- bind_rows(H1B_models, res)
+    H1_models <- bind_rows(H1_models, res)
   }
 }
 
 #Get primary contrasts
-H1B_res <- NULL
-for(i in 1:nrow(H1B_models)){
-  res <- data.frame(X=H1B_models$X[i], Y=H1B_models$Y[i])
-  preds <- predict_gam_diff(fit=H1B_models$fit[i][[1]], d=H1B_models$dat[i][[1]], quantile_diff=c(0.25,0.75), Xvar=res$X, Yvar=res$Y)
-  H1B_res <-  bind_rows(H1B_res , preds$res)
+H1_res <- NULL
+for(i in 1:nrow(H1_models)){
+  res <- data.frame(X=H1_models$X[i], Y=H1_models$Y[i])
+  preds <- predict_gam_diff(fit=H1_models$fit[i][[1]], d=H1_models$dat[i][[1]], quantile_diff=c(0.25,0.75), Xvar=res$X, Yvar=res$Y)
+  H1_res <-  bind_rows(H1_res , preds$res)
 }
 
 #Make list of plots
-H1B_plot_list <- NULL
-H1B_plot_data <- NULL
-for(i in 1:nrow(H1B_models)){
-  res <- data.frame(X=H1B_models$X[i], Y=H1B_models$Y[i])
-  simul_plot <- gam_simul_CI(H1B_models$fit[i][[1]], H1B_models$dat[i][[1]], xlab=res$X, ylab=res$Y, title="")
-  H1B_plot_list[[i]] <-  simul_plot$p
-  H1B_plot_data <-  rbind(H1B_plot_data, data.frame(Xvar=res$X, Yvar=res$Y, adj=0, simul_plot$pred))
+H1_plot_list <- NULL
+H1_plot_data <- NULL
+for(i in 1:nrow(H1_models)){
+  res <- data.frame(X=H1_models$X[i], Y=H1_models$Y[i])
+  simul_plot <- gam_simul_CI(H1_models$fit[i][[1]], H1_models$dat[i][[1]], xlab=res$X, ylab=res$Y, title="")
+  H1_plot_list[[i]] <-  simul_plot$p
+  H1_plot_data <-  rbind(H1_plot_data, data.frame(Xvar=res$X, Yvar=res$Y, adj=0, simul_plot$pred))
 }
 
 # correct p-value
-H1B_res <- H1B_res %>%  
+H1_res <- H1_res %>%  
   mutate(corrected.Pval=p.adjust(Pval, method="BH"))
 
 #Save models
-saveRDS(H1B_models, here("models/H1B_models.RDS"))
+saveRDS(H1_models, here("models/H1_models.RDS"))
 
 #Save results
-saveRDS(H1B_res, here("results/unadjusted/H1B_res.RDS"))
+saveRDS(H1_res, here("results/unadjusted/H1_res.RDS"))
 
 
 #Save plots
-#saveRDS(H1B_plot_list, here("figure-objects/H1B_unadj_splines.RDS"))
+#saveRDS(H1_plot_list, here("figure-objects/H1_unadj_splines.RDS"))
 
 #Save plot data
-saveRDS(H1B_plot_data, here("figure-data/H1B_unadj_spline_data.RDS"))
+saveRDS(H1_plot_data, here("figure-data/H1_unadj_spline_data.RDS"))
 
 # ----------------------------------------------------------------------
 #### Hypothesis 2 ####
