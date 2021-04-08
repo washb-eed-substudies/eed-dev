@@ -37,6 +37,11 @@ bg_mm <- read_dta('./bangladesh/washb-bangladesh-motormile-year1.dta') %>%
     childid = as.numeric(paste0(dataid, tchild)),
     clusterid = as.numeric(clusterid)
   )  %>% 
+  select(childid, dataid, month_mm = month,
+         agedays_motor = agedays, 
+         ends_with('supp'))
+
+bg_mm_totals <- bg_mm %>% 
   # pivot and group by to sum group
   pivot_longer(cols = ends_with('supp')) %>% 
   group_by(childid) %>% 
@@ -46,10 +51,14 @@ bg_mm <- read_dta('./bangladesh/washb-bangladesh-motormile-year1.dta') %>%
                       'stand_nosupp', 'walk_nosupp')) %>% 
   mutate(who_sub_total = sum(value, na.rm = TRUE)) %>% 
   select(childid, dataid, # agedays_motor from bg_dev
-         month_mm = month,
-         agedays_motor = agedays,
          who_sum_total, who_sub_total) %>% 
   slice(1) 
+
+bg_mm <- bg_mm %>%  
+  left_join(bg_mm_totals, 
+            by = c("childid", "dataid"))
+
+
 
 # label to overwrite existing
 labelled::var_label(bg_mm$who_sum_total) <- 'WHO motor milestones, total'

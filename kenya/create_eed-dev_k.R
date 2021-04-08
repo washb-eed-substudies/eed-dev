@@ -60,7 +60,8 @@ k_mm <- k_who_sub %>%
              by = 'childid') %>% 
   select(childid, month_mm,
          agedays_motor = aged_mm,
-         who_sum_total, who_sub_total)
+         who_sum_total, who_sub_total,
+         ends_with('supp'))
 
 labelled::var_label(k_mm$agedays_motor) <- 'childage at motor milestone, days'
 
