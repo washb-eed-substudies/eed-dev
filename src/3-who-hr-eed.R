@@ -195,3 +195,67 @@ saveRDS(H1b_who_adj_res, here("results/adjusted/H1b_who_adj_res.RDS"))
 #Save plot data
 #saveRDS(H1b_who_adj_plot_data, paste0(dropboxDir,"results/stress-growth-models/figure-data/H1b_who_adj_spline_data.RDS"))
 
+# ------------------------------------------------------------------------
+####### kenya hypotheses ####### 
+# ------------------------------------------------------------------------
+
+d <- readRDS('eed-dev_k.RDS')
+
+# Unadjusted Models
+
+#### Hypothesis 4 ####
+# eed t1 v. dev t2 (who)
+
+Xvars <- c('aat1', 'mpo1', 'neo1', 
+           'ln_Lact1', 'ln_Mann1')
+
+
+#Fit models
+H4_who_models <- NULL
+for(i in Xvars){
+  for(j in Yvars){
+    res_unadj <- fit_HR_GAM(d=d, X=i, Y=j, age = "agedays_motor", W=NULL)
+    res <- data.frame(X=i, Y=j, fit=I(list(res_unadj$fit)), dat=I(list(res_unadj$dat)))
+    H4_who_models <- bind_rows(H4_who_models, res)
+  }
+}
+
+#Get primary contrasts
+H4_who_res <- NULL
+for(i in 1:nrow(H4_who_models)){
+  res <- data.frame(X=H4_who_models$X[i], Y=H4_who_models$Y[i])
+  preds <- predict_gam_HR(fit=H4_who_models$fit[i][[1]], d=H4_who_models$dat[i][[1]], quantile_diff=c(0.25,0.75), Xvar=res$X, Yvar=res$Y)
+  H4_who_res <-  bind_rows(H4_who_res , preds$res)
+}
+
+#Make list of plots
+H4_who_plot_list <- NULL
+H4_who_plot_data <- NULL
+for(i in 1:nrow(H4_who_models)){
+  res <- data.frame(X=H4_who_models$X[i], Y=H4_who_models$Y[i])
+  simul_plot <- gam_simul_CI(H4_who_models$fit[i][[1]], H4_who_models$dat[i][[1]], xlab=res$X, ylab=res$Y, title="")
+  H4_who_plot_list[[i]] <-  simul_plot$p
+  H4_who_plot_data <-  rbind(H4_who_plot_data, data.frame(Xvar=res$X, Yvar=res$Y, adj=0, simul_plot$pred))
+}
+
+# correct p-value
+H4_who_res <- H4_who_res %>%  
+  mutate(corrected.Pval=p.adjust(Pval, method="BH"))
+
+#Save models
+saveRDS(H4_who_models, here("models/H4_who_models.RDS"))
+
+#Save results
+saveRDS(H4_who_res, here("results/unadjusted/H4_who_res.RDS"))
+
+
+#Save plots
+#saveRDS(H4_who_plot_list, here("figure-objects/H4_who_unadj_splines.RDS"))
+
+#Save plot data
+saveRDS(H4_who_plot_data, here("figure-data/H4_who_unadj_spline_data.RDS"))
+
+
+## Adjusted Models
+
+
