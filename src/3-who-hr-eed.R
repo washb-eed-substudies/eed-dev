@@ -258,4 +258,143 @@ saveRDS(H4_who_plot_data, here("figure-data/H4_who_unadj_spline_data.RDS"))
 
 ## Adjusted Models
 
+# ------------------------------------------------------------------------
+####### kenya hypotheses ####### 
+
+d <- readRDS('eed-dev_k.RDS')
+
+#Set list of adjustment variables
+#Make vectors of adjustment variable names
+Wvars<-c("sex","birthord", "momage","momheight","momedu", 
+         "HHS", "Nlt18","Ncomp", "water_time", 
+         "floor", 'roof', "hh_index", 
+         "tr",
+         
+         'laz_t1', 'waz_t1')
+
+Wvars[!(Wvars %in% colnames(d))]
+
+# ------------------------------------------------------------------------
+#### Hypothesis 4 ####
+# eed markers at t2 v. dev (who mm) at t2
+
+H4_W <- c(Wvars,
+          'laz_t1', 'waz_t1',
+          'aged1',	'agedays_motor', 
+          'month_mm')
+
+
+##########################
+# adjustment sets 33-35
+## exposure: fecal markers t1
+## outcome: who mm t2
+##########################
+
+Xvars <- c('aat1', 'mpo1', 'neo1')
+
+H4a_who_W <- c(H4_W, 'month_st1')
+H4a_who_W[!(H4a_who_W %in% colnames(d))]
+
+#Fit models
+H4a_who_adj_models <- NULL
+for(i in Xvars){
+  for(j in Yvars){
+    print(i)
+    print(j)
+    res_adj <- fit_HR_GAM(d=d, X=i, Y=j, age = "agedays_motor", W=H4a_who_W)
+    res <- data.frame(X=i, Y=j, fit=I(list(res_adj$fit)), dat=I(list(res_adj$dat)))
+    H4a_who_adj_models <- bind_rows(H4a_who_adj_models, res)
+  }
+}
+
+
+
+#Get primary contrasts
+H4a_who_adj_res <- NULL
+for(i in 1:nrow(H4a_who_adj_models)){
+  res <- data.frame(X=H4a_who_adj_models$X[i], Y=H4a_who_adj_models$Y[i])
+  preds <- predict_gam_HR(fit=H4a_who_adj_models$fit[i][[1]], d=H4a_who_adj_models$dat[i][[1]], quantile_diff=c(0.25,0.75), Xvar=res$X, Yvar=res$Y)
+  H4a_who_adj_res <-  bind_rows(H4a_who_adj_res , preds$res)
+}
+
+#Make list of plots
+H4a_who_adj_plot_list <- NULL
+H4a_who_adj_plot_data <- NULL
+for(i in 1:nrow(H4a_who_adj_models)){
+  res <- data.frame(X=H4a_who_adj_models$X[i], Y=H4a_who_adj_models$Y[i])
+  simul_plot <- gam_simul_CI(H4a_who_adj_models$fit[i][[1]], H4a_who_adj_models$dat[i][[1]], xlab=res$X, ylab=res$Y, title="")
+  H4a_who_adj_plot_list[[i]] <-  simul_plot$p
+  H4a_who_adj_plot_data <-  rbind(H4a_who_adj_plot_data, data.frame(Xvar=res$X, Yvar=res$Y, adj=0, simul_plot$pred %>% subset(., select = c(Y,X,id,fit,se.fit,uprP, lwrP,uprS,lwrS))))
+}
+
+
+#Save models
+#saveRDS(H4a_who_adj_models, paste0(dropboxDir,"results/stress-growth-models/models/H4a_who_adj_models.RDS"))
+
+#Save results
+saveRDS(H4a_who_adj_res, here("results/adjusted/H4a_who_adj_res.RDS"))
+
+
+#Save plots
+#saveRDS(H4a_who_adj_plot_list, paste0(dropboxDir,"results/stress-growth-models/figure-objects/H4a_who_adj_splines.RDS"))
+
+#Save plot data
+#saveRDS(H4a_who_adj_plot_data, paste0(dropboxDir,"results/stress-growth-models/figure-data/H4a_who_adj_spline_data.RDS"))
+
+##########################
+# adjustment sets 36-37
+## exposure: urine markers t1
+## outcome: who mm t2
+##########################
+
+Xvars <- c('ln_Lact1', 'ln_Mann1')
+
+H4b_who_W <- c(H4_W, 'month_ut1')
+H4b_who_W[!(H4b_who_W %in% colnames(d))]
+
+#Fit models
+H4b_who_adj_models <- NULL
+for(i in Xvars){
+  for(j in Yvars){
+    print(i)
+    print(j)
+    res_adj <- fit_HR_GAM(d=d, X=i, Y=j, age = "agedays_motor", W=H4b_who_W)
+    res <- data.frame(X=i, Y=j, fit=I(list(res_adj$fit)), dat=I(list(res_adj$dat)))
+    H4b_who_adj_models <- bind_rows(H4b_who_adj_models, res)
+  }
+}
+
+
+
+#Get primary contrasts
+H4b_who_adj_res <- NULL
+for(i in 1:nrow(H4b_who_adj_models)){
+  res <- data.frame(X=H4b_who_adj_models$X[i], Y=H4b_who_adj_models$Y[i])
+  preds <- predict_gam_HR(fit=H4b_who_adj_models$fit[i][[1]], d=H4b_who_adj_models$dat[i][[1]], quantile_diff=c(0.25,0.75), Xvar=res$X, Yvar=res$Y)
+  H4b_who_adj_res <-  bind_rows(H4b_who_adj_res , preds$res)
+}
+
+#Make list of plots
+H4b_who_adj_plot_list <- NULL
+H4b_who_adj_plot_data <- NULL
+for(i in 1:nrow(H4b_who_adj_models)){
+  res <- data.frame(X=H4b_who_adj_models$X[i], Y=H4b_who_adj_models$Y[i])
+  simul_plot <- gam_simul_CI(H4b_who_adj_models$fit[i][[1]], H4b_who_adj_models$dat[i][[1]], xlab=res$X, ylab=res$Y, title="")
+  H4b_who_adj_plot_list[[i]] <-  simul_plot$p
+  H4b_who_adj_plot_data <-  rbind(H4b_who_adj_plot_data, data.frame(Xvar=res$X, Yvar=res$Y, adj=0, simul_plot$pred %>% subset(., select = c(Y,X,id,fit,se.fit,uprP, lwrP,uprS,lwrS))))
+}
+
+
+#Save models
+#saveRDS(H4b_who_adj_models, paste0(dropboxDir,"results/stress-growth-models/models/H4b_who_adj_models.RDS"))
+
+#Save results
+saveRDS(H4b_who_adj_res, here("results/adjusted/H4b_who_adj_res.RDS"))
+
+
+#Save plots
+#saveRDS(H4b_who_adj_plot_list, paste0(dropboxDir,"results/stress-growth-models/figure-objects/H4b_who_adj_splines.RDS"))
+
+#Save plot data
+#saveRDS(H4b_who_adj_plot_data, paste0(dropboxDir,"results/stress-growth-models/figure-data/H4b_who_adj_spline_data.RDS"))
 
