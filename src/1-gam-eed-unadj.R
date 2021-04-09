@@ -98,9 +98,6 @@ for(i in 1:nrow(H1_models)){
   H1_plot_data <-  rbind(H1_plot_data, data.frame(Xvar=res$X, Yvar=res$Y, adj=0, simul_plot$pred))
 }
 
-# correct p-value
-H1_res <- H1_res %>%  
-  mutate(corrected.Pval=p.adjust(Pval, method="BH"))
 
 #Save models
 saveRDS(H1_models, here("models/H1_models.RDS"))
@@ -155,10 +152,6 @@ for(i in 1:nrow(H2_models)){
   H2_plot_data <-  rbind(H2_plot_data, data.frame(Xvar=res$X, Yvar=res$Y, adj=0, simul_plot$pred))
 }
 
-# correct p-value
-H2_res <- H2_res %>%  
-  mutate(corrected.Pval=p.adjust(Pval, method="BH"))
-
 #Save models
 saveRDS(H2_models, here("models/H2_models.RDS"))
 
@@ -209,10 +202,6 @@ for(i in 1:nrow(H3_models)){
   H3_plot_list[[i]] <-  simul_plot$p
   H3_plot_data <-  rbind(H3_plot_data, data.frame(Xvar=res$X, Yvar=res$Y, adj=0, simul_plot$pred))
 }
-
-# correct p-value
-H3_res <- H3_res %>%  
-  mutate(corrected.Pval=p.adjust(Pval, method="BH"))
 
 #Save models
 saveRDS(H3_models, here("models/H3_models.RDS"))
@@ -269,9 +258,6 @@ for(i in 1:nrow(H4_models)){
   H4_plot_data <-  rbind(H4_plot_data, data.frame(Xvar=res$X, Yvar=res$Y, adj=0, simul_plot$pred))
 }
 
-# correct p-value
-H4_res <- H4_res %>%  
-  mutate(corrected.Pval=p.adjust(Pval, method="BH"))
 
 #Save models
 saveRDS(H4_models, here("models/H4_models.RDS"))
@@ -325,9 +311,6 @@ for(i in 1:nrow(H5_models)){
   H5_plot_data <-  rbind(H5_plot_data, data.frame(Xvar=res$X, Yvar=res$Y, adj=0, simul_plot$pred))
 }
 
-# correct p-value
-H5_res <- H5_res %>%  
-  mutate(corrected.Pval=p.adjust(Pval, method="BH"))
 
 #Save models
 saveRDS(H5_models, here("models/H5_models.RDS"))

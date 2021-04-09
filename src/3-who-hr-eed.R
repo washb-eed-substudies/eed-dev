@@ -44,9 +44,6 @@ for(i in 1:nrow(H1_who_models)){
   H1_who_plot_data <-  rbind(H1_who_plot_data, data.frame(Xvar=res$X, Yvar=res$Y, adj=0, simul_plot$pred))
 }
 
-# correct p-value
-H1_who_res <- H1_who_res %>%  
-  mutate(corrected.Pval=p.adjust(Pval, method="BH"))
 #Save models
 saveRDS(H1_who_models, here("models/H1_who_models.RDS"))
 #Save results
@@ -237,10 +234,6 @@ for(i in 1:nrow(H4_who_models)){
   H4_who_plot_list[[i]] <-  simul_plot$p
   H4_who_plot_data <-  rbind(H4_who_plot_data, data.frame(Xvar=res$X, Yvar=res$Y, adj=0, simul_plot$pred))
 }
-
-# correct p-value
-H4_who_res <- H4_who_res %>%  
-  mutate(corrected.Pval=p.adjust(Pval, method="BH"))
 
 #Save models
 saveRDS(H4_who_models, here("models/H4_who_models.RDS"))

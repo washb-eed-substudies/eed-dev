@@ -578,7 +578,7 @@ saveRDS(H2e_adj_res, here("results/adjusted/H2e_adj_res.RDS"))
 ## outcome: easq t3
 ##########################
 
-Xvars <- c('lm_L_conc_t2', 'ln_M_conc_t2')           
+Xvars <- c('ln_L_conc_t2', 'ln_M_conc_t2')           
 Yvars <- c("z_age2mo_personal_all", "z_age2mo_motor_all", 
            "z_age2mo_combined_all", "z_age2mo_com_all")
 
@@ -1217,27 +1217,22 @@ for(hyp in paste0("H", 1:3)){
   print(str_subset(ls(), str_glue("^{hyp}.*res$")))
 }
 
-bind_rows(H1a_adj_res, H1b_adj_res, H1c_adj_res, H1d_adj_res) %>% 
-  mutate(corrected.Pval=p.adjust(Pval, method="BH")) %>% 
+bind_rows(H1a_adj_res, H1b_adj_res, H1c_adj_res, H1d_adj_res) %>%
   saveRDS("results/adjusted/H1_all_adj_res.RDS")
 
 bind_rows(H2a_adj_res, H2b_adj_res, H2c_adj_res, 
           H2d_adj_res, H2e_adj_res, H2f_adj_res,
           H2g_adj_res) %>%
-  mutate(corrected.Pval=p.adjust(Pval, method="BH")) %>% 
   saveRDS("results/adjusted/H2_all_adj_res.RDS")
 
 bind_rows(H3a_adj_res, H3b_adj_res) %>% 
-  mutate(corrected.Pval=p.adjust(Pval, method="BH")) %>% 
   saveRDS("results/adjusted/H3_all_adj_res.RDS")
 
-bind_rows(H4a_adj_res, H4b_adj_res) %>% 
-  mutate(corrected.Pval=p.adjust(Pval, method="BH")) %>% 
+bind_rows(H4a_adj_res, H4b_adj_res) %>%
   saveRDS("results/adjusted/H4_all_adj_res.RDS")
 
 bind_rows(H5a_adj_res, H5b_adj_res, H5c_adj_res, 
           H5d_adj_res) %>%
-  mutate(corrected.Pval=p.adjust(Pval, method="BH")) %>% 
   saveRDS("results/adjusted/H5_all_adj_res.RDS")
 
 
