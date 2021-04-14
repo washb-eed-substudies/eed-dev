@@ -3,6 +3,7 @@ rm(list=ls())
 source(here::here("0-config.R"))
 
 d <- readRDS('eed-dev_bg.RDS')
+d <- readRDS("C:/Users/andre/Dropbox/WASHB-EE-analysis/WBB-EE-analysis/Data/Cleaned/Andrew/eed-dev_bg.RDS")
 
 # to calculate missings for each 
 # exposure-outcome pair
