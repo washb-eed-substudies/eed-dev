@@ -138,7 +138,8 @@ factor.vars = c('sex', 'birthord', 'momedu', 'momheight', 'HHS', 'floor', 'roof'
 
 k_full <- k_full %>% 
   mutate(across(.cols = all_of(factor.vars), 
-                .fns = ~ as.factor(replace_na(as.character(.), 'missing')))) 
+                .fns = ~ as.factor(replace_na(as.character(.), 'missing'))),
+         tr = as.factor(tr))
   
 
 

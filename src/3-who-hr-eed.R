@@ -260,7 +260,7 @@ d <- readRDS('eed-dev_k.RDS')
 #Make vectors of adjustment variable names
 Wvars<-c("sex","birthord", "momage","momheight","momedu", 
          "HHS", "Nlt18","Ncomp", "water_time", 
-         "floor", 'roof', "hh_index", 
+         "hh_index", # "floor", 'roof', 
          "tr",
          
          'laz_t1', 'waz_t1')
@@ -272,7 +272,7 @@ Wvars[!(Wvars %in% colnames(d))]
 # eed markers at t2 v. dev (who mm) at t2
 
 H4_W <- c(Wvars,
-          'laz_t1', 'waz_t1',
+          # 'laz_t1', 'waz_t1',
           'aged1',	'agedays_motor', 
           'month_mm')
 
@@ -292,12 +292,20 @@ H4a_who_W[!(H4a_who_W %in% colnames(d))]
 H4a_who_adj_models <- NULL
 for(i in Xvars){
   for(j in Yvars){
-    print(i)
-    print(j)
-    res_adj <- fit_HR_GAM(d=d, X=i, Y=j, age = "agedays_motor", W=H4a_who_W)
-    res <- data.frame(X=i, Y=j, fit=I(list(res_adj$fit)), dat=I(list(res_adj$dat)))
-    H4a_who_adj_models <- bind_rows(H4a_who_adj_models, res)
+    for(w in Wvars){
+      print(i)
+      print(j)
+      print(w)
+      res_adj <- fit_HR_GAM(d=d, X=i, Y=j, age = "agedays_motor", W=w)
+      res <- data.frame(X=i, Y=j, fit=I(list(res_adj$fit)), dat=I(list(res_adj$dat)))
+      H4a_who_adj_models <- bind_rows(H4a_who_adj_models, res)
+    }
   }
+}
+
+for(var in H4a_who_W){
+  print(var)
+  print(class(d[[var]]))
 }
 
 
@@ -349,12 +357,16 @@ H4b_who_W[!(H4b_who_W %in% colnames(d))]
 H4b_who_adj_models <- NULL
 for(i in Xvars){
   for(j in Yvars){
-    print(i)
-    print(j)
+    print(c(i, j))
     res_adj <- fit_HR_GAM(d=d, X=i, Y=j, age = "agedays_motor", W=H4b_who_W)
     res <- data.frame(X=i, Y=j, fit=I(list(res_adj$fit)), dat=I(list(res_adj$dat)))
     H4b_who_adj_models <- bind_rows(H4b_who_adj_models, res)
   }
+}
+
+for(var in H4b_who_W){
+  print(var)
+  print(class(d[[var]]))
 }
 
 
