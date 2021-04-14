@@ -19,6 +19,28 @@ library(tableone)
 library(flextable)
 library(officer)
 library(here)
+
+# CoopG/tableone2flextable
+tableone2flextable <- function(tableone){
+  rows <- nrow(tableone)
+  cols <- ncol(tableone)
+  rowsXcols <- rows*cols
+  colnames <- colnames(tableone)
+  
+  listoflists <- list()
+  
+  for (i in 1:cols){
+    start <- (i*rows+1)-rows
+    end <- i*rows
+    
+    listoflists[[i]] <- tableone[start:end]
+  }
+  
+  dataframe <- as.data.frame(listoflists, col.names = colnames)
+  flex <- flextable::flextable(dataframe)
+  
+  return(flex)
+}
 ```
 
 # Import Data
@@ -95,6 +117,14 @@ tab1 <- CreateTableOne(vars = myVars, data = both, strata = 'country', test = FA
 print(tab1, nonnormal = myVars)
 ```
 
+```{r}
+print(tab1, nonnormal = myVars, quote = FALSE, noSpaces = TRUE, printToggle = FALSE) %>% 
+  write.csv(here('tables/tableone.csv'))
+
+table_1 <- read_csv(here('tables/tableone.csv'))
+```
+
+
 # Flextables
 
 ```{r}
@@ -103,9 +133,10 @@ keep_cols <- c('Outcome', 'Exposure', 't', 'n',
                        'Adjusted P-value', 'FDR Corrected P-value', 
                        'hyp')
 
-flex_format <- function(ft){
+flex_format <- function(ft, len_col_keys = 10){
   ft %>% 
-  hline(part="header", border=fp_border(color="black")) %>% 
+    bold(i = ~ str_detect(`Adjusted P-value`, "\\*") | str_detect(`FDR Corrected P-value`, "\\*")) %>% 
+    hline(part="header", border=fp_border(color="black")) %>% 
   hline_bottom(part="body", border=fp_border(color="black")) %>% 
   hline_top(part="header", border=fp_border(color="black")) %>% 
   # align(align = "center", part = "all") %>% 
@@ -113,7 +144,7 @@ flex_format <- function(ft){
   autofit(part = "all") %>% 
   fit_to_width(max_width=8) %>% 
   add_footer_row(top=F, 
-                values = "N, 25th Percentile, and 75th Percentile are from the adjusted analyses", length(keep_cols))
+                values = "N, 25th Percentile, and 75th Percentile are from the adjusted analyses", len_col_keys)
 }
 ```
 
@@ -121,7 +152,7 @@ flex_format <- function(ft){
 ## Bangladesh
 
 ```{r}
-flextable(bg_cdi, 
+bg_cdi_tab <- flextable(bg_cdi, 
           col_keys = keep_cols) %>% 
   flex_format() %>% 
   set_caption("Communicative Development Inventories (Bangladesh)", style = "Table Caption",
@@ -129,7 +160,7 @@ flextable(bg_cdi,
 ```
 
 ```{r}
-flextable(bg_who, 
+bg_who_tab <- flextable(bg_who, 
           col_keys = keep_cols) %>% 
   flex_format() %>% 
   set_caption("WHO Motor Milestones (Bangladesh)", style = "Table Caption",
@@ -139,7 +170,7 @@ flextable(bg_who,
 ## Kenya
 
 ```{r}
-flextable(k_who, 
+k_who_tab <- flextable(k_who, 
           col_keys = keep_cols) %>% 
   flex_format() %>% 
   set_caption("WHO Motor Milestones (Kenya)", style = "Table Caption",
@@ -148,7 +179,7 @@ flextable(k_who,
 
 
 ```{r}
-flextable(k_easq, 
+k_easq_tab <- flextable(k_easq, 
           col_keys = keep_cols) %>% 
   flex_format() %>% 
   set_caption("Extended Ages and Stages Questionnaire (Kenya)", style = "Table Caption",
@@ -157,18 +188,52 @@ flextable(k_easq,
 
 # Full Tables
 ```{r}
-flextable(bg_tables, 
-          col_keys = keep_cols) %>% 
-  flex_format() %>% 
+bg_tables_tab <- flextable(bg_tables, 
+          col_keys = c("Outcome Domain", keep_cols)) %>% 
+  flex_format(11) %>% 
   set_caption("Bangladesh Analyses", style = "Table Caption",
               autonum = run_autonum())
 ```
 
 ```{r}
-flextable(k_tables, 
-          col_keys = keep_cols) %>% 
-  flex_format() %>% 
+k_tables_tab <- flextable(k_tables, 
+          col_keys = c("Outcome Domain", keep_cols)) %>% 
+  flex_format(11) %>% 
   set_caption("Kenya Analyses", style = "Table Caption",
               autonum = run_autonum())
+```
+
+Export to Word
+
+```{r}
+table_1_ft <- table_1 %>% 
+  flextable() %>% 
+  hline(part="header", border=fp_border(color="black")) %>% 
+  hline_bottom(part="body", border=fp_border(color="black")) %>% 
+  hline_top(part="header", border=fp_border(color="black")) %>% 
+  # align(align = "center", part = "all") %>% 
+  # align(j = c(1, 2), align = "left", part="all") %>% 
+  autofit(part = "all") %>% 
+  fit_to_width(max_width=8) %>% 
+  set_caption("", style = "Table Caption",
+              autonum = run_autonum())
+```
+
+
+```{r}
+save_as_docx(table_1_ft, 
+             bg_cdi_tab, bg_tables, bg_tables_tab, bg_who_tab,
+             k_easq_tab, k_tables, k_tables_tab, k_who_tab, 
+             
+             
+             path = here::here('tables/eed-dev-tables.docx'), 
+             pr_section = prop_section(
+               page_size = page_size(orient = 'landscape'), 
+               page_margins = page_mar(bottom = 1, 
+                                       top = 1, 
+                                       right = 0.25, 
+                                       left = 0.25), 
+               type = 'nextPage'
+             ) )
 ```
 
