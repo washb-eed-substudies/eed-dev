@@ -11,7 +11,7 @@ k_stool <- read_csv('./kenya/washb-kenya-eed-stool.csv')
 
 k_stool <- k_stool %>% 
   select(childid, hhid, clusterid,
-         setdiff(colnames(k_stool), colnames(k_urine)))
+         setdiff(colnames(k_stool), colnames(k_urine))) 
 
 k_eed <- k_urine %>% 
   full_join(k_stool, 
@@ -23,12 +23,11 @@ k_eed <- k_urine %>%
          month_ut1 = month(parse_date(urine_bl_date, format = '%m/%d/%y')), 
          month_st2 = month(parse_date(stool_ml_date, format = '%m/%d/%y')), 
          month_ut2 = month(parse_date(urine_ml_date, format = '%m/%d/%y')), 
-         ln_Lact1 = log(Lact1), 
-         ln_Lact2 = log(Lact2), 
-         ln_Lact3 = log(Lact3), 
-         ln_Mann1 = log(Mann1), 
-         ln_Mann2 = log(Mann2), 
-         ln_Mann3 = log(Mann3))
+         ln_Lact1 = log(Lact1), ln_Lact2 = log(Lact2),  ln_Lact3 = log(Lact3), 
+         ln_Mann1 = log(Mann1), ln_Mann2 = log(Mann2), ln_Mann3 = log(Mann3),
+         ln_aat1 = log(aat1), ln_aat2 = log(aat2),
+         ln_mpo1 = log(mpo1), ln_mpo2 = log(mpo2), 
+         ln_neo1 = log(neo1), ln_neo2 = log(neo2))
 
 # outcomes
 # year 1

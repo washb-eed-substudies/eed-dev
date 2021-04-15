@@ -23,9 +23,9 @@ exp_rename <- tribble(
   'aat',   'alpha-1 antitrypsin', 'fecal',
   'mpo',   'myeloperoxidase',      'fecal', 
   'neo',   'neopterin',            'fecal', 
-  'ln_L_conc_t', 'lactulose concentration', 'urine', 
-  'ln_M_conc_t', 'mannitol concentration', 'urine',
-  'reg1b', 'regenerating gene 1-beta', 'fecal'
+  'L_conc_t', 'lactulose concentration', 'urine', 
+  'M_conc_t', 'mannitol concentration', 'urine',
+  'reg', 'regenerating gene 1-beta', 'fecal'
 )
 
 # create df of outcome names
@@ -61,6 +61,7 @@ all_h1 <- h1_adj %>%
             suffix = c('_adj', '_unadj')) %>% 
   mutate(t = str_extract(X, '[0-9]'),
          X = str_remove(X, '[0-9]'), 
+         X = str_remove(X, 'ln_'), 
          Y = case_when(str_detect(Y, 'com_no4') ~ 'com_no4',
                        str_detect(Y, 'cdi_und') ~ 'cdi_und',
                        str_detect(Y, 'cdi_say') ~ 'cdi_say',
@@ -144,7 +145,7 @@ print(xtable(h1_cdi), type="html", file=here("tables/eed-dev_h1-cdi.html"))
 ```{r h2_setup, include = F}
 # read in data
 h2_adj <- readRDS(here('results/adjusted/H2_all_adj_res.RDS')) %>% 
-  mutate_if(is.numeric, round, 5)
+  mutate_if(is.numeric, round, 2)
 h2_unadj <- readRDS(here('results/unadjusted/H2_res.RDS'))%>% 
   mutate_if(is.numeric, round, 2)
 
@@ -155,6 +156,7 @@ all_h2 <- h2_adj %>%
             suffix = c('_adj', '_unadj')) %>% 
   mutate(t = str_extract(X, '[0-9]'),
          X = str_remove(X, '[0-9]'), 
+         X = str_remove(X, 'ln_'), 
          Y = case_when(str_detect(Y, 'com_no4') ~ 'com_no4',
                        str_detect(Y, 'cdi_und') ~ 'cdi_und',
                        str_detect(Y, 'cdi_say') ~ 'cdi_say',
@@ -252,6 +254,7 @@ all_h3 <- h3_adj %>%
             suffix = c('_adj', '_unadj')) %>% 
   mutate(t = str_sub(X, start = nchar(X)),
          X = str_sub(X, end = nchar(X)-1), 
+         X = str_remove(X, 'ln_'), 
          Y = case_when(str_detect(Y, 'com_no4') ~ 'com_no4',
                        str_detect(Y, 'cdi_und') ~ 'cdi_und',
                        str_detect(Y, 'cdi_say') ~ 'cdi_say',

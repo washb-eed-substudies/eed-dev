@@ -1,5 +1,5 @@
-"","Outcome Domain","Outcome","Exposure","t","n","Q1 mean","Q3 mean","Unadjusted Difference (95% CI)","Unadjusted P-value","Adjusted Difference (95% CI)","Adjusted P-value","FDR Corrected P-value"
-"1","Extended Ages and Stages Questionnaire","Combined","regenerating gene 1-beta","2",860,101.8,234.69,"-0.01(-0.06,0.03)",0.51,"-0.01(-0.07,0.05)",0.78,0.96
-"2",NA,"Combined","regenerating gene 1-beta","2",860,101.8,234.69,"-0.01(-0.04,0.03)",0.79,"0.02(-0.03,0.08)",0.43,0.96
-"3",NA,"Gross Motor Score","regenerating gene 1-beta","2",855,101.68,234.33,"0.02(-0.07,0.12)",0.65,"-0.01(-0.12,0.09)",0.8,0.96
-"4",NA,"Personal Social Score","regenerating gene 1-beta","2",860,101.8,234.69,"-0.01(-0.05,0.04)",0.79,"0(-0.06,0.06)",0.97,0.97
+"","Outcome Domain","Outcome","Exposure","t","n","Q1 mean","Q3 mean","Unadjusted Difference (95% CI)","Unadjusted P-value","Adjusted Difference (95% CI)","Adjusted P-value"
+"1","Extended Ages and Stages Questionnaire","Combined","regenerating gene 1-beta","2",860,4.62,5.46,"NA(NA,NA)",NA,"-0.02(-0.08,0.03)",0.41
+"2",NA,"Combined","regenerating gene 1-beta","2",860,4.62,5.46,"NA(NA,NA)",NA,"0(-0.05,0.05)",0.98
+"3",NA,"Gross Motor Score","regenerating gene 1-beta","2",855,4.62,5.46,"NA(NA,NA)",NA,"-0.03(-0.09,0.04)",0.43
+"4",NA,"Personal Social Score","regenerating gene 1-beta","2",860,4.62,5.46,"NA(NA,NA)",NA,"-0.03(-0.09,0.03)",0.38

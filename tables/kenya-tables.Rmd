@@ -23,9 +23,9 @@ exp_rename <- tribble(
   'aat',   'alpha-1 antitrypsin', 'fecal',
   'mpo',   'myeloperoxidase',      'fecal', 
   'neo',   'neopterin',            'fecal', 
-  'ln_Lact', 'lactulose concentration', 'urine', 
-  'ln_Mann', 'mannitol concentration', 'urine',
-  'reg1b', 'regenerating gene 1-beta', 'fecal'
+  'Lact', 'lactulose concentration', 'urine', 
+  'Mann', 'mannitol concentration', 'urine',
+  'reg', 'regenerating gene 1-beta', 'fecal'
 )
 
 # create df of outcome names
@@ -61,6 +61,7 @@ all_h4 <- h4_adj %>%
             suffix = c('_adj', '_unadj')) %>% 
   mutate(t = str_extract(X, '[0-9]'),
          X = str_remove(X, '[0-9]'), 
+         X = str_remove(X, 'ln_'), 
          Y = case_when(str_detect(Y, 'comtotz') ~ 'communication',
                        str_detect(Y, 'mottotz') ~ 'motor',
                        str_detect(Y, 'pstotz') ~ 'personal',
@@ -126,9 +127,9 @@ print(xtable(h4_who), type="html", file=here("tables/eed-dev_h4-who.html"))
 ```{r h5_setup, include = F}
 # read in data
 h5_adj <- readRDS(here('results/adjusted/h5_all_adj_res.RDS')) %>% 
-  mutate_if(is.numeric, round, 4)
+  mutate_if(is.numeric, round, 2)
 h5_unadj <- readRDS(here('results/unadjusted/h5_res.RDS'))%>% 
-  mutate_if(is.numeric, round, 5)
+  mutate_if(is.numeric, round, 2)
 
 
 all_h5 <- h5_adj %>% 
@@ -137,6 +138,7 @@ all_h5 <- h5_adj %>%
             suffix = c('_adj', '_unadj')) %>% 
   mutate(t = str_extract(X, '[0-9]'),
          X = str_remove(X, '[0-9]'), 
+         X = str_remove(X, 'ln_'), 
          Y = case_when(str_detect(Y, 'comtotz') ~ 'communication',
                        str_detect(Y, 'mottotz') ~ 'motor',
                        str_detect(Y, 'pstotz') ~ 'personal',

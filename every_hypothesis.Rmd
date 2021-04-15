@@ -29,7 +29,9 @@ k_tables <- readRDS('tables/all_kenya_tables.RDS')
 every_hyp <- bind_rows(
   bg_tables, 
   k_tables
-) 
+) %>% 
+  group_by(hyp) %>% 
+  mutate(`FDR Corrected P-value` = p.adjust(`Adjusted P-value`, "BH"))
 
 
 every_hyp %>% 

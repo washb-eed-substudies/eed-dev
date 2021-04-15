@@ -29,7 +29,7 @@ H1_W <- c(Wvars)
 ## outcome: who mm
 ##########################
 
-Xvars <- c('aat1', 'mpo1', 'neo1')           
+Xvars <- c('ln_aat1', 'ln_mpo1', 'ln_neo1')           
 Yvars <- c('who_sum_total', 'who_sub_total')
 
 H1a_W <- c(H1_W, 'ageday_st1', 'agedays_motor', 
@@ -148,7 +148,7 @@ saveRDS(H1b_adj_res, here("results/adjusted/H1b_adj_res.RDS"))
 ## outcome: cdi2
 ##########################
 
-Xvars <- c('aat1', 'mpo1', 'neo1')           
+Xvars <- c('ln_aat1', 'ln_mpo1', 'ln_neo1')           
 Yvars <- c('z_age2mo_cdi_undyr1_all_no4', 
            'z_age2mo_cdi_sayyr1_all_no4')
 
@@ -277,7 +277,7 @@ H2_W <- c(Wvars, 'laz_t2', 'waz_t2',
 ## outcome: easq t3
 ##########################
 
-Xvars <- c('aat1', 'mpo1', 'neo1')           
+Xvars <- c('ln_aat1', 'ln_mpo1', 'ln_neo1')           
 Yvars <- c("z_age2mo_personal_all", "z_age2mo_motor_all", 
            "z_age2mo_combined_all", "z_age2mo_com_all")
 
@@ -398,7 +398,7 @@ saveRDS(H2b_adj_res, here("results/adjusted/H2b_adj_res.RDS"))
 ## outcome: cdi t3
 ##########################
 
-Xvars <- c('aat1', 'mpo1', 'neo1')           
+Xvars <- c('ln_aat1', 'ln_mpo1', 'ln_neo1')           
 Yvars <- c("z_age2mo_cdi_undyr2_all_no4", "z_age2mo_cdi_sayyr2_all_no4")
 
 H2c_W <- c(H2_W, 'ageday_st1', 'agedays_cdi3',
@@ -518,7 +518,7 @@ saveRDS(H2d_adj_res, here("results/adjusted/H2d_adj_res.RDS"))
 ## outcome: easq t3
 ##########################
 
-Xvars <- c('aat2', 'mpo2', 'neo2')           
+Xvars <- c('ln_aat2', 'ln_mpo2', 'ln_neo2')           
 Yvars <- c("z_age2mo_personal_all", "z_age2mo_motor_all", 
            "z_age2mo_combined_all", "z_age2mo_com_all")
 
@@ -639,7 +639,7 @@ saveRDS(H2f_adj_res, here("results/adjusted/H2f_adj_res.RDS"))
 ## outcome: cdi t3
 ##########################
 
-Xvars <- c('aat2', 'mpo2', 'neo2')           
+Xvars <- c('ln_aat2', 'ln_mpo2', 'ln_neo2')           
 Yvars <- c("z_age2mo_cdi_undyr2_all_no4", "z_age2mo_cdi_sayyr2_all_no4")
 
 H2g_W <- c(H2_W, 'ageday_st2', 'agedays_cdi3',
@@ -692,6 +692,65 @@ saveRDS(H2g_adj_res, here("results/adjusted/H2g_adj_res.RDS"))
 #Save plot data
 #saveRDS(H2g_adj_plot_data, paste0(dropboxDir,"results/stress-growth-models/figure-data/H2g_adj_spline_data.RDS"))
 
+##########################
+# adjustment sets 29-30
+## exposure: urine markers t2
+## outcome: cdi t3
+##########################
+
+Xvars <- c('ln_L_conc_t2', 'ln_M_conc_t2')           
+Yvars <- c("z_age2mo_cdi_undyr2_all_no4", "z_age2mo_cdi_sayyr2_all_no4")
+
+H2h_W <- c(H2_W, 'ageday_ut2', 'agedays_cdi3',
+           'month_ut2', 'month_cdi3')
+H2h_W[!(H2h_W %in% colnames(d))]
+
+#Fit models
+H2h_adj_models <- NULL
+for(i in Xvars){
+  for(j in Yvars){
+    print(i)
+    print(j)
+    res_adj <- fit_RE_gam(d=d, X=i, Y=j,  W=H2h_W)
+    res <- data.frame(X=i, Y=j, fit=I(list(res_adj$fit)), dat=I(list(res_adj$dat)))
+    H2h_adj_models <- bind_rows(H2h_adj_models, res)
+  }
+}
+
+
+
+#Get primary contrasts
+H2h_adj_res <- NULL
+for(i in 1:nrow(H2h_adj_models)){
+  res <- data.frame(X=H2h_adj_models$X[i], Y=H2h_adj_models$Y[i])
+  preds <- predict_gam_diff(fit=H2h_adj_models$fit[i][[1]], d=H2h_adj_models$dat[i][[1]], quantile_diff=c(0.25,0.75), Xvar=res$X, Yvar=res$Y)
+  H2h_adj_res <-  bind_rows(H2h_adj_res , preds$res)
+}
+
+#Make list of plots
+H2h_adj_plot_list <- NULL
+H2h_adj_plot_data <- NULL
+for(i in 1:nrow(H2h_adj_models)){
+  res <- data.frame(X=H2h_adj_models$X[i], Y=H2h_adj_models$Y[i])
+  simul_plot <- gam_simul_CI(H2h_adj_models$fit[i][[1]], H2h_adj_models$dat[i][[1]], xlab=res$X, ylab=res$Y, title="")
+  H2h_adj_plot_list[[i]] <-  simul_plot$p
+  H2h_adj_plot_data <-  rbind(H2h_adj_plot_data, data.frame(Xvar=res$X, Yvar=res$Y, adj=0, simul_plot$pred %>% subset(., select = c(Y,X,id,fit,se.fit,uprP, lwrP,uprS,lwrS))))
+}
+
+
+#Save models
+#saveRDS(H2h_adj_models, paste0(dropboxDir,"results/stress-growth-models/models/H2h_adj_models.RDS"))
+
+#Save results
+saveRDS(H2h_adj_res, here("results/adjusted/H2h_adj_res.RDS"))
+
+
+#Save plots
+#saveRDS(H2h_adj_plot_list, paste0(dropboxDir,"results/stress-growth-models/figure-objects/H2h_adj_splines.RDS"))
+
+#Save plot data
+#saveRDS(H2h_adj_plot_data, paste0(dropboxDir,"results/stress-growth-models/figure-data/H2h_adj_spline_data.RDS"))
+
 
 # --------------------------------------------------------------------------
 #### Hypothesis 3 ####
@@ -707,7 +766,7 @@ H3_W <- c(Wvars, 'laz_t2', 'waz_t2',
 ## outcome: easq t3
 ##########################
 
-Xvars <- c('reg1b2')           
+Xvars <- c('ln_reg2')           
 Yvars <- c("z_age2mo_personal_all", "z_age2mo_motor_all", 
             "z_age2mo_combined_all", "z_age2mo_com_all")
 
@@ -767,7 +826,7 @@ saveRDS(H3a_adj_res, here("results/adjusted/H3a_adj_res.RDS"))
 ## outcome: cdi t3
 ##########################
 
-Xvars <- c('reg1b2')           
+Xvars <- c('ln_reg2')           
 Yvars <- c("z_age2mo_cdi_undyr2_all_no4", "z_age2mo_cdi_sayyr2_all_no4")
 
 H3b_W <- c(H3_W, 'ageday_st2', 'agedays_cdi3',
@@ -831,9 +890,7 @@ d <- readRDS('eed-dev_k.RDS')
 Wvars<-c("sex","birthord", "momage","momheight","momedu", 
          "HHS", "Nlt18","Ncomp", "water_time", 
          "floor", 'roof', "hh_index", 
-         "tr",
-         
-         'laz_t1', 'waz_t1')
+         "tr")
 
 Wvars[!(Wvars %in% colnames(d))]
 
@@ -854,7 +911,7 @@ H4_W <- c(Wvars,
 ## outcome: who mm t2
 ##########################
 
-Xvars <- c('aat1', 'mpo1', 'neo1')           
+Xvars <- c('ln_aat1', 'ln_mpo1', 'ln_neo1')           
 Yvars <- c("who_sub_total", "who_sum_total")
 
 H4a_W <- c(H4_W, 'month_st1')
@@ -981,7 +1038,7 @@ H5_W <- c(Wvars,
 ## outcome: easq t2
 ##########################
 
-Xvars <- c('aat1', 'mpo1', 'neo1')           
+Xvars <- c('ln_aat1', 'ln_mpo1', 'ln_neo1')           
 Yvars <- c("comtotz", "mottotz", "pstotz", "globaltotz")
 
 H5a_W <- c(H5_W, 'aged1', 'month_st1')
@@ -1098,7 +1155,7 @@ saveRDS(H5b_adj_res, here("results/adjusted/H5b_adj_res.RDS"))
 ## outcome: easq t3
 ##########################
 
-Xvars <- c('aat1', 'mpo1', 'neo1')           
+Xvars <- c('ln_aat1', 'ln_mpo1', 'ln_neo1')           
 Yvars <- c("comtotz", "mottotz", "pstotz", "globaltotz")
 
 H5c_W <- c(H5_W, 'aged2', 'month_st2')
@@ -1222,7 +1279,7 @@ bind_rows(H1a_adj_res, H1b_adj_res, H1c_adj_res, H1d_adj_res) %>%
 
 bind_rows(H2a_adj_res, H2b_adj_res, H2c_adj_res, 
           H2d_adj_res, H2e_adj_res, H2f_adj_res,
-          H2g_adj_res) %>%
+          H2g_adj_res, H2h_adj_res) %>%
   saveRDS("results/adjusted/H2_all_adj_res.RDS")
 
 bind_rows(H3a_adj_res, H3b_adj_res) %>% 

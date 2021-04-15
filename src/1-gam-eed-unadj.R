@@ -3,7 +3,7 @@ rm(list=ls())
 source(here::here("0-config.R"))
 
 d <- readRDS('eed-dev_bg.RDS')
-d <- readRDS("C:/Users/andre/Dropbox/WASHB-EE-analysis/WBB-EE-analysis/Data/Cleaned/Andrew/eed-dev_bg.RDS")
+# d <- readRDS("C:/Users/andre/Dropbox/WASHB-EE-analysis/WBB-EE-analysis/Data/Cleaned/Andrew/eed-dev_bg.RDS")
 
 # to calculate missings for each 
 # exposure-outcome pair
@@ -60,7 +60,7 @@ paired_missing <- function(Xvars = Xvars, Yvars = Yvars){
 
 #### Hypothesis 1 ####
 # eed markers at t1 v. dev (who, cdi2) at t2
-Xvars <- c('aat1', 'mpo1', 'neo1', 
+Xvars <- c('ln_aat1', 'ln_mpo1', 'ln_neo1', 
            'ln_L_conc_t1', 'ln_M_conc_t1')            
 Yvars <- c('who_sum_total', 'who_sub_total',
            'z_age2mo_cdi_undyr1_all_no4', 
@@ -116,10 +116,10 @@ saveRDS(H1_plot_data, here("figure-data/H1_unadj_spline_data.RDS"))
 # ----------------------------------------------------------------------
 #### Hypothesis 2 ####
 # eed markers at t1/t2 v. dev (cdi3, easq) at t3
-Xvars <- c('aat1', 'mpo1', 'neo1', 
+Xvars <- c('ln_aat1', 'ln_mpo1', 'ln_neo1', 
            'ln_L_conc_t1', 'ln_M_conc_t1',
-           'aat2', 'mpo2', 'neo2', 
-           'L_conc_t2', 'M_conc_t2')            
+           'ln_aat2', 'ln_mpo2', 'ln_neo2', 
+           'ln_L_conc_t2', 'ln_M_conc_t2')            
 Yvars <- c("z_age2mo_personal_all", "z_age2mo_motor_all", "z_age2mo_combined_all", "z_age2mo_com_all", 
            "z_age2mo_cdi_undyr2_all_no4", "z_age2mo_cdi_sayyr2_all_no4") 
 
@@ -226,7 +226,7 @@ d <- readRDS('eed-dev_k.RDS')
 #### Hypothesis 4 ####
 # eed t1 v. dev t2 (who)
 
-Xvars <- c('aat1', 'mpo1', 'neo1', 
+Xvars <- c('ln_aat1', 'ln_mpo1', 'ln_neo1', 
            'ln_Lact1', 'ln_Mann1')            
 Yvars <- c('who_sum_total', 'who_sub_total')
 
@@ -277,9 +277,9 @@ saveRDS(H4_plot_data, here("figure-data/H4_unadj_spline_data.RDS"))
 #### Hypothesis 5 ####
 # eed t1/t2 v. dev t3 (easq)
 
-Xvars <- c('aat1', 'mpo1', 'neo1', 
+Xvars <- c('ln_aat1', 'ln_mpo1', 'ln_neo1', 
            'ln_Lact1', 'ln_Mann1',
-           'aat2', 'mpo2', 'neo2', 
+           'ln_aat2', 'ln_mpo2', 'ln_neo2', 
            'ln_Lact2', 'ln_Mann2')            
 Yvars <- c('comtotz', 'mottotz', 'pstotz', 'globaltotz')
 
