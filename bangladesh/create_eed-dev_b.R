@@ -1,6 +1,7 @@
 library(haven)
 library(tidyverse)
 library(lubridate)
+library(here)
 
 rm(list = ls())
 
@@ -25,12 +26,17 @@ bg_eed <- read_csv('./bangladesh/bangladesh-dm-ee-ee-growth-stool-urine-lab-cova
          -contains('velocity'))
 
 
+bg_eed$pss_mom_quant <- cut(bg_eed$pss_sum_mom_t3, 
+                            breaks = quantile(bg_eed$pss_sum_mom_t3, probs = seq(0, 1, 0.25), 
+                                              na.rm = TRUE), 
+                            labels = FALSE)
+
 # outcomes
 # year 1
 
 # WHO motor milestones
 # aggregate scores (total and subset)
-bg_mm <- read_dta('./bangladesh/washb-bangladesh-motormile-year1.dta') %>%
+bg_mm <- read_dta(here('bangladesh/washb-bangladesh-motormile-year1.dta')) %>%
   mutate(
     dataid = as.numeric(dataid),
     tchild = as.numeric(tchild),
@@ -64,69 +70,27 @@ bg_mm <- bg_mm %>%
 labelled::var_label(bg_mm$who_sum_total) <- 'WHO motor milestones, total'
 labelled::var_label(bg_mm$who_sub_total) <- 'WHO motor milestones,  sum of 2, 4, 5, 6'
 
-# cdi1 
-bg_cdi2 <- read_dta('./bangladesh/washb_cdiyr1_std_17jan2021.dta', 
-                    col_select = c(tchild, 
-                                   ends_with('id'), 
-                                   ends_with('_no4'),
-                                   agedays, month) ) %>%
-  mutate(
-    dataid = as.numeric(dataid),
-    tchild = as.numeric(tchild),
-    childid = as.numeric(paste0(dataid, tchild)),
-    clusterid = as.numeric(clusterid)
-  ) %>% 
-  select(-c(dataid, tchild, clusterid)) %>% 
-  rename(month_cdi2 = month,
-         agedays_cdi2 = agedays)
+# restandardized ecd from helen
+bg_easq <- read_dta("bangladesh/wash-b_easq_std_5mar2021.dta", 
+                   col_select = c(dataid, tchild, matches("z_.*_no4", perl = TRUE), 
+                                  agedays, month)) %>% 
+  rename(agedays_easq = agedays, month_easq = month)
+bg_cdi2 <- read_dta("bangladesh/washb_cdiyr1_std_5mar2021.dta",
+                    col_select = c(dataid, tchild, matches("z_.*_no4", perl = TRUE), 
+                                   agedays, month)) %>% 
+  rename(agedays_cdi2 = agedays, month_cdi2 = month)
+bg_cdi3 <- read_dta("bangladesh/washb_cdiyr2_std_5mar2021.dta",
+                    col_select = c(dataid, tchild, matches("z_.*_no4", perl = TRUE), 
+                                   agedays, month)) %>% 
+  rename(agedays_cdi3 = agedays, month_cdi3 = month)
 
-# year 2
-
-# # from sophia 
-# # CDI Y2 and EASQ 
-# # Z scores
-bg_dev <- readRDS('bangladesh/bangladesh-development.RDS') %>%
-  select(childid, starts_with('fci'))
-
-# from helen
-# cdi3, easq
-
-bg_cdi3 <- read_dta('bangladesh/washb_cdiyr2_std_17jan2021.dta', 
-                    col_select = c(tchild, 
-                                   ends_with('id'), 
-                                   ends_with('_no4'),
-                                   agedays, month) ) %>%
-  mutate(
-    dataid = as.numeric(dataid),
-    tchild = as.numeric(tchild),
-    childid = as.numeric(paste0(dataid, tchild)),
-    clusterid = as.numeric(clusterid)
-  ) %>% 
-  select(-c(dataid, tchild, clusterid),
-         agedays_cdi3 = agedays,
-         month_cdi3 = month)
-
-bg_easq <- read_dta('bangladesh/washb_easq_std_22dec2020.dta', 
-                    col_select = c(tchild, 
-                                   ends_with('id'), 
-                                   starts_with('z_'), 
-                                   agedays, 
-                                   month)) %>%
-  mutate(
-    dataid = as.numeric(dataid),
-    tchild = as.numeric(tchild),
-    childid = as.numeric(paste0(dataid, tchild)),
-    clusterid = as.numeric(clusterid)
-  ) %>% 
-  select(-c(dataid, tchild, clusterid)) %>% 
-  rename(agedays_easq = agedays,
-         month_easq = month)
-
-bg_dev <- bg_dev %>% 
-  left_join(bg_cdi3, 
-            by = 'childid') %>% 
-  left_join(bg_easq, 
-            by = 'childid')
+bg_dev <- bg_cdi2 %>% 
+  full_join(bg_cdi3, 
+            by = c("dataid", "tchild")) %>% 
+  full_join(bg_easq, 
+            by = c("dataid", "tchild")) %>% 
+  mutate(childid = as.numeric(str_c(dataid, tchild))) %>% 
+  select(-dataid)
 
 
 # bg_cdi2 <- read_dta('./bangladesh/washb-bangladesh-cdi-year2.dta') %>%
@@ -162,8 +126,6 @@ bg_dev_full <- bg_eed %>%
   left_join(bg_mm, 
             by = c('childid', 
                    'dataid')) %>% 
-  left_join(bg_cdi2, 
-            by = 'childid') %>% 
   left_join(bg_dev, 
             by = 'childid') %>% 
   left_join(bg_hhwealth, 
@@ -175,6 +137,7 @@ bg_dev_full <- bg_dev_full %>%
   mutate(birthord = case_when(birthord == 1 ~ 'first', 
                               birthord >= 2 ~ 'second or greater', 
                               TRUE ~ 'missing'),
+         momheight_raw = momheight,
          momheight = scale(momheight, center = TRUE, scale = TRUE),
          momheight = cut(momheight, 
                          c(min(momheight, na.rm = T), -2, -1, 0, 1, 2, max(momheight, na.rm = T)),

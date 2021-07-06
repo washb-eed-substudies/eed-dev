@@ -60,14 +60,18 @@ k_mm <- k_who_sub %>%
   select(childid, month_mm,
          agedays_motor = aged_mm,
          who_sum_total, who_sub_total,
-         ends_with('supp'))
+         ends_with('supp'), 
+         nulliparous) # not in other datasets
 
 labelled::var_label(k_mm$agedays_motor) <- 'childage at motor milestone, days'
 
 # year 2
-k_easq <- read_dta('./kenya/washk_development_allkids_CA_20171121.dta') %>% 
-  select(-c('sex', 'roof', 'Ncomp', 'floor')) %>% 
-  rename(month_easq = month) 
+k_easq <- read_dta('./kenya/kenya_easq_no4_14april2021.dta', 
+                   col_select = c(childid, childage_dev, matches("z_.*_no4_activec", perl = TRUE), -starts_with("z_cat"))) %>% 
+  left_join(read_dta('kenya/washk_development_allkids_CA_20171121.dta',
+                     col_select = c(childid, month_easq = month)), 
+            by = "childid")
+  
 
 # ----
 # covariates
@@ -125,6 +129,7 @@ k_full <- k_full %>%
                               is.na(nulliparous) ~ 'missing'), # has given birth before -> second or greater
          HHS = case_when(between(HHS, 1, 3) ~ as.character(HHS), 
                          TRUE ~ 'missing'),
+         momheight_raw = momheight, 
          momheight = scale(momheight, center = TRUE, scale = TRUE),
          momheight = cut(momheight, 
                          c(min(momheight, na.rm = T), -2, -1, 0, 1, 2, max(momheight, na.rm = T)),
@@ -138,7 +143,8 @@ factor.vars = c('sex', 'birthord', 'momedu', 'momheight', 'HHS', 'floor', 'roof'
 k_full <- k_full %>% 
   mutate(across(.cols = all_of(factor.vars), 
                 .fns = ~ as.factor(replace_na(as.character(.), 'missing'))),
-         tr = as.factor(tr))
+         tr = as.factor(tr)) %>% 
+  rename(water_time = dminwat)
   
 
 
