@@ -69,7 +69,8 @@ labelled::var_label(k_mm$agedays_motor) <- 'childage at motor milestone, days'
 k_easq <- read_dta('./kenya/kenya_easq_no4_14april2021.dta', 
                    col_select = c(childid, childage_dev, matches("z_.*_no4_activec", perl = TRUE), -starts_with("z_cat"))) %>% 
   left_join(read_dta('kenya/washk_development_allkids_CA_20171121.dta',
-                     col_select = c(childid, month_easq = month)), 
+                     col_select = c(childid, month)) %>% 
+              rename(month_easq = month), 
             by = "childid")
   
 
