@@ -120,7 +120,7 @@ Xvars <- c('ln_aat1', 'ln_mpo1', 'ln_neo1',
            'ln_L_conc_t1', 'ln_M_conc_t1',
            'ln_aat2', 'ln_mpo2', 'ln_neo2', 
            'ln_L_conc_t2', 'ln_M_conc_t2')            
-Yvars <- c("z_age2mo_personal_all", "z_age2mo_motor_all", "z_age2mo_combined_all", "z_age2mo_com_all", 
+Yvars <- c("z_age2mo_personal_no4", "z_age2mo_motor_no4", "z_age2mo_combined_no4", "z_age2mo_com_no4", 
            "z_age2mo_cdi_undyr2_all_no4", "z_age2mo_cdi_sayyr2_all_no4") 
 
 h2_missing <- paired_missing(Xvars, Yvars)
@@ -169,8 +169,8 @@ saveRDS(H2_plot_data, here("figure-data/H2_unadj_spline_data.RDS"))
 
 #### Hypothesis 3 ####
 # reg1b at t2 v. dev (cdi3, easq) at time 3
-Xvars <- c("reg1b2")            
-Yvars <- c("z_age2mo_personal_all", "z_age2mo_motor_all", "z_age2mo_combined_all", "z_age2mo_com_all", 
+Xvars <- c("ln_reg2")            
+Yvars <- c("z_age2mo_personal_no4", "z_age2mo_motor_no4", "z_age2mo_combined_no4", "z_age2mo_com_no4", 
            "z_age2mo_cdi_undyr2_all_no4", "z_age2mo_cdi_sayyr2_all_no4") 
 
 h3_missing <- paired_missing(Xvars, Yvars)
@@ -281,7 +281,7 @@ Xvars <- c('ln_aat1', 'ln_mpo1', 'ln_neo1',
            'ln_Lact1', 'ln_Mann1',
            'ln_aat2', 'ln_mpo2', 'ln_neo2', 
            'ln_Lact2', 'ln_Mann2')            
-Yvars <- c('comtotz', 'mottotz', 'pstotz', 'globaltotz')
+Yvars <- c("z_comtot_no4_activec", "z_mottot_no4_activec", "z_pstot_no4_activec", "z_globaltot_no4_activec")
 
 
 #Fit models

@@ -13,7 +13,7 @@ d <- readRDS('eed-dev_bg.RDS')
 
 ## Unadjusted 
 
-Xvars <- c('aat1', 'mpo1', 'neo1',
+Xvars <- c('ln_aat1', 'ln_mpo1', 'ln_neo1',
            'ln_L_conc_t1', 'ln_M_conc_t1') 
 Yvars <- c("sit_nosupp", "crawl_nosupp", "stand_supp",
            "walk_supp", "stand_nosupp", "walk_nosupp" )
@@ -82,7 +82,7 @@ H1_W <- c(Wvars)
 ## outcome: who mm
 ##########################
 
-Xvars <- c('aat1', 'mpo1', 'neo1')           
+Xvars <- c('ln_aat1', 'ln_mpo1', 'ln_neo1')           
 
 H1a_who_W <- c(H1_W, 'ageday_st1', 'agedays_motor', 
            'month_st1', 'month_mm')
@@ -203,7 +203,7 @@ d <- readRDS('eed-dev_k.RDS')
 #### Hypothesis 4 ####
 # eed t1 v. dev t2 (who)
 
-Xvars <- c('aat1', 'mpo1', 'neo1', 
+Xvars <- c('ln_aat1', 'ln_mpo1', 'ln_neo1', 
            'ln_Lact1', 'ln_Mann1')
 
 
@@ -254,7 +254,7 @@ saveRDS(H4_who_plot_data, here("figure-data/H4_who_unadj_spline_data.RDS"))
 # ------------------------------------------------------------------------
 ####### kenya hypotheses ####### 
 
-d <- readRDS('eed-dev_k.RDS')
+# d <- readRDS('eed-dev_k.RDS')
 
 #Set list of adjustment variables
 #Make vectors of adjustment variable names
@@ -283,7 +283,7 @@ H4_W <- c(Wvars,
 ## outcome: who mm t2
 ##########################
 
-Xvars <- c('aat1', 'mpo1', 'neo1')
+Xvars <- c('ln_aat1', 'ln_mpo1', 'ln_neo1')
 
 H4a_who_W <- c(H4_W, 'month_st1')
 H4a_who_W[!(H4a_who_W %in% colnames(d))]
@@ -292,22 +292,13 @@ H4a_who_W[!(H4a_who_W %in% colnames(d))]
 H4a_who_adj_models <- NULL
 for(i in Xvars){
   for(j in Yvars){
-    for(w in Wvars){
-      print(i)
-      print(j)
-      print(w)
-      res_adj <- fit_HR_GAM(d=d, X=i, Y=j, age = "agedays_motor", W=w)
-      res <- data.frame(X=i, Y=j, fit=I(list(res_adj$fit)), dat=I(list(res_adj$dat)))
-      H4a_who_adj_models <- bind_rows(H4a_who_adj_models, res)
-    }
+    print(i)
+    print(j)
+    res_adj <- fit_HR_GAM(d=d, X=i, Y=j, age = "agedays_motor", W=H4a_who_W)
+    res <- data.frame(X=i, Y=j, fit=I(list(res_adj$fit)), dat=I(list(res_adj$dat)))
+    H4a_who_adj_models <- bind_rows(H4a_who_adj_models, res)
   }
 }
-
-for(var in H4a_who_W){
-  print(var)
-  print(class(d[[var]]))
-}
-
 
 
 #Get primary contrasts
@@ -363,12 +354,6 @@ for(i in Xvars){
     H4b_who_adj_models <- bind_rows(H4b_who_adj_models, res)
   }
 }
-
-for(var in H4b_who_W){
-  print(var)
-  print(class(d[[var]]))
-}
-
 
 
 #Get primary contrasts

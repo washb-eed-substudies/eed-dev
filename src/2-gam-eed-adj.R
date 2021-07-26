@@ -278,8 +278,8 @@ H2_W <- c(Wvars, 'laz_t2', 'waz_t2',
 ##########################
 
 Xvars <- c('ln_aat1', 'ln_mpo1', 'ln_neo1')           
-Yvars <- c("z_age2mo_personal_all", "z_age2mo_motor_all", 
-           "z_age2mo_combined_all", "z_age2mo_com_all")
+Yvars <- c("z_age2mo_personal_no4", "z_age2mo_motor_no4", 
+           "z_age2mo_combined_no4", "z_age2mo_com_no4")
 
 H2a_W <- c(H2_W, 'ageday_st1',	'agedays_easq', 
            'month_st1',	'month_easq')
@@ -338,8 +338,8 @@ saveRDS(H2a_adj_res, here("results/adjusted/H2a_adj_res.RDS"))
 ##########################
 
 Xvars <- c('ln_L_conc_t1', 'ln_M_conc_t1')           
-Yvars <- c("z_age2mo_personal_all", "z_age2mo_motor_all", 
-           "z_age2mo_combined_all", "z_age2mo_com_all")
+Yvars <- c("z_age2mo_personal_no4", "z_age2mo_motor_no4", 
+           "z_age2mo_combined_no4", "z_age2mo_com_no4")
 
 H2b_W <- c(H2_W, 'ageday_ut1',	'agedays_easq', 
            'month_ut1',	'month_easq')
@@ -519,8 +519,8 @@ saveRDS(H2d_adj_res, here("results/adjusted/H2d_adj_res.RDS"))
 ##########################
 
 Xvars <- c('ln_aat2', 'ln_mpo2', 'ln_neo2')           
-Yvars <- c("z_age2mo_personal_all", "z_age2mo_motor_all", 
-           "z_age2mo_combined_all", "z_age2mo_com_all")
+Yvars <- c("z_age2mo_personal_no4", "z_age2mo_motor_no4", 
+           "z_age2mo_combined_no4", "z_age2mo_com_no4")
 
 H2e_W <- c(H2_W, 'ageday_st2', 'agedays_easq', 
            'month_st2',	'month_easq')
@@ -579,8 +579,8 @@ saveRDS(H2e_adj_res, here("results/adjusted/H2e_adj_res.RDS"))
 ##########################
 
 Xvars <- c('ln_L_conc_t2', 'ln_M_conc_t2')           
-Yvars <- c("z_age2mo_personal_all", "z_age2mo_motor_all", 
-           "z_age2mo_combined_all", "z_age2mo_com_all")
+Yvars <- c("z_age2mo_personal_no4", "z_age2mo_motor_no4", 
+           "z_age2mo_combined_no4", "z_age2mo_com_no4")
 
 H2f_W <- c(H2_W, 'ageday_ut2', 'agedays_easq', 
            'month_ut2',	'month_easq')
@@ -767,8 +767,8 @@ H3_W <- c(Wvars, 'laz_t2', 'waz_t2',
 ##########################
 
 Xvars <- c('ln_reg2')           
-Yvars <- c("z_age2mo_personal_all", "z_age2mo_motor_all", 
-            "z_age2mo_combined_all", "z_age2mo_com_all")
+Yvars <- c("z_age2mo_personal_no4", "z_age2mo_motor_no4", 
+            "z_age2mo_combined_no4", "z_age2mo_com_no4")
 
 H3a_W <- c(H3_W, 'ageday_st2', 'agedays_easq',
            'month_st2', 'month_easq')
@@ -1035,11 +1035,11 @@ H5_W <- c(Wvars,
 ##########################
 # adjustment sets 38-40
 ## exposure: fecal markers t1
-## outcome: easq t2
+## outcome: easq t3
 ##########################
 
 Xvars <- c('ln_aat1', 'ln_mpo1', 'ln_neo1')           
-Yvars <- c("comtotz", "mottotz", "pstotz", "globaltotz")
+Yvars <- c("z_comtot_no4_activec", "z_mottot_no4_activec", "z_pstot_no4_activec", "z_globaltot_no4_activec")
 
 H5a_W <- c(H5_W, 'aged1', 'month_st1')
 H5a_W[!(H5a_W %in% colnames(d))]
@@ -1091,13 +1091,13 @@ saveRDS(H5a_adj_res, here("results/adjusted/H5a_adj_res.RDS"))
 #saveRDS(H5a_adj_plot_data, paste0(dropboxDir,"results/stress-growth-models/figure-data/H5a_adj_spline_data.RDS"))
 
 ##########################
-# adjustment sets 36-37
+# adjustment sets 41-42
 ## exposure: urine markers t1
-## outcome: easq t2
+## outcome: easq t3
 ##########################
 
 Xvars <- c('ln_Lact1', 'ln_Mann1')           
-Yvars <- c("comtotz", "mottotz", "pstotz", "globaltotz")
+Yvars <- c("z_comtot_no4_activec", "z_mottot_no4_activec", "z_pstot_no4_activec", "z_globaltot_no4_activec")
 
 H5b_W <- c(H5_W, 'aged1', 'month_ut1')
 H5b_W[!(H5b_W %in% colnames(d))]
@@ -1156,7 +1156,7 @@ saveRDS(H5b_adj_res, here("results/adjusted/H5b_adj_res.RDS"))
 ##########################
 
 Xvars <- c('ln_aat1', 'ln_mpo1', 'ln_neo1')           
-Yvars <- c("comtotz", "mottotz", "pstotz", "globaltotz")
+Yvars <- c("z_comtot_no4_activec", "z_mottot_no4_activec", "z_pstot_no4_activec", "z_globaltot_no4_activec")
 
 H5c_W <- c(H5_W, 'aged2', 'month_st2')
 H5c_W[!(H5c_W %in% colnames(d))]
@@ -1214,7 +1214,7 @@ saveRDS(H5c_adj_res, here("results/adjusted/H5c_adj_res.RDS"))
 ##########################
 
 Xvars <- c('ln_Lact2', 'ln_Mann2')           
-Yvars <- c("comtotz", "mottotz", "pstotz", "globaltotz")
+Yvars <- c("z_comtot_no4_activec", "z_mottot_no4_activec", "z_pstot_no4_activec", "z_globaltot_no4_activec")
 
 H5d_W <- c(H5_W, 'aged2', 'month_ut2')
 H5d_W[!(H5d_W %in% colnames(d))]
