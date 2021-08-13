@@ -1,0 +1,104 @@
+---
+title: "Significant Analyses"
+subtitle: "WASH Benefits: EED-Development"
+output: html_notebook
+---
+
+```{r}
+library(dplyr)
+
+rm(list = ls())
+source(here::here("0-config.R"))
+load(here::here("tables/all_tables.RData"))
+```
+
+
+Combine all GAM Analyses together. 
+
+```{r}
+gam_analyses <- bind_rows(
+  all_h1 %>% 
+    mutate(hyp = 1), 
+  all_h2 %>% 
+    mutate(hyp = 2), 
+  all_h3 %>% 
+    mutate(hyp = 3), 
+  all_h4 %>% 
+    mutate(hyp = 4), 
+  all_h5 %>% 
+    mutate(hyp = 5), 
+) %>% 
+  group_by(hyp)
+```
+
+
+Combine all WHO HR Analyses
+
+```{r}
+hr_analyses <- bind_rows(
+  bg_who %>% 
+    mutate(hyp = 1), 
+  k_who %>% 
+    mutate(hyp = 4)
+)
+```
+
+
+Filter out insignificant hypotheses
+
+```{r, include = TRUE}
+sig_gam <- gam_analyses %>% 
+  filter(`Unadjusted P-value` < 0.05 | `Adjusted P-value` < 0.05 | `FDR Corrected P-value` < 0.2 ) %>% 
+  mutate(significant_unadj = ifelse(`Unadjusted P-value` < 0.05, "Unadj.", NA), 
+         significant_adj = ifelse(`Adjusted P-value` < 0.05, 'Adj.', NA), 
+         significant_fdr = ifelse(`FDR Corrected P-value` < 0.2, 'FDR', NA), 
+         dir = case_when(str_starts(`Adjusted Difference (95% CI)`, 
+                                    '-') ~ '-', 
+                         str_detect(`Adjusted Difference (95% CI)`, 
+                                    "0,0") ~ "", 
+                         TRUE ~ '+'),
+         exposure_domain = case_when(str_starts(`Exposure`, "alpha") ~ "permeability", 
+                                     str_starts(`Exposure`, "mye") ~ "inflammation", 
+                                     str_starts(`Exposure`, "neo") ~ "inflammation", 
+                                     str_starts(`Exposure`, "mann") ~ "permeability", 
+                                     str_starts(`Exposure`, "lact") ~ "permeability",
+                                     str_starts(`Exposure`, "reg") ~ "repair",
+                                     TRUE ~ NA_character_
+                                     )) %>% 
+  unite("signif", significant_unadj, significant_adj, significant_fdr, sep = ', ', na.rm = TRUE, remove = FALSE) %>% 
+  filter(signif != "Unadj.")
+
+sig_gam
+```
+
+```{r, include = TRUE}
+sig_hr <- hr_analyses %>% 
+  filter(`Unadjusted P-value` <= 0.05 | `Adjusted P-value` <= 0.05 | `FDR Corrected P-value` <= 0.2 ) %>% 
+  mutate(significant_unadj = ifelse(`Unadjusted P-value` <= 0.05, "Unadj.", NA), 
+         significant_adj = ifelse(`Adjusted P-value` <= 0.05, 'Adj.', NA), 
+         significant_fdr = ifelse(`FDR Corrected P-value` <= 0.2, 'FDR', NA), 
+         dir = case_when(str_starts(`Adjusted Difference (95% CI)`, 
+                                    '-') ~ '-', 
+                         str_detect(`Adjusted Difference (95% CI)`, 
+                                    "0,0") ~ "", 
+                         TRUE ~ '+'),
+         exposure_domain = case_when(str_starts(`Exposure`, "alpha") ~ "permeability", 
+                                     str_starts(`Exposure`, "mye") ~ "inflammation", 
+                                     str_starts(`Exposure`, "neo") ~ "inflammation", 
+                                     str_starts(`Exposure`, "mann") ~ "permeability", 
+                                     str_starts(`Exposure`, "lact") ~ "permeability",
+                                     TRUE ~ NA_character_
+                                     )) %>% 
+  unite("signif", significant_unadj, significant_adj, significant_fdr, sep = ', ', na.rm = TRUE, remove = FALSE) %>% 
+  filter(signif != "Unadj.")
+
+sig_hr
+```
+
+
+```{r}
+writexl::write_xlsx(list("who_hr" = sig_hr, 
+                      "gam_analyses" = sig_gam),
+                    path = here("tables/significant_hypotheses.xlsx"))
+```
+
