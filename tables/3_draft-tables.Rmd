@@ -254,7 +254,7 @@ bg_cdi_tab <- flextable(bg_cdi %>%
 bg_easq_tab <- flextable(bg_easq,
                          col_keys = append(keep_cols, "Adj. Diff (95% CI)", 6)) %>% 
   flex_format(8) %>% 
-  set_caption("Communicative Development Inventories (Bangladesh)", style = "Table Caption",
+  set_caption("Extended Ages and Stages Questionnaire, Year 2 (Bangladesh)", style = "Table Caption",
               autonum = autonum)
 ```
 
