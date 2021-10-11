@@ -883,7 +883,7 @@ saveRDS(H3b_adj_res, here("results/adjusted/H3b_adj_res.RDS"))
 # ------------------------------------------------------------------------
 ####### kenya hypotheses ####### 
 
-d <- readRDS('eed-dev_k.RDS')
+d <- readRDS(here('final-data/eed-dev_k.RDS'))
 
 #Set list of adjustment variables
 #Make vectors of adjustment variable names
@@ -1155,7 +1155,7 @@ saveRDS(H5b_adj_res, here("results/adjusted/H5b_adj_res.RDS"))
 ## outcome: easq t3
 ##########################
 
-Xvars <- c('ln_aat1', 'ln_mpo1', 'ln_neo1')           
+Xvars <- c('ln_aat2', 'ln_mpo2', 'ln_neo2')           
 Yvars <- c("z_comtot_no4_activec", "z_mottot_no4_activec", "z_pstot_no4_activec", "z_globaltot_no4_activec")
 
 H5c_W <- c(H5_W, 'aged2', 'month_st2')
