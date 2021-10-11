@@ -39,3 +39,4 @@ kenya/washb-kenya-allkids-ee-med-age-no-dob.csv
 kenya/washk_phq_pss_20210203.csv
 *.log
 raw-data/*
+*.aux
