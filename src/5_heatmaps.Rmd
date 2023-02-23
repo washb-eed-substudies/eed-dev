@@ -1,8 +1,8 @@
 ---
 title: "R Notebook"
 output:
-  pdf_document: default
-  # html_notebook: default
+  html_notebook: default
+  # pdf_document: default
 ---
 
 ```{r include = F}
@@ -70,7 +70,7 @@ h1_who_hr_adj %>%
                        str_detect(X, "L_") ~ "Lact", 
                        str_detect(X, "M_") ~ "Mann")) %>% 
   rename(point.diff = point.HR) %>% 
-  plot_sig_heatmap(Outcome = "WHO Motor Milestones (HR)")
+  plot_sig_heatmap(Outcome = "WHO Motor Milestones (HR)", null = 1)
 ```
 
 ## Hypothesis 2
@@ -212,7 +212,7 @@ h4_who_hr_adj %>%
                        str_detect(X, "Lact") ~ "Lact", 
                        str_detect(X, "Mann") ~ "Mann")) %>% 
   rename(point.diff = point.HR) %>% 
-  plot_sig_heatmap(Outcome = "WHO Motor Milestones (HR)")
+  plot_sig_heatmap(Outcome = "WHO Motor Milestones (HR)", null = 1)
 ```
 
 
