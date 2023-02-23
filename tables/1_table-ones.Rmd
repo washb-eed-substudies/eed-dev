@@ -63,27 +63,26 @@ k <- readRDS(here('final-data/eed-dev_k.RDS')) %>%
 
 
 ```{r}
-myVars <- c("tr", "laz_t1", "waz_t1", "laz_t2", "waz_t2", 
+myVars <- c("laz_t1", "waz_t1", "laz_t2", "waz_t2", 
             "cesd_sum_t2", "cesd_sum_ee_t3", "pss_sum_mom_t3",
-            "sex", "life_viol_any_t3", "birthord", "momage", "momheight_raw", 
-            "momedu", "hfiacat", "Nlt18", "Ncomp", "watmin", "walls", 
-            "floor", "roof", "hh_index")
+            "sex", "life_viol_any_t3", "momage", "momheight_raw", 
+            "momedu", "hfiacat", "floor")
 
 bg <- bg %>% 
   select(all_of(myVars))
 ```
 
 ```{r}
-bg$birthord <- factor(bg$birthord, 
-                      levels = c("first", "second or greater", "missing"),
-                      ordered = TRUE)
+# bg$birthord <- factor(bg$birthord, 
+#                       levels = c("first", "second or greater", "missing"),
+#                       ordered = TRUE)
 
 bg$hfiacat <- factor(bg$hfiacat, 
                       levels = c("Mildly Food Insecure", "Moderately Food Insecure", 
                                  "Severely Food Insecure", "Food Secure"),
                       ordered = TRUE)
 
-var_label(bg) <- list(tr = "Treatment Arm", 
+var_label(bg) <- list(# tr = "Treatment Arm", 
                       laz_t1 = "Length-for-age Z score (3 mo)", 
                       waz_t1 = "Weight-for-age Z score (3 mo)", 
                       laz_t2 = "Length-for-age Z score (14 mo)", 
@@ -91,20 +90,21 @@ var_label(bg) <- list(tr = "Treatment Arm",
                       cesd_sum_t2 = "Maternal Depressive Symptoms (14 mo)", 
                       cesd_sum_ee_t3 = "Maternal Depressive Symptoms (24 mo)", # check month
                       pss_sum_mom_t3 = "Maternal Perceived Stress Scale (PSS) (24 mo)",
-                      # sex, 
+                      # sex,
                       life_viol_any_t3 = "Cumulative maternal exposure to intimate partner violence",
-                      birthord = "Birth Order", 
+                      # birthord = "Birth Order", 
                       momage = "Maternal Age", 
                       momheight_raw = "Maternal Height", 
                       momedu = "Highest Completed Schooling (Years), mom", 
                       hfiacat = "Household food insecurity", 
-                      Nlt18 = "Number of children < 18 years old", 
-                      Ncomp = "Total individuals in compound",
-                      watmin = "Minutes to primary water source", 
-                      walls = "Housing material, improved walls", 
-                      floor = "Housing material, improved floor", 
-                      roof = "Housing material, improved roof", 
-                      hh_index = "Household wealth index")
+                      # Nlt18 = "Number of children < 18 years old", 
+                      # Ncomp = "Total individuals in compound",
+                      # watmin = "Minutes to primary water source", 
+                      # walls = "Housing material, improved walls", 
+                      floor = "Housing material, improved floor" 
+                      # roof = "Housing material, improved roof", 
+                      # hh_index = "Household wealth index"
+                      )
 ```
 
 
@@ -123,11 +123,10 @@ print(tab1_bg, nonnormal = myVars, quote = TRUE, noSpaces = TRUE, printToggle = 
 ```
 
 ```{r}
-myVars <- c("tr", "laz_t1", "waz_t1", "laz_t2", "waz_t2", 
+myVars <- c("laz_t1", "waz_t1", "laz_t2", "waz_t2", 
             "pss_score", "phq_score_t3",
-            "sex", "birthord", "momage", "momheight_raw", 
-            "momedu", "HHS", "Nlt18", "Ncomp", "water_time", "wall", 
-            "floor", "roof", "hh_index")
+            "sex", "momage", "momheight_raw", 
+            "momedu", "floor")
 k <- k %>% 
   select(all_of(myVars))
 ```
@@ -140,38 +139,39 @@ k <- k %>%
                          labels = c("Primary", "Incomplete Primary", 
                                     "Any Secondary", "Missing"), 
                          ordered = T),
-         birthord = factor(birthord,
-                           levels = c("first", "second or greater",
-                                      "missing"),
-                           ordered = TRUE),
-         roof = factor(roof, 
-                        levels = c(0, 1, "missing"),
-                        labels = c("thatch/leaf", 
-                                   "iron/other", "missing")),
+         # birthord = factor(birthord,
+         #                   levels = c("first", "second or greater",
+         #                              "missing"),
+         #                   ordered = TRUE),
+         # roof = factor(roof, 
+         #                levels = c(0, 1, "missing"),
+         #                labels = c("thatch/leaf", 
+                                   # "iron/other", "missing")),
          floor = factor(floor, 
                         levels = c(0, 1, "missing"),
                         labels = c("earth/dung", "cement/concrete",
                                    "missing")))
 
-var_label(k) <- list(tr = "Treatment Arm", 
+var_label(k) <- list(# tr = "Treatment Arm", 
                      laz_t1 = "Length-for-age Z score (6 mo)", 
                      waz_t1 = "Weight-for-age Z score (6 mo)", 
                      laz_t2 = "Length-for-age Z score (17 mo)", 
                      waz_t2 = "Weight-for-age Z score (17 mo)", 
                      pss_score = "Maternal Perceived Stress Scale (PSS) (25 mo)", 
-                     phq_score_t3 = "Maternal Depressive Symptoms (25 mo)",
-                     birthord = "Birth Order", 
+                     phq_score_t3 = "Maternal Depressive Symptoms (PHQ) (25 mo)",
+                     # birthord = "Birth Order",
                      momage = "Maternal Age",
                      momheight_raw = "Maternal Height", 
                      momedu = "Highest Completed Schooling (Years), mom",
-                     HHS = "Household Hunger Scale", 
-                     Nlt18 = "Number of children < 18 years old", 
-                     Ncomp = "Total individuals in compound",
-                     water_time = "Minutes to primary water source", 
-                     wall = "Housing material, walls", 
-                     floor = "Housing material, floor", 
-                     roof = "Housing material, roof", 
-                     hh_index = "Household wealth index")
+                     # HHS = "Household Hunger Scale", 
+                     # Nlt18 = "Number of children < 18 years old", 
+                     # Ncomp = "Total individuals in compound",
+                     # water_time = "Minutes to primary water source", 
+                     # wall = "Housing material, walls", 
+                     floor = "Housing material, floor"
+                     # roof = "Housing material, roof", 
+                     # hh_index = "Household wealth index"
+                     )
 
 ```
 

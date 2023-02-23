@@ -9,6 +9,7 @@ output:
 
 ```{r setup, include = F}
 rm(list = ls())
+source(here::here("0-config.R"))
 
 knitr::opts_chunk$set(echo = FALSE)
 
@@ -238,11 +239,16 @@ autonum <- run_autonum(seq_id = "tab")
 ## Bangladesh
 
 ```{r}
-bg_cdi_tab <- flextable(bg_cdi %>% 
+bg_cdi_tbl <- bg_cdi %>% 
                           mutate(`CDI Year` = case_when(hyp == 1 ~ "Year 1", 
                                                         hyp %in% c(2, 3) ~ "Year 2"),
-                                 `Outcome Domain` = str_remove(`Outcome Domain`, "\\(Year (1|2)\\)")), 
-          col_keys = c("CDI Year", append(keep_cols, "Adj. Diff (95% CI)", 6))) %>% 
+                                 `Outcome Domain` = str_remove(`Outcome Domain`, "\\(Year (1|2)\\)"))
+
+
+
+bg_cdi_tab <- flextable(bg_cdi_tbl, 
+                        col_keys = c("CDI Year", 
+                                     append(keep_cols, "Adj. Diff (95% CI)", 6))) %>% 
     merge_v("CDI Year") %>% 
   valign(j = "CDI Year", valign = 'top') %>% 
   flex_format(9) %>% 
@@ -251,7 +257,9 @@ bg_cdi_tab <- flextable(bg_cdi %>%
 ```
 
 ```{r}
-bg_easq_tab <- flextable(bg_easq,
+bg_easq_tbl <- bg_easq
+
+bg_easq_tab <- flextable(bg_easq_tbl,
                          col_keys = append(keep_cols, "Adj. Diff (95% CI)", 6)) %>% 
   flex_format(8) %>% 
   set_caption("Extended Ages and Stages Questionnaire, Year 2 (Bangladesh)", style = "Table Caption",
@@ -259,9 +267,12 @@ bg_easq_tab <- flextable(bg_easq,
 ```
 
 ```{r}
-bg_who_tab <- flextable(bg_who %>% 
-                          mutate(`Outcome Domain` = str_remove(`Outcome Domain`, "\\(Year (1|2)\\)")), 
-          col_keys = append(keep_cols, "Adj. Diff (95% CI)", 6)) %>% 
+bg_who_tbl <- bg_who %>% 
+  mutate(`Outcome Domain` = str_remove(`Outcome Domain`, "\\(Year (1|2)\\)"))
+
+
+bg_who_tab <- flextable(bg_who_tbl, 
+                        col_keys = append(keep_cols, "Adj. Diff (95% CI)", 6)) %>% 
   flex_format() %>% 
   set_caption("WHO Motor Milestones, Year 1 (Bangladesh)", style = "Table Caption",
               autonum = autonum)
@@ -270,8 +281,11 @@ bg_who_tab <- flextable(bg_who %>%
 ## Kenya
 
 ```{r}
-k_who_tab <- flextable(k_who %>% 
-                          mutate(`Outcome Domain` = str_remove(`Outcome Domain`, "\\(Year (1|2)\\)")), 
+k_who_tbl <- k_who %>% 
+  mutate(`Outcome Domain` = str_remove(`Outcome Domain`, "\\(Year (1|2)\\)"))
+
+
+k_who_tab <- flextable(k_who_tbl, 
           col_keys = append(keep_cols, "Adj. Diff (95% CI)", 6)) %>% 
   flex_format() %>% 
   set_caption("WHO Motor Milestones, Year 1 (Kenya)", style = "Table Caption",
@@ -280,8 +294,10 @@ k_who_tab <- flextable(k_who %>%
 
 
 ```{r}
-k_easq_tab <- flextable(k_easq %>% 
-                          mutate(`Outcome Domain` = str_remove(`Outcome Domain`, "\\(Year (1|2)\\)")), 
+k_easq_tbl <- k_easq %>% 
+  mutate(`Outcome Domain` = str_remove(`Outcome Domain`, "\\(Year (1|2)\\)"))
+
+k_easq_tab <- flextable(k_easq_tbl, 
           col_keys = append(keep_cols, "Adj. Diff (95% CI)", 6)) %>% 
   flex_format() %>% 
   set_caption("Extended Ages and Stages Questionnaire, Year 2 (Kenya)", style = "Table Caption",
@@ -293,7 +309,9 @@ k_easq_tab <- flextable(k_easq %>%
 ## Bangladesh
 
 ```{r}
-bg_hr_tab <- flextable(bg_hr, 
+bg_hr_tbl <- bg_hr
+
+bg_hr_tab <- flextable(bg_hr_tbl, 
           col_keys = c("Motor Milestone", 
                        append(keep_cols, "Adj. HR (95% CI)", 6))) %>% 
   flex_format(9) %>% 
@@ -304,7 +322,9 @@ bg_hr_tab <- flextable(bg_hr,
 ## Kenya
 
 ```{r}
-k_hr_tab <- flextable(k_hr, 
+k_hr_tbl <- k_hr
+
+k_hr_tab <- flextable(k_hr_tbl, 
           col_keys = c("Motor Milestone", 
                        append(keep_cols, "Adj. HR (95% CI)", 6))) %>% 
   flex_format(9) %>% 
@@ -377,5 +397,21 @@ save_as_docx(bg_who_tab, k_who_tab,
                                        left = 0.1), 
                type = 'nextPage'
              ) )
+```
+
+```{r}
+write.xlsx(
+  tibble::lst(bg_who_tbl, k_who_tbl,
+             
+             bg_cdi_tbl,
+             bg_easq_tbl, k_easq_tbl,
+             
+             bg_hr_tbl, k_hr_tbl,
+             
+             # bg_tables_tbl, k_tables_tbl
+             ),
+  here::here("tables/all_tables.xlsx"),
+  overwrite = T
+)
 ```
 
