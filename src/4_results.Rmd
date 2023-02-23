@@ -2,6 +2,13 @@
 title: "3_results"
 output: html_notebook
 ---
+```{r}
+# requires 2_sig-hyp.Rmd to be run
+source(here::here("0-config.R"))
+
+```
+
+
 
 ```{r include = F}
 paste_output <- function(x, y, y_domain, country, additional = NA, analysis = "gam"){
@@ -42,7 +49,7 @@ paste_output <- function(x, y, y_domain, country, additional = NA, analysis = "g
   }
   
   paste0("(", moa, ": ",  df$`Adjusted Difference (95% CI)`, 
-         if_else(!is.na(df$significant_fdr[1]), "*", NA_character_), 
+         if_else(!is.na(df$significant_fdr[1]), "\\*", NA_character_), 
          if_else(!is.na(additional), paste0("; ", additional), NA_character_), 
          ")") %>% 
     str_remove_all("NA")
@@ -52,8 +59,8 @@ paste_output <- function(x, y, y_domain, country, additional = NA, analysis = "g
 
 ```{r}
 sig_gam %>% 
-  select(`Outcome Domain`, `Outcome`, `Exposure`, `Adjusted Difference (95% CI)`,
-         `Adjusted P-value`)
+  select(c("Outcome Domain", "Outcome", "Exposure", "Adjusted Difference (95% CI)",
+         "Adjusted P-value"))
 ```
 
 ```{r}
