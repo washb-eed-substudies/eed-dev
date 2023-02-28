@@ -1,0 +1,251 @@
+---
+title: "R Notebook"
+output:
+  html_notebook: default
+  # pdf_document: default
+---
+
+```{r include = F}
+rm(list = ls())
+source(here::here("0-config.R"))
+library(fs)
+library(RColorBrewer)
+
+knitr::opts_chunk$set(echo = FALSE,
+                      message = FALSE)
+
+adj_file_list <- dir_ls(here("results/adjusted")) %>% 
+  str_subset("_all")
+
+
+for (file in adj_file_list){
+  
+  obj_name <- str_match(file, "/adjusted/(.*)_all")[2] %>% 
+    str_replace_all("-", "_") %>% 
+    str_to_lower()
+  
+  assign(paste0(obj_name, "_adj"), readRDS(file))
+}
+
+```
+
+## Hypothesis 1
+```{r}
+# cdi
+h1_adj %>% 
+  filter(str_detect(Y, "cdi")) %>% 
+  mutate(Y = case_when(str_detect(Y, "und") ~ "Understanding",
+                       str_detect(Y, "say") ~ "Expressing"),
+         X = case_when(str_detect(X, "aat") ~ "AAT",
+                       str_detect(X, "mpo") ~ "MPO",
+                       str_detect(X, "neo") ~ "NEO", 
+                       str_detect(X, "L_") ~ "Lact", 
+                       str_detect(X, "M_") ~ "Mann")) %>% 
+  plot_sig_heatmap(Outcome = "Communicative Development Inventory")
+
+
+# who
+h1_adj %>% 
+  filter(str_detect(Y, "who")) %>% 
+  mutate(Y = case_when(str_detect(Y, "sub") ~ "Milestones 2,4,5,6",
+                       str_detect(Y, "sum") ~ "Sum Total"),
+         X = case_when(str_detect(X, "aat") ~ "AAT",
+                       str_detect(X, "mpo") ~ "MPO",
+                       str_detect(X, "neo") ~ "NEO", 
+                       str_detect(X, "L_") ~ "Lact", 
+                       str_detect(X, "M_") ~ "Mann")) %>% 
+  plot_sig_heatmap(Outcome = "WHO Motor Milestones (Mean Diff)")
+
+h1_who_hr_adj %>% 
+  mutate(y_subdomain = case_when(str_detect(Y, "sit") ~ "Sitting", 
+                       str_detect(Y, "crawl") ~ "Crawling", 
+                       str_detect(Y, "walk") ~ "Walking", 
+                       str_detect(Y, "stand") ~ "Standing"),
+         Y = case_when(str_detect(Y, "nosupp") ~ str_c(y_subdomain, " (w/o support)"), 
+                       str_detect(Y, "supp") ~ str_c(y_subdomain, " (w/ support)"), 
+                       TRUE ~ y_subdomain), 
+         X = case_when(str_detect(X, "aat") ~ "AAT",
+                       str_detect(X, "mpo") ~ "MPO",
+                       str_detect(X, "neo") ~ "NEO", 
+                       str_detect(X, "L_") ~ "Lact", 
+                       str_detect(X, "M_") ~ "Mann")) %>% 
+  rename(point.diff = point.HR) %>% 
+  plot_sig_heatmap(Outcome = "WHO Motor Milestones (HR)", null = 1)
+```
+
+## Hypothesis 2
+```{r}
+# cdi
+# t1 markers
+h2_adj %>% 
+  filter(str_detect(Y, "cdi"),
+         str_detect(X, "1")) %>% 
+  mutate(Y = case_when(str_detect(Y, "und") ~ "Understanding",
+                       str_detect(Y, "say") ~ "Expressing",
+                       str_detect(Y, "personal") ~ "Personal Social", 
+                       str_detect(Y, "motor") ~ "Motor", 
+                       str_detect(Y, "combined") ~ "Combined", 
+                       str_detect(Y, "com") ~ "Communication"),
+         X = case_when(str_detect(X, "aat") ~ "AAT",
+                       str_detect(X, "mpo") ~ "MPO",
+                       str_detect(X, "neo") ~ "NEO", 
+                       str_detect(X, "L_") ~ "Lact", 
+                       str_detect(X, "M_") ~ "Mann")) %>% 
+  plot_sig_heatmap(Outcome = "Communicative Development Inventory")
+
+# t2 markers
+h2_adj %>% 
+  filter(str_detect(Y, "cdi"),
+         str_detect(X, "2")) %>% 
+  mutate(Y = case_when(str_detect(Y, "und") ~ "Understanding",
+                       str_detect(Y, "say") ~ "Expressing",
+                       str_detect(Y, "personal") ~ "Personal Social", 
+                       str_detect(Y, "motor") ~ "Motor", 
+                       str_detect(Y, "combined") ~ "Combined", 
+                       str_detect(Y, "com") ~ "Communication"),
+         X = case_when(str_detect(X, "aat") ~ "AAT",
+                       str_detect(X, "mpo") ~ "MPO",
+                       str_detect(X, "neo") ~ "NEO", 
+                       str_detect(X, "L_") ~ "Lact", 
+                       str_detect(X, "M_") ~ "Mann")) %>% 
+  plot_sig_heatmap(Outcome = "Communicative Development Inventory")
+
+# EASQ
+# t1 markers
+h2_adj %>% 
+  filter(str_detect(Y, "cdi", negate = TRUE),
+         str_detect(X, "1")) %>% 
+  mutate(Y = case_when(str_detect(Y, "und") ~ "Understanding",
+                       str_detect(Y, "say") ~ "Expressing",
+                       str_detect(Y, "personal") ~ "Personal Social", 
+                       str_detect(Y, "motor") ~ "Motor", 
+                       str_detect(Y, "combined") ~ "Combined", 
+                       str_detect(Y, "com") ~ "Communication"),
+         X = case_when(str_detect(X, "aat") ~ "AAT",
+                       str_detect(X, "mpo") ~ "MPO",
+                       str_detect(X, "neo") ~ "NEO", 
+                       str_detect(X, "L_") ~ "Lact", 
+                       str_detect(X, "M_") ~ "Mann")) %>% 
+  plot_sig_heatmap(Outcome = "Extended Ages and Stages Questionnaire")
+
+
+# t2 markers 
+h2_adj %>% 
+  filter(str_detect(Y, "cdi", negate = TRUE),
+         str_detect(X, "2")) %>% 
+  mutate(Y = case_when(str_detect(Y, "und") ~ "Understanding",
+                       str_detect(Y, "say") ~ "Expressing",
+                       str_detect(Y, "personal") ~ "Personal Social", 
+                       str_detect(Y, "motor") ~ "Motor", 
+                       str_detect(Y, "combined") ~ "Combined", 
+                       str_detect(Y, "com") ~ "Communication"),
+         X = case_when(str_detect(X, "aat") ~ "AAT",
+                       str_detect(X, "mpo") ~ "MPO",
+                       str_detect(X, "neo") ~ "NEO", 
+                       str_detect(X, "L_") ~ "Lact", 
+                       str_detect(X, "M_") ~ "Mann")) %>% 
+  plot_sig_heatmap(Outcome = "Extended Ages and Stages Questionnaire")
+```
+
+## Hypothesis 3
+```{r}
+# cdi
+h3_adj %>% 
+  filter(str_detect(Y, "cdi")) %>% 
+  mutate(Y = case_when(str_detect(Y, "und") ~ "Understanding",
+                       str_detect(Y, "say") ~ "Expressing",
+                       str_detect(Y, "personal") ~ "Personal Social", 
+                       str_detect(Y, "motor") ~ "Motor", 
+                       str_detect(Y, "combined") ~ "Combined", 
+                       str_detect(Y, "com") ~ "Communication"),
+         X = case_when(str_detect(X, "aat") ~ "AAT",
+                       str_detect(X, "mpo") ~ "MPO",
+                       str_detect(X, "neo") ~ "NEO", 
+                       str_detect(X, "L_") ~ "Lact", 
+                       str_detect(X, "M_") ~ "Mann",
+                       str_detect(X, "reg") ~ "REG1B")) %>% 
+  plot_sig_heatmap(Outcome = "Communicative Development Inventory")
+
+# EASQ
+h3_adj %>% 
+  filter(str_detect(Y, "cdi", negate = TRUE)) %>% 
+  mutate(Y = case_when(str_detect(Y, "und") ~ "Understanding",
+                       str_detect(Y, "say") ~ "Expressing",
+                       str_detect(Y, "personal") ~ "Personal Social", 
+                       str_detect(Y, "motor") ~ "Motor", 
+                       str_detect(Y, "combined") ~ "Combined", 
+                       str_detect(Y, "com") ~ "Communication"),
+         X = case_when(str_detect(X, "aat") ~ "AAT",
+                       str_detect(X, "mpo") ~ "MPO",
+                       str_detect(X, "neo") ~ "NEO", 
+                       str_detect(X, "L_") ~ "Lact", 
+                       str_detect(X, "M_") ~ "Mann",
+                       str_detect(X, "reg") ~ "REG1B")) %>% 
+  plot_sig_heatmap(Outcome = "Extended Ages and Stages Questionnaire")
+```
+
+## Hypothesis 4
+```{r}
+# who
+h4_adj %>% 
+  filter(str_detect(Y, "who")) %>% 
+  mutate(Y = case_when(str_detect(Y, "sub") ~ "Milestones 2,4,5,6",
+                       str_detect(Y, "sum") ~ "Sum Total"),
+         X = case_when(str_detect(X, "aat") ~ "AAT",
+                       str_detect(X, "mpo") ~ "MPO",
+                       str_detect(X, "neo") ~ "NEO", 
+                       str_detect(X, "Lact") ~ "Lact", 
+                       str_detect(X, "Mann") ~ "Mann")) %>% 
+  plot_sig_heatmap(Outcome = "WHO Motor Milestones (Mean Diff)")
+
+h4_who_hr_adj %>% 
+  mutate(y_subdomain = case_when(str_detect(Y, "sit") ~ "Sitting", 
+                       str_detect(Y, "crawl") ~ "Crawling", 
+                       str_detect(Y, "walk") ~ "Walking", 
+                       str_detect(Y, "stand") ~ "Standing"),
+         Y = case_when(str_detect(Y, "nosupp") ~ str_c(y_subdomain, " (w/o support)"), 
+                       str_detect(Y, "supp") ~ str_c(y_subdomain, " (w/ support)"), 
+                       TRUE ~ y_subdomain), 
+         X = case_when(str_detect(X, "aat") ~ "AAT",
+                       str_detect(X, "mpo") ~ "MPO",
+                       str_detect(X, "neo") ~ "NEO", 
+                       str_detect(X, "Lact") ~ "Lact", 
+                       str_detect(X, "Mann") ~ "Mann")) %>% 
+  rename(point.diff = point.HR) %>% 
+  plot_sig_heatmap(Outcome = "WHO Motor Milestones (HR)", null = 1)
+```
+
+
+## Hypothesis 5
+```{r}
+# EASQ
+# t1 markers
+h5_adj %>% 
+  filter(str_detect(Y, "cdi", negate = TRUE),
+         str_detect(X, "1")) %>% 
+  mutate(Y = case_when(str_detect(Y, "pstot") ~ "Personal Social", 
+                       str_detect(Y, "mottot") ~ "Motor", 
+                       str_detect(Y, "globaltot") ~ "Combined", 
+                       str_detect(Y, "comtot") ~ "Communication"),
+         X = case_when(str_detect(X, "aat") ~ "AAT",
+                       str_detect(X, "mpo") ~ "MPO",
+                       str_detect(X, "neo") ~ "NEO", 
+                       str_detect(X, "Lact") ~ "Lact", 
+                       str_detect(X, "Mann") ~ "Mann")) %>% 
+  plot_sig_heatmap(Outcome = "Extended Ages and Stages Questionnaire")
+
+# t2 markers 
+h5_adj %>% 
+  filter(str_detect(Y, "cdi", negate = TRUE),
+         str_detect(X, "2")) %>% 
+  mutate(Y = case_when(str_detect(Y, "pstot") ~ "Personal Social", 
+                       str_detect(Y, "mottot") ~ "Motor", 
+                       str_detect(Y, "globaltot") ~ "Combined", 
+                       str_detect(Y, "comtot") ~ "Communication"),
+         X = case_when(str_detect(X, "aat") ~ "AAT",
+                       str_detect(X, "mpo") ~ "MPO",
+                       str_detect(X, "neo") ~ "NEO", 
+                       str_detect(X, "Lact") ~ "Lact", 
+                       str_detect(X, "Mann") ~ "Mann")) %>% 
+  plot_sig_heatmap(Outcome = "Extended Ages and Stages Questionnaire")
+```

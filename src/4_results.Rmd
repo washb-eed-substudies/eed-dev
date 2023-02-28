@@ -1,0 +1,146 @@
+---
+title: "3_results"
+output: html_notebook
+---
+```{r}
+# requires 2_sig-hyp.Rmd to be run
+source(here::here("0-config.R"))
+
+```
+
+
+
+```{r include = F}
+paste_output <- function(x, y, y_domain, country, additional = NA, analysis = "gam"){
+  if(analysis == "gam"){
+    df <- sig_gam
+    moa <- "mean difference"
+  } else if(analysis == "hr"){
+    df <- sig_hr %>% 
+      mutate(across(.cols = c(starts_with("exposure"), 
+                              starts_with("outcome")), 
+                    .fns = ~str_remove_all(., "\\(|\\)")))
+    moa <- "hazard ratio"
+  }
+  
+  y_domain <- case_when(y_domain == "cdi" ~ "Communicative Development Inventories", 
+                        y_domain == "who" ~ "WHO Motor Milestone",
+                        y_domain == "easq" ~ "Extended Ages and Stages Questionnaire", 
+                        TRUE ~ y_domain)
+  
+  if(str_detect(country, "b")){
+    df <- df %>% 
+      filter(between(hyp, 1, 3))
+  } else if(str_detect(country, "k")){
+    df <- df %>% 
+      filter(between(hyp, 4, 5))
+  }
+
+  df <- df %>% 
+    filter(str_detect(`Exposure`, x),
+           str_detect(`Outcome`, y),
+           str_detect(`Outcome Domain`, y_domain)
+           )
+  
+
+  
+  if(nrow(df) > 1){
+    warning("There is more than 1 row.")
+  }
+  
+  paste0("(", moa, ": ",  df$`Adjusted Difference (95% CI)`, 
+         if_else(!is.na(df$significant_fdr[1]), "\\*", NA_character_), 
+         if_else(!is.na(additional), paste0("; ", additional), NA_character_), 
+         ")") %>% 
+    str_remove_all("NA")
+  
+}
+```
+
+```{r}
+sig_gam %>% 
+  select(c("Outcome Domain", "Outcome", "Exposure", "Adjusted Difference (95% CI)",
+         "Adjusted P-value"))
+```
+
+```{r}
+sig_gam %>% 
+  ungroup() %>% 
+  summarize(r_code = str_c("`r paste_output('", `Exposure`, 
+                           "', '", `Outcome`, "', '", `Outcome Domain`, "', '",
+                           if_else(between(hyp, 1, 3), 'b', 'k'), "')`")) 
+```
+
+```{r}
+sig_hr %>% 
+  select(`Outcome Domain`, `Outcome`, `Exposure`, `Adjusted Difference (95% CI)`,
+         `Adjusted P-value`)
+```
+
+```{r}
+sig_hr %>% 
+  ungroup()  %>% 
+  mutate(across(.cols = c(starts_with("exposure"), 
+                              starts_with("outcome")), 
+                    .fns = ~str_remove_all(., "\\(|\\)")))%>% 
+  summarize(r_code = str_c("`r paste_output('", `Exposure`, 
+                           "', '", `Outcome`, "', '", `Outcome Domain`, "', '",
+                           if_else(between(hyp, 1, 3), 'b', 'k'), "', analysis = 'hr')`")) 
+```
+
+
+# Abstract
+
+## Results
+
+In Bangladesh, log-transformed lactulose concentrations at 3 months were negatively correlated with the expressing domain of CDI `r paste_output('lactulose', 'Expressing', 'Communicative Development Inventories', 'b')` and the CDI understanding domain `r paste_output('lactulose', 'Understanding', 'Communicative Development Inventories', 'b', "Table 3")` at Year 2. At 3 months of age, lactulose had a negative association with the communication score of EASQ at Year 2 `r paste_output('lactulose', 'Communication Score', 'Extended Ages and Stages Questionnaire', 'b')`. Additionally at 3 months, it was negatively correlated with both the sum total of the WHO motor milestones `r paste_output('lactulose', 'Sum Total', 'WHO Motor Milestone', 'b')` and milestones 2, 4, 5, 6 `r paste_output('lactulose', 'Milestones 2, 4, 5, 6', 'WHO Motor Milestone', 'b')`. 
+
+Lactulose and mannitol at 3 months were negatively associated with several WHO Motor Milestone hazard ratios. Lactulose was associated with standing without support milestone `r paste_output('lactulose', 'Standing w/o support', 'WHO Motor Milestone HR', 'b', analysis = 'hr')`. Mannitol had similar associations with the standing without support milestone `r paste_output('mannitol', 'Standing w/o support', 'WHO Motor Milestone HR', 'b', analysis = 'hr')`, as well as the standing with support milestone `r paste_output('mannitol', 'Standing w/ support', 'WHO Motor Milestone HR', 'b', analysis = 'hr')`. It was also negatively associated with the crawling without support milestone `r paste_output('mannitol', 'Crawling w/o support', 'WHO Motor Milestone HR', 'b', analysis = 'hr')`. Alpha-1 antitrypsin had a negative association with the standing with support milestone `r paste_output('alpha-1 antitrypsin', 'Standing w/ support', 'WHO Motor Milestone HR', 'b', analysis = 'hr')`. Neopterin was positively associated with the walking with support milestone `r paste_output('neopterin', 'Walking w/ support', 'WHO Motor Milestone HR', 'b', analysis = 'hr')`. 
+
+Mannitol at 3 months was similarly correlated with the CDI understanding domain `r paste_output('mannitol', 'Understanding', 'Communicative Development Inventories', 'b')`, the sum total of all WHO motor milestones `r paste_output('mannitol', 'Sum Total', 'WHO Motor Milestone', 'b')`, and the subset of milestones 2, 4, 5, 6 `r paste_output('mannitol', 'Milestones 2, 4, 5, 6', 'WHO Motor Milestone', 'b', "Table 4")`. Neopterin, which is a measure of inflammation, at age 3 months was positively correlated with the understanding domain of CDI at Year 1 `r paste_output('neopterin', 'Understanding', 'Communicative Development Inventories', 'b', "Table 2")`. Lactulose and mannitol at 14 months were negatively associated with the gross motor domain of EASQ at Year 2 `r paste_output('lactulose', 'Gross Motor Score', 'Extended Ages and Stages Questionnaire', 'b')` and `r paste_output('mannitol', 'Gross Motor Score', 'Extended Ages and Stages Questionnaire', 'b')`, respectively.
+
+Regenerating gene 1$\beta$ measured at 14 months had a positive association with the communication domain of EASQ at Year 2 `r paste_output('regenerating gene 1-beta', 'Communication Score', 'Extended Ages and Stages Questionnaire', 'b')`. However, REG1B was negatively associated with the expressing domain of CDI, also at Year 2 `r paste_output('regenerating gene 1-beta', 'Expressing', 'Communicative Development Inventories', 'b')`.
+
+In Kenya, alpha-1 antitrypsin measured at 6 months of age had a positive association with the communication score of EASQ at Year 2 `r paste_output('alpha-1 antitrypsin', 'Communication Score', 'Extended Ages and Stages Questionnaire', 'k')`.  Similarly, mannitol at 6 months was positively associated with the personal-social score of EASQ `r paste_output('mannitol', 'Personal Social Score', 'Extended Ages and Stages Questionnaire', 'k')`. 
+
+While alpha-1 antitrypsin measured at month 6 was negatively associated with the crawling without support WHO motor milestone `r paste_output('alpha-1 antitrypsin', 'Crawling w/o support', 'WHO Motor Milestone HR', 'k', analysis = 'hr')`, neopterin was positively associated with the walking without support milestone `r paste_output('neopterin', 'Walking w/o support', 'WHO Motor Milestone HR', 'k', analysis = 'hr')`.
+
+
+
+
+
+# Manuscript
+
+## Results
+
+### Bangladesh
+
+#### Permeability
+
+In Bangladesh, log-transformed lactulose concentrations at 3 months were negatively correlated with the expressing domain of CDI `r paste_output('lactulose', 'Expressing', 'Communicative Development Inventories', 'b')` and the CDI understanding domain `r paste_output('lactulose', 'Understanding', 'Communicative Development Inventories', 'b', "Table 3")` at Year 2. At 3 months of age, lactulose had a negative association with the communication score of EASQ at Year 2 `r paste_output('lactulose', 'Communication Score', 'Extended Ages and Stages Questionnaire', 'b')`. Additionally at 3 months, it was negatively correlated with both the sum total of the WHO motor milestones `r paste_output('lactulose', 'Sum Total', 'WHO Motor Milestone', 'b')` and milestones 2, 4, 5, 6 `r paste_output('lactulose', 'Milestones 2, 4, 5, 6', 'WHO Motor Milestone', 'b')`. 
+
+Lactulose and mannitol at 3 months were negatively associated with several WHO Motor Milestone hazard ratios. Lactulose was associated with standing without support milestone `r paste_output('lactulose', 'Standing w/o support', 'WHO Motor Milestone HR', 'b', analysis = 'hr')`. Mannitol had similar associations with the standing without support milestone `r paste_output('mannitol', 'Standing w/o support', 'WHO Motor Milestone HR', 'b', analysis = 'hr')`, as well as the standing with support milestone `r paste_output('mannitol', 'Standing w/ support', 'WHO Motor Milestone HR', 'b', analysis = 'hr')`. It was also negatively associated with the crawling without support milestone `r paste_output('mannitol', 'Crawling w/o support', 'WHO Motor Milestone HR', 'b', analysis = 'hr')`. Alpha-1 antitrypsin had a negative association with the standing with support milestone `r paste_output('alpha-1 antitrypsin', 'Standing w/ support', 'WHO Motor Milestone HR', 'b', analysis = 'hr')`. Neopterin was positively associated with the walking with support milestone `r paste_output('neopterin', 'Walking w/ support', 'WHO Motor Milestone HR', 'b', analysis = 'hr')`. 
+
+Mannitol at 3 months was similarly correlated with the CDI understanding domain `r paste_output('mannitol', 'Understanding', 'Communicative Development Inventories', 'b')`, the sum total of all WHO motor milestones `r paste_output('mannitol', 'Sum Total', 'WHO Motor Milestone', 'b')`, and the subset of milestones 2, 4, 5, 6 `r paste_output('mannitol', 'Milestones 2, 4, 5, 6', 'WHO Motor Milestone', 'b', "Table 4")`.
+
+Lactulose and mannitol at 14 months were negatively associated with the gross motor domain of EASQ at Year 2 `r paste_output('lactulose', 'Gross Motor Score', 'Extended Ages and Stages Questionnaire', 'b')` and `r paste_output('mannitol', 'Gross Motor Score', 'Extended Ages and Stages Questionnaire', 'b')`, respectively.
+
+
+#### Inflamation
+
+Neopterin was positively associated with the walking with support milestone `r paste_output('neopterin', 'Walking w/ support', 'WHO Motor Milestone HR', 'b', analysis = 'hr')`. 
+
+#### Repair
+
+Regenerating gene 1$\beta$ measured at 14 months had a positive association with the communication domain of EASQ at Year 2 `r paste_output('regenerating gene 1-beta', 'Communication Score', 'Extended Ages and Stages Questionnaire', 'b')`. However, REG1B was negatively associated with the expressing domain of CDI, also at Year 2 `r paste_output('regenerating gene 1-beta', 'Expressing', 'Communicative Development Inventories', 'b')`.
+
+### Kenya
+
+#### Permeability
+In Kenya, alpha-1 antitrypsin measured at 6 months of age had a positive association with the communication score of EASQ at Year 2 `r paste_output('alpha-1 antitrypsin', 'Communication Score', 'Extended Ages and Stages Questionnaire', 'k')`.  Similarly, mannitol at 6 months was positively associated with the personal-social score of EASQ `r paste_output('mannitol', 'Personal Social Score', 'Extended Ages and Stages Questionnaire', 'k')`. 
+
+Alpha-1 antitrypsin measured at month 6 was negatively associated with the crawling without support WHO motor milestone `r paste_output('alpha-1 antitrypsin', 'Crawling w/o support', 'WHO Motor Milestone HR', 'k', analysis = 'hr')`, 
+
+#### Inflammation
+
+At 6 months of age, neopterin was positively associated with the walking without support milestone hazard ratio`r paste_output('neopterin', 'Walking w/o support', 'WHO Motor Milestone HR', 'k', analysis = 'hr')`.

@@ -1,0 +1,249 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r setup}
+rm(list=ls())
+library("xtable")
+source(here::here("0-config.R"))
+
+adj_mods <- dir(here('results/adjusted'))
+unadj_mods <- dir(here('results/unadjusted/'))
+
+knitr::opts_chunk$set(
+  include = FALSE
+)
+```
+
+```{r clean_analysis_output function}
+clean_analysis_output <- function(adjusted, unadjusted, analysis = "diff"){
+  # create df of exposure names
+  # to merge actual names
+  exp_rename <- tribble(
+    ~var,     ~exposure,       ~exp_domain,
+    'aat',   'alpha-1 antitrypsin', 'fecal',
+    'mpo',   'myeloperoxidase',      'fecal', 
+    'neo',   'neopterin',            'fecal', 
+    'L_conc_t', 'lactulose', 'urine', 
+    'M_conc_t', 'mannitol', 'urine',
+    'Lact', 'lactulose', 'urine', 
+    'Mann', 'mannitol', 'urine',
+    'reg', 'regenerating gene 1-beta', 'fecal'
+  )
+  
+  # create df of outcome names
+  # to merge in 
+  outcome_rename <- tribble(
+    ~var,            ~outcome,  ~outcome_domain,
+    'who_sum_total', 'Sum Total', 'WHO Motor Milestone', 
+    'who_sub_total', 'Milestones 2, 4, 5, 6', 'WHO Motor Milestone', 
+    'personal', 'Personal Social Score', 'Extended Ages and Stages Questionnaire', 
+    'motor', 'Gross Motor Score', 'Extended Ages and Stages Questionnaire', 
+    'combined', 'Combined', 'Extended Ages and Stages Questionnaire', 
+    'communication', 'Communication Score', 'Extended Ages and Stages Questionnaire', 
+    'cdi_und', 'Understanding', 'Communicative Development Inventories', 
+    'cdi_say', 'Expressing' , 'Communicative Development Inventories', 
+    'crawl_nosupp', 'Crawling (w/o support)', 'WHO Motor Milestone (HR)',
+    'sit_nosupp', 'Sitting (w/o support)', 'WHO Motor Milestone (HR)',
+    'stand_nosupp', 'Standing (w/o support)', 'WHO Motor Milestone (HR)',
+    'stand_supp', 'Standing (w/ support)', 'WHO Motor Milestone (HR)',
+    'walk_nosupp', 'Walking (w/o support)', 'WHO Motor Milestone (HR)',
+    'walk_supp', 'Walking (w/ support)', 'WHO Motor Milestone (HR)'
+  )
+  
+  if(!exists("adjusted$corrected.Pval_adj")){
+    adjusted <- adjusted %>% 
+      mutate(corrected.Pval_adj = p.adjust(Pval, "BH"))
+  }
+  
+  combined <- adjusted %>% 
+  left_join(unadjusted, 
+            by = c('X', 'Y'), 
+            suffix = c('_adj', '_unadj')) %>% 
+  mutate(t_exp = str_extract(X, '[0-9]'),
+         X = str_remove(X, '[0-9]'), 
+         X = str_remove(X, 'ln_'), 
+         Y = case_when(str_detect(Y, 'cdi_und') ~ 'cdi_und',
+                       str_detect(Y, 'cdi_say') ~ 'cdi_say',
+                       # bangladesh easq
+                       str_detect(Y, 'personal_') ~ 'personal',
+                       str_detect(Y, 'com_') ~ 'communication',
+                       str_detect(Y, 'motor_') ~ 'motor',
+                       str_detect(Y, 'combined_') ~ 'combined',
+                       # kenya easq
+                       str_detect(Y, 'mottot_') ~ 'motor',
+                       str_detect(Y, 'comtot_') ~ 'communication',
+                       str_detect(Y, 'pstot_') ~ 'personal',
+                       str_detect(Y, 'globaltot_') ~ 'combined',
+                       TRUE ~ Y)) %>% 
+  left_join(exp_rename, 
+            by = c('X' = 'var')) %>% 
+  left_join(outcome_rename, 
+            by = c('Y' = 'var')) %>% 
+    select(exposure:outcome_domain, t_exp, N_adj:Pval_unadj)
+  
+  if(str_detect(analysis, "diff")){
+    combined <- combined %>% 
+      mutate(unadj_ci = paste0(point.diff_unadj, " (", lb.diff_unadj, ', ', ub.diff_unadj,')'),
+             adj_ci = paste0(point.diff_adj, " (", lb.diff_adj, ', ', ub.diff_adj,')')) 
+  } else if(str_detect(analysis, "hr")){
+    combined <- combined %>% 
+      mutate(unadj_ci = paste0(point.HR_unadj, " (", lb.HR_unadj, ', ', ub.HR_unadj,')'),
+             adj_ci = paste0(point.HR_adj, " (", lb.HR_adj, ', ', ub.HR_adj,')')) 
+  }
+  
+  combined %>% 
+    select(`Outcome Domain` = outcome_domain, 
+           `Outcome` = outcome, 
+           `Exposure Source` = exp_domain, 
+           `Exposure` = exposure, 
+           t_exp,
+           `n` = N_adj, 
+           `Q1 mean` = q1_adj, 
+           `Q3 mean` = q3_adj, 
+           `Unadjusted Difference (95% CI)` = unadj_ci, 
+           `Unadjusted P-value` = Pval_unadj, 
+           `Adjusted Difference (95% CI)` = adj_ci, 
+           `Adjusted P-value` = Pval_adj, 
+           `FDR Corrected P-value` = corrected.Pval_adj
+           )
+}
+```
+
+# Bangladesh Tables
+
+## Hypothesis 1
+
+EED at t1 (3 months) is negatively associated with child development at t2
+
+WHO Hazard Ratios
+
+```{r read in bg hr data}
+bg_who_hr_adj <- readRDS(here('results/adjusted/H1a_who_adj_res.RDS')) %>% 
+  bind_rows(readRDS(here('results/adjusted/H1b_who_adj_res.RDS'))) %>% 
+  mutate(corrected.Pval_adj = p.adjust(Pval, "BH")) %>% 
+  mutate_if(is.numeric, ~ signif(round(., 4), digits = 4))
+bg_who_hr_unadj <- readRDS(here('results/unadjusted/H1_who-hr_res.RDS')) %>% 
+  mutate_if(is.numeric, format, digits = 4) 
+
+bg_who <- clean_analysis_output(bg_who_hr_adj, bg_who_hr_unadj, "hr") 
+```
+
+```{r, include = TRUE}
+bg_who
+```
+
+
+GAM Analyses
+
+```{r h1_setup, include = F}
+# read in data
+h1_adj <- readRDS(here('results/adjusted/H1_all_adj_res.RDS')) %>% 
+  mutate_if(is.numeric, round, 4)
+h1_unadj <- readRDS(here('results/unadjusted/H1_res.RDS'))%>% 
+  mutate_if(is.numeric, round, 4)
+
+all_h1 <- clean_analysis_output(h1_adj, h1_unadj)
+```
+
+```{r, include = TRUE}
+all_h1
+```
+
+
+## Hypothesis 2
+
+GAM Analyses
+
+```{r}
+# read in data
+h2_adj <- readRDS(here('results/adjusted/H2_all_adj_res.RDS')) %>% 
+  mutate_if(is.numeric, round, 4)
+h2_unadj <- readRDS(here('results/unadjusted/H2_res.RDS'))%>% 
+  mutate_if(is.numeric, round, 4)
+
+all_h2 <- clean_analysis_output(h2_adj, h2_unadj)
+```
+
+```{r, include = TRUE}
+all_h2
+```
+
+## Hypothesis 3
+
+GAM Analyses
+
+```{r}
+# read in data
+h3_adj <- readRDS(here('results/adjusted/h3_all_adj_res.RDS')) %>% 
+  mutate_if(is.numeric, round, 4)
+h3_unadj <- readRDS(here('results/unadjusted/h3_res.RDS'))%>% 
+  mutate_if(is.numeric, round, 4)
+
+all_h3 <- clean_analysis_output(h3_adj, h3_unadj)
+```
+
+```{r, include = TRUE}
+all_h3
+```
+
+# Kenya Tables
+
+## Hypothesis 4
+
+WHO Motor Milestone Hazard Ratios
+
+```{r}
+k_who_hr_adj <- readRDS(here('results/adjusted/H4a_who_adj_res.RDS')) %>% 
+  bind_rows(readRDS(here('results/adjusted/H4b_who_adj_res.RDS'))) %>% 
+  mutate(corrected.Pval_adj = p.adjust(Pval, "BH")) %>% 
+  mutate_if(is.numeric, ~ signif(round(., 3), digits = 3))
+k_who_hr_unadj <- readRDS(here('results/unadjusted/H4_who-hr_res.RDS')) %>% 
+  mutate_if(is.numeric, format, digits = 3) 
+
+k_who <- clean_analysis_output(k_who_hr_adj, k_who_hr_unadj, "hr") 
+```
+
+```{r, include = TRUE}
+k_who
+```
+
+GAM Analyses
+
+```{r}
+# read in data
+h4_adj <- readRDS(here('results/adjusted/H4_all_adj_res.RDS')) %>% 
+  mutate_if(is.numeric, round, 4)
+h4_unadj <- readRDS(here('results/unadjusted/H4_res.RDS'))%>% 
+  mutate_if(is.numeric, round, 4)
+
+all_h4 <- clean_analysis_output(h4_adj, h4_unadj)
+```
+
+```{r, include = TRUE}
+all_h4
+```
+
+## Hypothesis 5
+
+```{r}
+# read in data
+h5_adj <- readRDS(here('results/adjusted/h5_all_adj_res.RDS')) %>% 
+  mutate_if(is.numeric, round, 4)
+h5_unadj <- readRDS(here('results/unadjusted/h5_res.RDS'))%>% 
+  mutate_if(is.numeric, round, 4)
+
+all_h5 <- clean_analysis_output(h5_adj, h5_unadj)
+```
+
+```{r, include = TRUE}
+all_h5
+```
+
+```{r}
+save(all_h1, all_h2, all_h3, all_h4, all_h5, bg_who, k_who, file = here::here("tables/all_tables.RData"))
+```
+
+
+

@@ -1,0 +1,417 @@
+---
+title: "EED-Development Draft Tables"
+subtitle: "WASH Benefits, Bangladesh" 
+date: "`r format(Sys.Date(), '%d %B %Y')`"
+output: 
+  html_notebook:
+    theme: sandstone
+---
+
+```{r setup, include = F}
+rm(list = ls())
+source(here::here("0-config.R"))
+
+knitr::opts_chunk$set(echo = FALSE)
+
+who_hr <- readRDS(here("results/final/cleaned_hr_results.RDS"))
+gam <- readRDS(here("results/final/cleaned_gam_results.RDS"))
+
+for(df in gam){
+  assign(paste0("gam_h", select(df, hyp)[1, ]), df)
+}
+
+for(df in who_hr){
+  assign(paste0("hr_h", select(df, hyp)[1, ]), df)
+}
+
+
+library(tidyverse)
+library(kableExtra)
+library(stringr)
+library(tableone)
+library(flextable)
+library(officer)
+library(here)
+
+# CoopG/tableone2flextable
+tableone2flextable <- function(tableone){
+  rows <- nrow(tableone)
+  cols <- ncol(tableone)
+  rowsXcols <- rows*cols
+  colnames <- colnames(tableone)
+  
+  listoflists <- list()
+  
+  for (i in 1:cols){
+    start <- (i*rows+1)-rows
+    end <- i*rows
+    
+    listoflists[[i]] <- tableone[start:end]
+  }
+  
+  dataframe <- as.data.frame(listoflists, col.names = colnames)
+  flex <- flextable::flextable(dataframe)
+  
+  return(flex)
+}
+```
+
+# Import Data
+
+```{r}
+bg_tables <- bind_rows(
+  gam_h1, 
+  gam_h2, 
+  gam_h3
+)
+
+k_tables <- bind_rows(
+  gam_h4, 
+  gam_h5
+)
+```
+
+
+```{r, eval = FALSE}
+bg_tables <- bind_rows(
+  all_h1 %>% 
+    mutate(hyp = 1), 
+  all_h2 %>% 
+    mutate(hyp = 2), 
+  all_h3 %>% 
+    mutate(hyp = 3)
+) %>% 
+  group_by(hyp) %>% 
+  mutate_if(is.numeric, round, 2) %>% 
+  mutate(across(contains('P-value'), 
+                ~ case_when(.x <= 0.05 ~ paste0(.x, "*"), 
+                            TRUE ~ as.character(.x))), 
+         Exposure = case_when(t_exp == 1 ~ str_c(Exposure, " (3 mo)"), 
+                              t_exp == 2 ~ str_c(Exposure, " (14 mo)")), 
+         `Outcome Domain` = case_when(hyp == 1 ~ str_c(`Outcome Domain`, " (Year 1)"), 
+                                      hyp %in% c(2, 3) ~ str_c(`Outcome Domain`, " (Year 2)"))) %>% 
+  rename(`Adj. Diff. (95% CI)` = `Adjusted Difference (95% CI)`, 
+         `Adj. P-value` = `Adjusted P-value`, 
+         `FDR Corr. P-value` = `FDR Corrected P-value`)
+
+k_tables <- bind_rows(
+  all_h4 %>% 
+    mutate(hyp = 4), 
+  all_h5 %>% 
+    mutate(hyp = 5)
+) %>% 
+  group_by(hyp) %>% 
+  mutate_if(is.numeric, round, 2) %>% 
+  mutate(across(contains('P-value'), 
+                ~ case_when(.x <= 0.05 ~ paste0(.x, "*"), 
+                            TRUE ~ as.character(.x))), 
+         Exposure = case_when(t_exp == 1 ~ str_c(Exposure," (3 mo)"), 
+                              t_exp == 2 ~ str_c(Exposure, " (14 mo)")),  
+         `Outcome Domain` = case_when(hyp == 4 ~ str_c(`Outcome Domain`, " (Year 1)"), 
+                                      hyp == 5 ~ str_c(`Outcome Domain`, " (Year 2)"))) %>% 
+  rename(`Adj. Diff. (95% CI)` = `Adjusted Difference (95% CI)`, 
+         `Adj. P-value` = `Adjusted P-value`, 
+         `FDR Corr. P-value` = `FDR Corrected P-value`)
+```
+
+
+
+# Create Dataframes
+
+```{r who}
+bg_who <- bg_tables %>% 
+  filter(str_starts(`Outcome Domain`, 'WHO'))
+
+k_who <- k_tables %>% 
+  filter(str_starts(`Outcome Domain`, 'WHO'))
+```
+
+```{r bg cdi}
+bg_cdi <- bg_tables %>% 
+  filter(str_starts(`Outcome Domain`, 'Communicative Development'), 
+         t_exp == 1)
+```
+
+```{r bg easq}
+bg_easq <- bg_tables %>% 
+  filter(str_starts(`Outcome Domain`, 'Extended'), 
+         str_starts(`Exposure`, 'lact|mann'))
+```
+
+```{r k easq}
+k_easq <- k_tables %>% 
+  filter(str_starts(`Outcome Domain`, 'Extended'), 
+         str_starts(`Exposure`, 'lact|mann|alpha'), 
+         t_exp == 1)
+```
+
+```{r who hr}
+bg_hr <- hr_h1 %>% 
+  select(-`Outcome Domain`)
+
+k_hr <- hr_h4 %>% 
+  select(-`Outcome Domain`)
+```
+
+
+# Table 1
+
+```{r eval = F}
+bg <- readRDS(here('eed-dev_bg.RDS')) %>% 
+  rename(hh_index = HHwealth) %>% 
+  mutate(across(c(cesd_sum_t2, cesd_sum_ee_t3,
+                  pss_sum_mom_t3), 
+                as.numeric), 
+         life_viol_any_t3 = case_when(as.character(life_viol_any_t3) == "missing" ~ NA_character_, 
+                                      TRUE ~ as.character(life_viol_any_t3)),
+         across(c(sex, life_viol_any_t3), 
+                as.factor), 
+         country = 'Bangladesh', 
+         )
+
+k <- readRDS(here('eed-dev_k.RDS')) %>% 
+  mutate(across(c(quantile_phq, quantile_pss), 
+                as.numeric), 
+         across(c(sex), 
+                as.factor), 
+         country = 'Kenya')
+
+both = bind_rows(bg, k)
+
+
+myVars <- c("tr", "laz_t1", "waz_t1", "laz_t2", "waz_t2", 
+            "cesd_sum_t2", "cesd_sum_ee_t3", "pss_sum_mom_t3",
+            "quantile_phq", "quantile_pss", 
+            "sex", "life_viol_any_t3", "birthord", "momage", "momheight", 
+            "momedu", "hfiacat", "Nlt18", "Ncomp", "watmin", "walls", 
+            "floor", "roof", "hh_index")
+
+tab1 <- CreateTableOne(vars = myVars, data = both, strata = 'country', test = FALSE)
+
+print(tab1, nonnormal = myVars)
+```
+
+```{r eval = F}
+print(tab1, nonnormal = myVars, quote = FALSE, noSpaces = TRUE, printToggle = FALSE) %>% 
+  write.csv(here('tables/tableone.csv'))
+
+table_1 <- read_csv(here('tables/tableone.csv')) %>% 
+  mutate(across(.fns = ~ case_when(str_detect(., "NA|NaN") ~ NA_character_, 
+                                   TRUE ~ .)))
+```
+
+
+# Flextables
+
+```{r}
+keep_cols <- c('Outcome Domain', 'Outcome Subdomain',
+               'Exposure', 'n', 
+               'Q1', 'Q3', # append(x, value, after = 6)
+               'Adj. P-value')
+
+ft_default <- set_flextable_defaults(
+  font.size = 10
+)
+
+
+do.call(set_flextable_defaults, ft_default)
+
+flex_format <- function(ft, len_col_keys = 8){
+  ft %>% 
+    bold(i = ~ str_detect(`Adj. P-value`, "\\*")) %>% 
+    hline(part="header", border=fp_border(color="black")) %>% 
+  hline_bottom(part="body", border=fp_border(color="black")) %>% 
+  hline_top(part="header", border=fp_border(color="black")) %>% 
+  # align(align = "center", part = "all") %>% 
+  # align(j = c(1, 2), align = "left", part="all") %>% 
+  autofit(part = "all") %>% 
+    fontsize(part = "all", size = 10) %>% 
+  fit_to_width(max_width=10.75) %>% 
+  add_footer_row(top=F, 
+                values = "N, 25th Percentile, and 75th Percentile are from the adjusted analyses", len_col_keys)
+}
+
+
+autonum <- run_autonum(seq_id = "tab")
+```
+
+
+## Bangladesh
+
+```{r}
+bg_cdi_tbl <- bg_cdi %>% 
+                          mutate(`CDI Year` = case_when(hyp == 1 ~ "Year 1", 
+                                                        hyp %in% c(2, 3) ~ "Year 2"),
+                                 `Outcome Domain` = str_remove(`Outcome Domain`, "\\(Year (1|2)\\)"))
+
+
+
+bg_cdi_tab <- flextable(bg_cdi_tbl, 
+                        col_keys = c("CDI Year", 
+                                     append(keep_cols, "Adj. Diff (95% CI)", 6))) %>% 
+    merge_v("CDI Year") %>% 
+  valign(j = "CDI Year", valign = 'top') %>% 
+  flex_format(9) %>% 
+  set_caption("Communicative Development Inventories (Bangladesh)", style = "Table Caption",
+              autonum = autonum)
+```
+
+```{r}
+bg_easq_tbl <- bg_easq
+
+bg_easq_tab <- flextable(bg_easq_tbl,
+                         col_keys = append(keep_cols, "Adj. Diff (95% CI)", 6)) %>% 
+  flex_format(8) %>% 
+  set_caption("Extended Ages and Stages Questionnaire, Year 2 (Bangladesh)", style = "Table Caption",
+              autonum = autonum)
+```
+
+```{r}
+bg_who_tbl <- bg_who %>% 
+  mutate(`Outcome Domain` = str_remove(`Outcome Domain`, "\\(Year (1|2)\\)"))
+
+
+bg_who_tab <- flextable(bg_who_tbl, 
+                        col_keys = append(keep_cols, "Adj. Diff (95% CI)", 6)) %>% 
+  flex_format() %>% 
+  set_caption("WHO Motor Milestones, Year 1 (Bangladesh)", style = "Table Caption",
+              autonum = autonum)
+```
+
+## Kenya
+
+```{r}
+k_who_tbl <- k_who %>% 
+  mutate(`Outcome Domain` = str_remove(`Outcome Domain`, "\\(Year (1|2)\\)"))
+
+
+k_who_tab <- flextable(k_who_tbl, 
+          col_keys = append(keep_cols, "Adj. Diff (95% CI)", 6)) %>% 
+  flex_format() %>% 
+  set_caption("WHO Motor Milestones, Year 1 (Kenya)", style = "Table Caption",
+              autonum = autonum)
+```
+
+
+```{r}
+k_easq_tbl <- k_easq %>% 
+  mutate(`Outcome Domain` = str_remove(`Outcome Domain`, "\\(Year (1|2)\\)"))
+
+k_easq_tab <- flextable(k_easq_tbl, 
+          col_keys = append(keep_cols, "Adj. Diff (95% CI)", 6)) %>% 
+  flex_format() %>% 
+  set_caption("Extended Ages and Stages Questionnaire, Year 2 (Kenya)", style = "Table Caption",
+              autonum = autonum)
+```
+
+# WHO Motor Milestones - HR
+
+## Bangladesh
+
+```{r}
+bg_hr_tbl <- bg_hr
+
+bg_hr_tab <- flextable(bg_hr_tbl, 
+          col_keys = c("Motor Milestone", 
+                       append(keep_cols, "Adj. HR (95% CI)", 6))) %>% 
+  flex_format(9) %>% 
+  set_caption("Individual WHO Motor Milestones - Hazard Ratios, Year 1 (Bangladesh)", style = "Table Caption",
+              autonum = autonum)
+```
+
+## Kenya
+
+```{r}
+k_hr_tbl <- k_hr
+
+k_hr_tab <- flextable(k_hr_tbl, 
+          col_keys = c("Motor Milestone", 
+                       append(keep_cols, "Adj. HR (95% CI)", 6))) %>% 
+  flex_format(9) %>% 
+  set_caption("Individual WHO Motor Milestones - Hazard Ratios, Year 1 (Kenya)", style = "Table Caption",
+              autonum = autonum)
+```
+
+# Full Tables
+```{r}
+bg_tables_tab <- flextable(bg_tables, 
+          col_keys = append(keep_cols, "Adj. Diff (95% CI)", 6)) %>% 
+  flex_format(8) %>% 
+    merge_v("Outcome Domain") %>% 
+  valign(j = "Outcome Domain", valign = 'top') %>% 
+  width(j = "Outcome Domain", width = 1.25) %>% 
+  autofit(part = "all") %>% 
+    fontsize(part = "all", size = 10) %>% 
+  width(j = "Outcome Domain", 
+        width = 2.9) %>% 
+  # fit_to_width(max_width=10.75) %>% 
+  set_caption("Bangladesh Analyses", style = "Table Caption",
+              autonum = autonum)
+```
+
+```{r}
+k_tables_tab <- flextable(k_tables, 
+          col_keys = append(keep_cols, "Adj. Diff (95% CI)", 6)) %>% 
+  flex_format(8) %>% 
+  merge_v("Outcome Domain") %>% 
+  width(j = "Outcome Domain", 
+        width = 2.9) %>% 
+  set_caption("Kenya Analyses", style = "Table Caption",
+              autonum = autonum)
+```
+
+# Export to Word
+
+```{r}
+table_1_ft <- table_1 %>% 
+  flextable() %>% 
+  hline(part="header", border=fp_border(color="black")) %>% 
+  hline_bottom(part="body", border=fp_border(color="black")) %>% 
+  hline_top(part="header", border=fp_border(color="black")) %>% 
+  # align(align = "center", part = "all") %>% 
+  # align(j = c(1, 2), align = "left", part="all") %>% 
+  autofit(part = "all") %>% 
+  # fit_to_width(max_width=8) %>% 
+  set_caption("", style = "Table Caption",
+              autonum = autonum)
+
+```
+
+
+```{r}
+save_as_docx(bg_who_tab, k_who_tab,
+             
+             bg_cdi_tab,
+             bg_easq_tab, k_easq_tab,
+             
+             bg_hr_tab, k_hr_tab,
+             
+             bg_tables_tab, k_tables_tab,
+             
+             path = here::here('tables/eed-dev-tables.docx'), 
+             pr_section = prop_section(
+               page_size = page_size(orient = 'landscape'), 
+               page_margins = page_mar(bottom = 1, 
+                                       top = 1, 
+                                       right = 0.1, 
+                                       left = 0.1), 
+               type = 'nextPage'
+             ) )
+```
+
+```{r}
+write.xlsx(
+  tibble::lst(bg_who_tbl, k_who_tbl,
+             
+             bg_cdi_tbl,
+             bg_easq_tbl, k_easq_tbl,
+             
+             bg_hr_tbl, k_hr_tbl,
+             
+             # bg_tables_tbl, k_tables_tbl
+             ),
+  here::here("tables/all_tables.xlsx"),
+  overwrite = T
+)
+```
+

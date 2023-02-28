@@ -1,4 +1,3 @@
-
 .DS_Store
 .Rproj.user
 .RData
@@ -37,3 +36,7 @@ kenya/k_phq_pss_with_quant.R
 kenya/kenya-wealth-index.csv
 kenya/washb-kenya-allkids-ee-med-age-no-dob.csv
 kenya/washk_phq_pss_20210203.csv
+*.log
+raw-data/*
+*.aux
+~/.boxr-oauth

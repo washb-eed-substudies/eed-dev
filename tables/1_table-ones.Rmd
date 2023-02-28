@@ -1,0 +1,233 @@
+---
+title: "EED-Development Draft Table 1"
+output: html_notebook
+---
+
+```{r setup, include = F}
+rm(list = ls())
+
+knitr::opts_chunk$set(echo = FALSE)
+
+library(tidyverse)
+library(kableExtra)
+library(stringr)
+library(tableone)
+library(flextable)
+library(officer)
+library(here)
+library(labelled)
+
+# CoopG/tableone2flextable
+tableone2flextable <- function(tableone){
+  rows <- nrow(tableone)
+  cols <- ncol(tableone)
+  rowsXcols <- rows*cols
+  colnames <- colnames(tableone)
+  
+  listoflists <- list()
+  
+  for (i in 1:cols){
+    start <- (i*rows+1)-rows
+    end <- i*rows
+    
+    listoflists[[i]] <- tableone[start:end]
+  }
+  
+  dataframe <- as.data.frame(listoflists, col.names = colnames)
+  flex <- flextable::flextable(dataframe)
+  
+  return(flex)
+}
+```
+
+```{r}
+bg <- readRDS(here('final-data/eed-dev_bg.RDS')) %>% 
+  rename(hh_index = HHwealth) %>% 
+  mutate(across(c(cesd_sum_t2, cesd_sum_ee_t3,
+                  pss_sum_mom_t3), 
+                as.numeric), 
+         life_viol_any_t3 = case_when(as.character(life_viol_any_t3) == "missing" ~ NA_character_, 
+                                      TRUE ~ as.character(life_viol_any_t3)),
+         across(c(sex, life_viol_any_t3), 
+                as.factor), 
+         country = 'Bangladesh', 
+         )
+
+k <- readRDS(here('final-data/eed-dev_k.RDS')) %>% 
+  mutate(across(c(pss_score, phq_score_t3), 
+                as.numeric), 
+         across(c(sex), 
+                as.factor), 
+         country = 'Kenya')
+```
+
+
+```{r}
+myVars <- c("laz_t1", "waz_t1", "laz_t2", "waz_t2", 
+            "cesd_sum_t2", "cesd_sum_ee_t3", "pss_sum_mom_t3",
+            "sex", "life_viol_any_t3", "momage", "momheight_raw", 
+            "momedu", "hfiacat", "floor")
+
+bg <- bg %>% 
+  select(all_of(myVars))
+```
+
+```{r}
+# bg$birthord <- factor(bg$birthord, 
+#                       levels = c("first", "second or greater", "missing"),
+#                       ordered = TRUE)
+
+bg$hfiacat <- factor(bg$hfiacat, 
+                      levels = c("Mildly Food Insecure", "Moderately Food Insecure", 
+                                 "Severely Food Insecure", "Food Secure"),
+                      ordered = TRUE)
+
+var_label(bg) <- list(# tr = "Treatment Arm", 
+                      laz_t1 = "Length-for-age Z score (3 mo)", 
+                      waz_t1 = "Weight-for-age Z score (3 mo)", 
+                      laz_t2 = "Length-for-age Z score (14 mo)", 
+                      waz_t2 = "Weight-for-age Z score (14 mo)", 
+                      cesd_sum_t2 = "Maternal Depressive Symptoms (14 mo)", 
+                      cesd_sum_ee_t3 = "Maternal Depressive Symptoms (24 mo)", # check month
+                      pss_sum_mom_t3 = "Maternal Perceived Stress Scale (PSS) (24 mo)",
+                      # sex,
+                      life_viol_any_t3 = "Cumulative maternal exposure to intimate partner violence",
+                      # birthord = "Birth Order", 
+                      momage = "Maternal Age", 
+                      momheight_raw = "Maternal Height", 
+                      momedu = "Highest Completed Schooling (Years), mom", 
+                      hfiacat = "Household food insecurity", 
+                      # Nlt18 = "Number of children < 18 years old", 
+                      # Ncomp = "Total individuals in compound",
+                      # watmin = "Minutes to primary water source", 
+                      # walls = "Housing material, improved walls", 
+                      floor = "Housing material, improved floor" 
+                      # roof = "Housing material, improved roof", 
+                      # hh_index = "Household wealth index"
+                      )
+```
+
+
+```{r}
+setdiff(myVars, colnames(bg))
+
+tab1_bg <- CreateTableOne(vars = myVars, data = bg, test = FALSE)
+
+print(tab1_bg, nonnormal = myVars, varLabels = TRUE)
+```
+# Export to CSV
+
+```{r}
+print(tab1_bg, nonnormal = myVars, quote = TRUE, noSpaces = TRUE, printToggle = FALSE, varLabels = TRUE) %>% 
+  write.csv(here('tables/table_one_bg.csv'))
+```
+
+```{r}
+myVars <- c("laz_t1", "waz_t1", "laz_t2", "waz_t2", 
+            "pss_score", "phq_score_t3",
+            "sex", "momage", "momheight_raw", 
+            "momedu", "floor")
+k <- k %>% 
+  select(all_of(myVars))
+```
+
+```{r}
+k <- k %>% 
+  mutate(momedu = factor(momedu, 
+                         levels = c("Primary", "IncompletePrimary", 
+                                    "AnySecondary", "missing"),
+                         labels = c("Primary", "Incomplete Primary", 
+                                    "Any Secondary", "Missing"), 
+                         ordered = T),
+         # birthord = factor(birthord,
+         #                   levels = c("first", "second or greater",
+         #                              "missing"),
+         #                   ordered = TRUE),
+         # roof = factor(roof, 
+         #                levels = c(0, 1, "missing"),
+         #                labels = c("thatch/leaf", 
+                                   # "iron/other", "missing")),
+         floor = factor(floor, 
+                        levels = c(0, 1, "missing"),
+                        labels = c("earth/dung", "cement/concrete",
+                                   "missing")))
+
+var_label(k) <- list(# tr = "Treatment Arm", 
+                     laz_t1 = "Length-for-age Z score (6 mo)", 
+                     waz_t1 = "Weight-for-age Z score (6 mo)", 
+                     laz_t2 = "Length-for-age Z score (17 mo)", 
+                     waz_t2 = "Weight-for-age Z score (17 mo)", 
+                     pss_score = "Maternal Perceived Stress Scale (PSS) (25 mo)", 
+                     phq_score_t3 = "Maternal Depressive Symptoms (PHQ) (25 mo)",
+                     # birthord = "Birth Order",
+                     momage = "Maternal Age",
+                     momheight_raw = "Maternal Height", 
+                     momedu = "Highest Completed Schooling (Years), mom",
+                     # HHS = "Household Hunger Scale", 
+                     # Nlt18 = "Number of children < 18 years old", 
+                     # Ncomp = "Total individuals in compound",
+                     # water_time = "Minutes to primary water source", 
+                     # wall = "Housing material, walls", 
+                     floor = "Housing material, floor"
+                     # roof = "Housing material, roof", 
+                     # hh_index = "Household wealth index"
+                     )
+
+```
+
+
+
+```{r}
+setdiff(myVars, colnames(k))
+
+tab1_k <- CreateTableOne(vars = myVars, data = k, test = FALSE)
+
+print(tab1_k, nonnormal = myVars, varLabels = TRUE)
+```
+
+
+# Export to CSV
+
+```{r}
+print(tab1_k, nonnormal = myVars, quote = TRUE, noSpaces = TRUE, printToggle = FALSE, varLabels = TRUE) %>% 
+  write.csv(here('tables/table_one_k.csv'))
+```
+
+
+# Put both in a single Word doc
+
+
+```{r}
+table_1_ft <- function(table_1_csv, caption){
+  read_csv(table_1_csv) %>%   
+    mutate(across(.fns = ~ case_when(str_detect(., "NA|NaN") ~ NA_character_, 
+                                     TRUE ~ .)),
+           across(.fns = ~ str_remove_all(., '\\"'))) %>% 
+    flextable() %>% 
+    hline(part="header", border=fp_border(color="black")) %>% 
+    set_header_labels(X1 = "", 
+                      '"Overall"' = caption) %>% 
+    hline_bottom(part="body", border=fp_border(color="black")) %>% 
+    hline_top(part="header", border=fp_border(color="black")) %>% 
+    autofit(part = "all") %>% 
+    set_caption(caption, style = "Table Caption",
+                autonum = run_autonum())
+}
+```
+
+
+```{r}
+save_as_docx(table_1_ft(here('tables/table_one_bg.csv'), "Bangladesh"), 
+             table_1_ft(here('tables/table_one_k.csv'), "Kenya"),
+
+             path = here::here('tables/eed-dev-both-tableones.docx'), 
+             pr_section = prop_section(
+               page_size = page_size(orient = 'portrait'), 
+               page_margins = page_mar(bottom = 0.1, 
+                                       top = 0.1, 
+                                       right = 0.1, 
+                                       left = 0.1), 
+               type = 'nextPage'
+             ) )
+```
+

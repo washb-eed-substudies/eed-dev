@@ -1,0 +1,989 @@
+---
+title: "Breastfeeding"
+subtitle: "Post Hoc Analyses"
+author: "Gene Ho"
+output: html_notebook
+---
+
+
+```{r}
+library(haven)
+library(readr)
+library(dplyr)
+library(ggplot2)
+library(here)
+library(stringr)
+library(boxr)
+
+bf <- read_dta(here("raw-data/bangladesh/bftotal.dta"))
+```
+
+## Breastfeeding
+
+### Bangladesh
+
+From Caitlin
+
+```{r}
+
+transformFFQdf <- function(df) {
+  if (all(df$timepoint != "endline")) {
+    df.new <- df %>%
+      rename(childNo = childId) %>%
+      rowwise() %>%
+      mutate(
+        any_liquid24h = sum(c_across(
+          c(
+            c608_1_3,
+            c608_2_3,
+            c608_3_3,
+            c608_4_3,
+            c608_5_3,
+            c608_6_3,
+            c608_7_3,
+            c608_8_3,
+            c608_9_3,
+            c608_10_3,
+            c608_11_3,
+            c608_12_3
+          )
+        ) == 1),
+        any_liquid7d = sum(c_across(
+          c(c612_1, c612_2, c612_3, c612_4, c612_5, c612_6)
+        ) == 1),
+        any_solid24h = sum(c_across(
+          starts_with("c609") &
+            !contains("_other") & !contains("c609_19")
+        ) == 1),
+        any_solid7d = sum(c_across(
+          c(
+            c611_1_2,
+            c611_2_2,
+            c611_3_2,
+            c611_4_2,
+            c611_5_2,
+            c611_6_2,
+            c611_7_2,
+            c611_8_2,
+            c611_9_2,
+            c611_10_2,
+            c611_11_2,
+            c611_12_2,
+            c611_13_2,
+            c611_14_2
+          )
+        ) > 0)
+      ) %>%
+      ungroup() %>%
+      mutate(
+        first_brstmlk_after_brth = factor(
+          ifelse(
+            is.na(c604) |
+              c604 == 99,
+            NA,
+            ifelse(
+              c604 == 88,
+              "Never breastfed",
+              ifelse(
+                c604 == 0,
+                "Within 30m of birth",
+                ifelse(
+                  c604 == 1,
+                  "Within 1h of birth",
+                  ifelse(
+                    c604 == 2,
+                    "1-24h after birth",
+                    ifelse(c604 == 3, ">24h after birth", "Problem")
+                  )
+                )
+              )
+            )
+          ),
+          levels = c(
+            "Within 30m of birth",
+            "Within 1h of birth",
+            "1-24h after birth",
+            ">24h after birth",
+            "Never breastfed",
+            "Problem"
+          )
+        ),
+        brstfd_YN = ifelse(is.na(c605), NA, ifelse(c605 == 1, 1, 0)),
+        brstfd_times = ifelse(is.na(c607), NA, c607),
+        brstfd_times_cat = factor(
+          ifelse(
+            is.na(brstfd_times) |
+              brstfd_times < 6,
+            "0-5",
+            ifelse(
+              brstfd_times < 11,
+              "6-10",
+              ifelse(brstfd_times < 16, "11-15", "16-20+")
+            )
+          ),
+          levels = c("0-5",
+                     "6-10",
+                     "11-15",
+                     "16-20+")
+        ),
+        last_brstfd_age_months = ifelse(
+          is.na(c606months) &
+            is.na(c606days),
+          NA,
+          ifelse(c606days == 0, c606months, round(c606months + c606days / 30, 0))
+        ),
+        othrmlk = ifelse(is.na(c608_3_3) |
+                           c608_3_3 == 0, NA, ifelse(c608_3_3 == 1, 1, 0)),
+        othrmlk_times = ifelse(is.na(c608_3_2) |
+                                 othrmlk == 0, NA, c608_3_2),
+        formula = ifelse(is.na(c608_4_3) |
+                           c608_4_3 == 0, NA, ifelse(c608_4_3 == 1, 1, 0)),
+        formula_times = ifelse(is.na(c608_4_2) |
+                                 formula == 0, NA, c608_4_2),
+        brstfd_cat = factor(
+          ifelse(
+            is.na(brstfd_YN),
+            NA,
+            ifelse(
+              first_brstmlk_after_brth == "Never breastfed",
+              "No longer breastfed",
+              ifelse(
+                brstfd_YN == 1 &
+                  (
+                    any_liquid24h == 0 &
+                      any_liquid7d == 0 &
+                      any_solid24h == 0 &
+                      any_solid7d == 0
+                  ),
+                "Exclusively breastfed",
+                ifelse(
+                  brstfd_YN == 1 &
+                    (any_liquid24h > 0 |
+                       any_liquid7d > 0) &
+                    (any_solid24h == 0 & any_solid7d == 0),
+                  "Breastfed &
+              other liquids / porridge",
+              ifelse(
+                brstfd_YN == 1 & (any_solid24h > 0 | any_solid7d > 0),
+                "Breastfed &
+              more substantive complimentary foods",
+              ifelse(brstfd_YN == 0, "No longer breastfed", "error")
+              )
+                )
+              )
+            )
+          ),
+          levels = c(
+            "Exclusively breastfed",
+            "Breastfed &
+              other liquids / porridge",
+            "Breastfed &
+              more substantive complimentary foods",
+            "No longer breastfed"
+          )
+        )
+      ) %>%
+      select(dataid, childNo, timepoint, any_liquid24h:brstfd_cat)
+  } else {
+    df.new <- df %>%
+      rowwise() %>%
+      mutate(
+        any_liquid24h = sum(c_across(
+          c(
+            c608_1_1,
+            c608_2_1,
+            c608_3_1,
+            c608_4_1,
+            c608_5_1,
+            c608_6_1,
+            c608_7_1,
+            c608_8_1,
+            c608_9_1,
+            c608_10_1,
+            c608_11_1,
+            c608_12_1
+          )
+        ) == 1),
+        any_solid24h = sum(c_across(
+          starts_with("c609") &
+            !contains("_other") & !contains("c609_19")
+        ) == 1),
+        any_solid7d = sum(c_across(
+          c(
+            c611_1_1,
+            c611_2_1,
+            c611_3_1,
+            c611_4_1,
+            c611_5_1,
+            c611_6_1,
+            c611_7_1,
+            c611_8_1,
+            c611_9_1,
+            c611_10_1,
+            c611_11_1,
+            c611_12_1,
+            c611_13_1,
+            c611_14_1
+          )
+        ) > 0)
+      ) %>%
+      ungroup() %>%
+      mutate(
+        brstfd_YN = ifelse(is.na(c605), NA, ifelse(c605 == 1, 1, 0)),
+        # brstfd_times = ifelse(is.na(c607), NA, c607),
+        ## This data is not in the endline dataset?
+        # brstfd_times_cat = factor(ifelse(is.na(brstfd_times) | brstfd_times <6,  "0 - 5", ifelse(brstfd_times < 11, "6 - 10", ifelse(brstfd_times < 16, "11 - 15", "16 - 20 + "))), levels = c("0 - 5", "6 - 10", "11 - 15", "16 - 20 +")),
+        ## brstfd_times data is not in the endline dataset (?) so can’t compute
+        last_brstfd_age_months = ifelse(
+          is.na(c606months) &
+            is.na(c606days),
+          NA,
+          ifelse(c606days == 0, c606months, round(c606months + c606days / 30, 0))
+        ),
+        othrmlk = ifelse(
+          is.na(c608_3_1) | c608_3_1 == 99,
+          NA,
+          ifelse(c608_3_1 == 1, 1, 0)
+        ),
+        othrmlk_times = ifelse(is.na(c608_3_2) |
+                                 othrmlk == 0, NA, c608_3_2),
+        formula = ifelse(
+          is.na(c608_4_1) | c608_4_1 == 99,
+          NA,
+          ifelse(c608_4_1 == 1, 1, 0)
+        ),
+        formula_times = ifelse(is.na(c608_4_2) |
+                                 formula == 0, NA, c608_4_2),
+        brstfd_cat = factor(
+          ifelse(
+            is.na(brstfd_YN),
+            NA,
+            ifelse(
+              brstfd_YN == 1 &
+                (any_liquid24h == 0 &
+                   any_solid24h == 0 &
+                   any_solid7d == 0),
+              "Exclusively breastfed",
+              ifelse(
+                brstfd_YN == 1 &
+                  any_liquid24h > 0 &
+                  (any_solid24h == 0 &
+                     any_solid7d == 0),
+                "Breastfed & other liquids / porridge",
+                ifelse(
+                  brstfd_YN == 1 &
+                    (any_solid24h > 0 |
+                       any_solid7d > 0),
+                  "Breastfed & more substantive complimentary foods",
+                  ifelse(brstfd_YN == 0, "No longer breastfed", "error")
+                )
+              )
+            )
+          ),
+          levels = c(
+            "Exclusively breastfed",
+            "Breastfed & other liquids / porridge",
+            "Breastfed & more substantive complimentary foods",
+            "No longer breastfed"
+          )
+        )
+      ) %>%
+      select(dataid, childNo, timepoint, any_liquid24h:brstfd_cat)
+  }
+  df.new <- df.new %>%
+    mutate(childid = as.numeric(paste0(dataid, childNo)))
+  return(df.new)
+}
+```
+
+```{r}
+
+bf <- bf %>% 
+  select(childid, contains("ln_mpo"),
+         contains("ln_neo"), contains("ln_reg1b"), 
+         contains("ln_l_conc"), contains("ln_m_conc"), 
+         contains("brstfd"))
+
+allttests <- NULL
+
+for (i in c("brstfd_yn1")){
+  for (j in c(grep("ln_mpo|ln_neo|ln_reg1b|ln_l_conc|ln_m_conc", names(bf), value = T))){
+    formula <- as.formula(paste(j,"~", i, sep = ""))
+    test <- t.test(formula, data = bf)
+    res <- data.frame(t(test$estimate), p.value = test$p.value)
+    allttests <- rbind(allttests, cbind(i, j, res))
+  }
+}
+
+t2 <- allttests[,2] %>% 
+  str_subset("1", negate = TRUE) %>% 
+  unique()
+
+for (i in c("brstfd_yn2")){
+  for (j in t2){
+    formula <- as.formula(paste(j,"~", i, sep = ""))
+    test <- t.test(formula, data = bf)
+    res <- data.frame(t(test$estimate), p.value = test$p.value)
+    allttests <- rbind(allttests, cbind(i, j, res))
+  }
+}
+
+t3 <- allttests[,2] %>% 
+  str_subset("1|2", negate = TRUE) %>% 
+  unique()
+
+for (i in c("brstfd_yn3")){
+  for (j in t3){
+    formula <- as.formula(paste(j,"~", i, sep = ""))
+    test <- t.test(formula, data = bf)
+    res <- data.frame(t(test$estimate), p.value = test$p.value)
+    allttests <- rbind(allttests, cbind(i, j, res))
+  }
+}
+```
+
+```{r}
+allttests <- allttests %>% 
+  mutate(time = case_when(str_sub(i, start = -1, end = -1) == str_sub(j, start = -1, end = -1) ~ "c", 
+                          TRUE ~ "s"),
+         i = factor(i, labels = c("3m", "14m", "28m")))
+```
+
+```{r}
+ggplot(data = as.data.frame(allttests)) +
+  geom_col(aes(x = j, y = as.numeric(p.value), fill = time)) +
+  geom_hline(yintercept = 0.2, color = "red") +
+  facet_wrap(~i, scales = "free_x") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  scale_fill_manual(values = c("darkgreen", "maroon")) + 
+  labs(x = "", y = "t-test p-value")
+
+long <- reshape2::melt(allttests, id.vars = c("i", "j", "p.value"))
+long <- long %>% mutate(variable = ifelse(variable == "mean.in.group.0", "No", "Yes"))
+
+ggplot(data = as.data.frame(long)) +
+  geom_col(aes(x = j, y = as.numeric(value), fill = variable), position = "dodge") +
+  facet_wrap(~i, scales = "free_x") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  labs(x = "", y = "Mean Z-score", fill = "Currently Breastfed")
+
+```
+
+
+## Exclusive Breastfeeding
+
+```{r}
+rm(list = ls())
+```
+
+
+### Bangladesh
+
+```{r}
+
+bg <- read_rds(here("final-data/eed-dev_bg.RDS"))
+
+bf_bl <- read_dta(here("raw-data/bangladesh/ffq/EE_Baseline_FFQ_Raw_data_13Sep2017_deidentified.dta"), 
+                  col_select = c(contains("id"), starts_with("child"),
+                                 c607, c607a, 
+                                 starts_with("c608"),
+                                 starts_with("c609")))
+bf_ml <- read_dta(here("raw-data/bangladesh/ffq/EE_Midline_FFQ_Raw_data_28Sep2017_deidentified.dta"), 
+                  col_select = c(contains("id"), starts_with("child"),
+                                 c607, c607a, 
+                                 starts_with("c608"),
+                                 starts_with("c609")))
+# bf_el <- read_dta(here("raw-data/bangladesh/ffq/EE_Endline_FFQ_raw_data_07March2017_deidentified.dta"), 
+#                   col_select = c(contains("id"), starts_with("child"),
+#                                  c607, c607a, 
+#                                  starts_with("c608"),
+#                                  starts_with("c609")))
+
+labelled::lookfor(bf_el) %>% 
+  View()
+
+
+```
+
+diff number of columns used c608_12_2
+compared to Caitlin's file
+
+```{r}
+ebf_bl <- bf_bl %>% 
+  rowwise() %>% 
+  mutate(childid = as.numeric(paste0(dataid, childId)), 
+         ebf_bl = all(c607>0, c607a==5, c608_1_3==2, c608_2_3==2, 
+                       c608_3_3==2, c608_4_3==2, c608_5_3==2, 
+                       c608_6_3==2, c608_7_3==2, c608_8_3==2, 
+                       c608_9_3==2, c608_10_3==2, c608_11_3==2, 
+                       c608_12_3==2, c609_1_1==2, c609_2_1==2,
+                       c609_2_2==2, c609_2_3==2, c609_2_4==2, 
+                       c609_2_5==2, c609_3_1==2, c609_3_2==2, 
+                       c609_3_3==2, c609_4_1==2, c609_4_2==2, 
+                       c609_5_1==2, c609_5_2==2, c609_5_3==2, 
+                       c609_5_4==2, c609_5_5==2, c609_6_1==2, 
+                       c609_6_2==2, c609_7_1==2, c609_7_2==2, 
+                       c609_7_3==2, c609_7_4==2, c609_7_5==2, 
+                       c609_7_6==2, c609_7_7==2, c609_8_1==2, 
+                       c609_8_2==2, c609_8_3==2, c609_8_4==2,
+                       c609_8_5==2, c609_8_6==2, c609_9_1==2, 
+                       c609_9_2==2, c609_9_3==2, c609_10_1==2, 
+                       c609_11_1==2, c609_12_1==2, c609_12_2==2, 
+                       c609_12_3==2, c609_13_1==2, c609_13_2==2, 
+                       c609_13_3==2, c609_13_4==2, c609_13_5==2, 
+                       c609_13_6==2, c609_13_7==2, c609_14_1==2, 
+                       c609_14_2==2, c609_14_3==2, c609_15_1==2, 
+                       c609_15_2==2, c609_15_3==2, c609_16_1==2, 
+                       c609_16_2==2, c609_16_3==2, c609_16_4==2, 
+                       c609_16_5==2, c609_17_1==2, c609_17_2==2, 
+                       c609_17_3==2, c609_17_4==2, c609_18_1==2, 
+                       c609_18_2==2)) %>% 
+  select(contains("childid"), ebf_bl)
+
+ebf_ml <- bf_ml %>% 
+  rowwise() %>% 
+  mutate(childid = as.numeric(paste0(dataid, childId)), 
+         ebf_ml = all(c607>0, c607a==5, c608_1_3==2, c608_2_3==2, 
+                   c608_3_3==2, c608_4_3==2, c608_5_3==2, 
+                   c608_6_3==2, c608_7_3==2, c608_8_3==2, 
+                   c608_9_3==2, c608_10_3==2, c608_11_3==2, 
+                   c608_12_3==2, c609_1_1==2, c609_2_1==2,
+                   c609_2_2==2, c609_2_3==2, c609_2_4==2, 
+                   c609_2_5==2, c609_3_1==2, c609_3_2==2, 
+                   c609_3_3==2, c609_4_1==2, c609_4_2==2, 
+                   c609_5_1==2, c609_5_2==2, c609_5_3==2, 
+                   c609_5_4==2, c609_5_5==2, c609_6_1==2, 
+                   c609_6_2==2, c609_7_1==2, c609_7_2==2, 
+                   c609_7_3==2, c609_7_4==2, c609_7_5==2, 
+                   c609_7_6==2, c609_7_7==2, c609_8_1==2, 
+                   c609_8_2==2, c609_8_3==2, c609_8_4==2,
+                   c609_8_5==2, c609_8_6==2, c609_9_1==2, 
+                   c609_9_2==2, c609_9_3==2, c609_10_1==2, 
+                   c609_11_1==2, c609_12_1==2, c609_12_2==2, 
+                   c609_12_3==2, c609_13_1==2, c609_13_2==2, 
+                   c609_13_3==2, c609_13_4==2, c609_13_5==2, 
+                   c609_13_6==2, c609_13_7==2, c609_14_1==2, 
+                   c609_14_2==2, c609_14_3==2, c609_15_1==2, 
+                   c609_15_2==2, c609_15_3==2, c609_16_1==2, 
+                   c609_16_2==2, c609_16_3==2, c609_16_4==2, 
+                   c609_16_5==2, c609_17_1==2, c609_17_2==2, 
+                   c609_17_3==2, c609_17_4==2, c609_18_1==2, 
+                   c609_18_2==2)) %>% 
+  select(contains("childid"), ebf_ml)
+
+ebf_bg <- bg %>% 
+  full_join(ebf_bl, by = "childid") %>% 
+  full_join(ebf_ml, by = "childid") %>% 
+  select(childid, contains("ln_mpo"),
+         contains("ln_neo"), contains("ln_reg1b"), 
+         contains("ln_L_conc"), contains("ln_M_conc"),
+         starts_with("ebf"))
+```
+
+
+```{r}
+allttests <- NULL 
+
+for (i in c("ebf_bl")){
+  for (j in c(grep("ln_mpo|ln_neo|ln_reg1b|ln_L_conc|ln_M_conc", names(ebf_bg), value = T))){
+    formula <- as.formula(paste(j,"~", i, sep = ""))
+    test <- t.test(formula, data = ebf_bg)
+    res <- data.frame(t(test$estimate), p.value = test$p.value)
+    allttests <- rbind(allttests, cbind(i, j, res))
+  }
+}
+
+bg_ttests <- allttests
+
+```
+
+### Kenya
+
+c605 for ebf at bl and ml for both countries
+is child still bf or completely weaned
+any amount of bf affects eed markers
+
+```{r}
+k_ffq <- read_dta(here("/Users/geneho/Downloads/washk_excbf_20180531_share.dta")) %>% 
+  select(childid, contains("excbf"))
+
+k_eed <- read_rds(here("final-data/eed-dev_k.RDS")) %>% 
+  select(childid, starts_with("ln_"), -ends_with("2"), -ends_with("3"))
+
+
+k_ebf <- k_ffq %>% 
+  inner_join(k_eed, by = "childid") %>% 
+  mutate(across(c("excbf_combined", "excbf_eeblinf", "excbf_eemlinf", "excbf_mselup", "excbf_msmlup"),
+                factor))
+
+
+```
+
+```{r}
+allttests <- NULL
+
+for (i in c("excbf_combined", "excbf_eeblinf")){
+  for (j in c(grep("ln_", names(k_ebf), value = T))){
+    formula <- as.formula(paste(j,"~", i, sep = ""))
+    test <- t.test(formula, data = k_ebf)
+    res <- data.frame(t(test$estimate), p.value = test$p.value)
+    allttests <- rbind(allttests, cbind(i, j, res))
+  }
+}
+
+k_ttests <- allttests
+# writexl::write_xlsx(list("bangladesh" = bg_ttests,
+#                          "kenya" = k_ttests), here("results/exclusive_bf.xlsx"))
+```
+
+
+
+# Sensitivity Analysis
+
+```{r}
+sig_bg_bf <- bg_ttests %>% 
+  filter(p.value < 0.05)
+
+sig_bg_bf
+```
+
+```{r echo = F}
+source(here::here("0-config.R"))
+rm(list = ls())
+
+```
+
+```{r}
+d <- readRDS(here('final-data/eed-dev_bg.RDS'))
+bf_bl <- read_dta(here("raw-data/bangladesh/ffq/EE_Baseline_FFQ_Raw_data_13Sep2017_deidentified.dta"), 
+                  col_select = c(contains("id"), starts_with("child"),
+                                 c605)) %>% 
+  mutate(childid = as.numeric(paste0(dataid, childId))) %>% 
+  select(-c(dataid, childId), curr_bf_bl = c605)
+bf_ml <- read_dta(here("raw-data/bangladesh/ffq/EE_Midline_FFQ_Raw_data_28Sep2017_deidentified.dta"), 
+                  col_select = c(contains("id"), starts_with("child"),
+                                 c605)) %>% 
+  mutate(childid = as.numeric(paste0(dataid, childId))) %>% 
+  select(-c(dataid, childId), curr_bf_ml = c605)
+
+
+# join dfs together
+
+d <- d %>% 
+  left_join(bf_bl %>% 
+              select("childid", "curr_bf_bl"), by = "childid") %>% 
+  left_join(bf_ml %>% 
+              select("childid", "curr_bf_ml"), by = "childid")
+
+#Set list of adjustment variables
+#Make vectors of adjustment variable names
+Wvars<-c("sex","birthord", "momage","momheight","momedu", 
+         "hfiacat", "Nlt18","Ncomp", "watmin", "walls", 
+         "floor", 'roof', "HHwealth", 
+         "life_viol_any_t3", "tr",
+         
+         'laz_t1', 'waz_t1', "cesd_sum_t2")
+
+Wvars[!(Wvars %in% colnames(d))]
+
+H1_W <- c(Wvars)
+
+```
+
+```{r results = FALSE}
+##########################
+# adjustment sets 4-5
+## exposure: urine markers
+## outcome: who mm
+##########################
+
+Xvars <- c('ln_L_conc_t1', 'ln_M_conc_t1')           
+Yvars <- c('who_sum_total', 'who_sub_total')
+
+H1b_W <- c(H1_W, 'ageday_ut1', 'agedays_cdi2', 
+           'month_ut1', 'month_cdi2', 'curr_bf_bl')
+H1b_W[!(H1b_W %in% colnames(d))]
+
+#Fit models
+H1b_adj_models <- NULL
+for(i in Xvars){
+  for(j in Yvars){
+    print(i)
+    print(j)
+    res_adj <- fit_RE_gam(d=d, X=i, Y=j,  W=H1b_W, forcedW = 'curr_bf_bl')
+    res <- data.frame(X=i, Y=j, fit=I(list(res_adj$fit)), dat=I(list(res_adj$dat)))
+    H1b_adj_models <- bind_rows(H1b_adj_models, res)
+  }
+}
+
+
+
+#Get primary contrasts
+H1b_adj_res <- NULL
+for(i in 1:nrow(H1b_adj_models)){
+  res <- data.frame(X=H1b_adj_models$X[i], Y=H1b_adj_models$Y[i])
+  preds <- predict_gam_diff(fit=H1b_adj_models$fit[i][[1]], d=H1b_adj_models$dat[i][[1]], quantile_diff=c(0.25,0.75), Xvar=res$X, Yvar=res$Y)
+  H1b_adj_res <-  bind_rows(H1b_adj_res , preds$res)
+}
+
+#Make list of plots
+H1b_adj_plot_list <- NULL
+H1b_adj_plot_data <- NULL
+for(i in 1:nrow(H1b_adj_models)){
+  res <- data.frame(X=H1b_adj_models$X[i], Y=H1b_adj_models$Y[i])
+  simul_plot <- gam_simul_CI(H1b_adj_models$fit[i][[1]], H1b_adj_models$dat[i][[1]], xlab=res$X, ylab=res$Y, title="")
+  H1b_adj_plot_list[[i]] <-  simul_plot$p
+  H1b_adj_plot_data <-  rbind(H1b_adj_plot_data, data.frame(Xvar=res$X, Yvar=res$Y, adj=0, simul_plot$pred %>% subset(., select = c(Y,X,id,fit,se.fit,uprP, lwrP,uprS,lwrS))))
+}
+```
+
+Compare with and without exclusive bf
+
+```{r}
+H1b <- H1b_adj_res %>% 
+  left_join(readRDS(here("results/adjusted/H1b_adj_res.RDS")),
+            by = c("X", "Y"),
+            suffix = c("_bf", "_nobf")) %>% 
+  select(Y, X, starts_with("N", ignore.case = FALSE),
+         starts_with("point.diff"), starts_with("lb.diff"), starts_with("ub.diff"),
+         starts_with("Pval")) %>% 
+  relocate(ends_with("_nobf"), .after = last_col()) %>% 
+  mutate(change = case_when(Pval_nobf < 0.05 & Pval_bf > 0.05 ~ as.character(emo::ji("sad")), # addition is no longer sig
+                            Pval_nobf < 0.05 & Pval_bf < 0.05 ~ as.character(emo::ji("happy")), # addition is still sig
+                            Pval_nobf > 0.05 & Pval_bf < 0.05 ~ as.character(emo::ji("exclamation")))) # addition makes sig
+```
+
+```{r results = FALSE, message = FALSE}
+##########################
+# adjustment sets 9-10
+## exposure: urine markers
+## outcome: cdi2
+##########################
+
+Xvars <- c('ln_L_conc_t1', 'ln_M_conc_t1')           
+Yvars <- c('z_age2mo_cdi_undyr1_all_no4', 
+           'z_age2mo_cdi_sayyr1_all_no4')
+
+H1d_W <- c(H1_W, 'ageday_ut1', 'agedays_cdi2', 
+           'month_ut1', 'month_cdi2', 'curr_bf_bl')
+H1d_W[!(H1d_W %in% colnames(d))]
+
+#Fit models
+H1d_adj_models <- NULL
+for(i in Xvars){
+  for(j in Yvars){
+    print(i)
+    print(j)
+    res_adj <- fit_RE_gam(d=d, X=i, Y=j,  W=H1d_W, forcedW = 'curr_bf_bl')
+    res <- data.frame(X=i, Y=j, fit=I(list(res_adj$fit)), dat=I(list(res_adj$dat)))
+    H1d_adj_models <- bind_rows(H1d_adj_models, res)
+  }
+}
+
+
+
+#Get primary contrasts
+H1d_adj_res <- NULL
+for(i in 1:nrow(H1d_adj_models)){
+  res <- data.frame(X=H1d_adj_models$X[i], Y=H1d_adj_models$Y[i])
+  preds <- predict_gam_diff(fit=H1d_adj_models$fit[i][[1]], d=H1d_adj_models$dat[i][[1]], quantile_diff=c(0.25,0.75), Xvar=res$X, Yvar=res$Y)
+  H1d_adj_res <-  bind_rows(H1d_adj_res , preds$res)
+}
+
+#Make list of plots
+H1d_adj_plot_list <- NULL
+H1d_adj_plot_data <- NULL
+for(i in 1:nrow(H1d_adj_models)){
+  res <- data.frame(X=H1d_adj_models$X[i], Y=H1d_adj_models$Y[i])
+  simul_plot <- gam_simul_CI(H1d_adj_models$fit[i][[1]], H1d_adj_models$dat[i][[1]], xlab=res$X, ylab=res$Y, title="")
+  H1d_adj_plot_list[[i]] <-  simul_plot$p
+  H1d_adj_plot_data <-  rbind(H1d_adj_plot_data, data.frame(Xvar=res$X, Yvar=res$Y, adj=0, simul_plot$pred %>% subset(., select = c(Y,X,id,fit,se.fit,uprP, lwrP,uprS,lwrS))))
+}
+```
+
+
+```{r}
+H1d <- H1d_adj_res %>% 
+  left_join(readRDS(here("results/adjusted/H1d_adj_res.RDS")),
+            by = c("X", "Y"),
+            suffix = c("_bf", "_nobf")) %>% 
+  select(Y, X, starts_with("N", ignore.case = FALSE),
+         starts_with("point.diff"), starts_with("lb.diff"), starts_with("ub.diff"),
+         starts_with("Pval")) %>% 
+  relocate(ends_with("_nobf"), .after = last_col()) %>% 
+  mutate(change = case_when(Pval_nobf < 0.05 & Pval_bf > 0.05 ~ as.character(emo::ji("sad")), # addition is no longer sig
+                            Pval_nobf < 0.05 & Pval_bf < 0.05 ~ as.character(emo::ji("happy")), # addition is still sig
+                            Pval_nobf > 0.05 & Pval_bf < 0.05 ~ as.character(emo::ji("exclamation")))) # addition makes sig
+```
+
+## Hypothesis 2 
+
+eed markers at t1/t2 v. dev (cdi3, easq) at t3
+
+```{r}
+H2_W <- c(Wvars, 'laz_t2', 'waz_t2',
+          'cesd_sum_ee_t3',	'pss_sum_mom_t3')
+```
+
+
+```{r results = FALSE}
+##########################
+# adjustment sets 14-15
+## exposure: urine markers t1
+## outcome: easq t3
+##########################
+
+Xvars <- c('ln_L_conc_t1', 'ln_M_conc_t1')           
+Yvars <- c("z_age2mo_personal_no4", "z_age2mo_motor_no4", 
+           "z_age2mo_combined_no4", "z_age2mo_com_no4")
+
+H2b_W <- c(H2_W, 'ageday_ut1',	'agedays_easq', 
+           'month_ut1',	'month_easq', 'curr_bf_bl')
+H2b_W[!(H2b_W %in% colnames(d))]
+
+#Fit models
+H2b_adj_models <- NULL
+for(i in Xvars){
+  for(j in Yvars){
+    print(i)
+    print(j)
+    res_adj <- fit_RE_gam(d=d, X=i, Y=j,  W=H2b_W, forcedW = 'curr_bf_bl')
+    res <- data.frame(X=i, Y=j, fit=I(list(res_adj$fit)), dat=I(list(res_adj$dat)))
+    H2b_adj_models <- bind_rows(H2b_adj_models, res)
+  }
+}
+
+
+
+#Get primary contrasts
+H2b_adj_res <- NULL
+for(i in 1:nrow(H2b_adj_models)){
+  res <- data.frame(X=H2b_adj_models$X[i], Y=H2b_adj_models$Y[i])
+  preds <- predict_gam_diff(fit=H2b_adj_models$fit[i][[1]], d=H2b_adj_models$dat[i][[1]], quantile_diff=c(0.25,0.75), Xvar=res$X, Yvar=res$Y)
+  H2b_adj_res <-  bind_rows(H2b_adj_res , preds$res)
+}
+
+#Make list of plots
+H2b_adj_plot_list <- NULL
+H2b_adj_plot_data <- NULL
+for(i in 1:nrow(H2b_adj_models)){
+  res <- data.frame(X=H2b_adj_models$X[i], Y=H2b_adj_models$Y[i])
+  simul_plot <- gam_simul_CI(H2b_adj_models$fit[i][[1]], H2b_adj_models$dat[i][[1]], xlab=res$X, ylab=res$Y, title="")
+  H2b_adj_plot_list[[i]] <-  simul_plot$p
+  H2b_adj_plot_data <-  rbind(H2b_adj_plot_data, data.frame(Xvar=res$X, Yvar=res$Y, adj=0, simul_plot$pred %>% subset(., select = c(Y,X,id,fit,se.fit,uprP, lwrP,uprS,lwrS))))
+}
+```
+
+```{r}
+H2b <- H2b_adj_res %>% 
+  left_join(readRDS(here("results/adjusted/H2b_adj_res.RDS")),
+            by = c("X", "Y"),
+            suffix = c("_bf", "_nobf")) %>% 
+  select(Y, X, starts_with("N", ignore.case = FALSE),
+         starts_with("point.diff"), starts_with("lb.diff"), starts_with("ub.diff"),
+         starts_with("Pval")) %>% 
+  relocate(ends_with("_nobf"), .after = last_col()) %>% 
+  mutate(change = case_when(Pval_nobf < 0.05 & Pval_bf > 0.05 ~ as.character(emo::ji("sad")), # addition is no longer sig
+                            Pval_nobf < 0.05 & Pval_bf < 0.05 ~ as.character(emo::ji("happy")), # addition is still sig
+                            Pval_nobf > 0.05 & Pval_bf < 0.05 ~ as.character(emo::ji("exclamation")))) # addition makes sig
+```
+
+
+```{r}
+##########################
+# adjustment sets 19-20
+## exposure: urine markers t1
+## outcome: cdi t3
+##########################
+
+Xvars <- c('ln_L_conc_t1', 'ln_M_conc_t1')           
+Yvars <- c("z_age2mo_cdi_undyr2_all_no4", "z_age2mo_cdi_sayyr2_all_no4")
+
+H2d_W <- c(H2_W, 'ageday_ut1', 'agedays_cdi3',
+           'month_ut1', 'month_cdi3', 'curr_bf_bl')
+H2d_W[!(H2d_W %in% colnames(d))]
+
+#Fit models
+H2d_adj_models <- NULL
+for(i in Xvars){
+  for(j in Yvars){
+    print(i)
+    print(j)
+    res_adj <- fit_RE_gam(d=d, X=i, Y=j,  W=H2d_W, forcedW = 'curr_bf_bl')
+    res <- data.frame(X=i, Y=j, fit=I(list(res_adj$fit)), dat=I(list(res_adj$dat)))
+    H2d_adj_models <- bind_rows(H2d_adj_models, res)
+  }
+}
+
+
+
+#Get primary contrasts
+H2d_adj_res <- NULL
+for(i in 1:nrow(H2d_adj_models)){
+  res <- data.frame(X=H2d_adj_models$X[i], Y=H2d_adj_models$Y[i])
+  preds <- predict_gam_diff(fit=H2d_adj_models$fit[i][[1]], d=H2d_adj_models$dat[i][[1]], quantile_diff=c(0.25,0.75), Xvar=res$X, Yvar=res$Y)
+  H2d_adj_res <-  bind_rows(H2d_adj_res , preds$res)
+}
+
+#Make list of plots
+H2d_adj_plot_list <- NULL
+H2d_adj_plot_data <- NULL
+for(i in 1:nrow(H2d_adj_models)){
+  res <- data.frame(X=H2d_adj_models$X[i], Y=H2d_adj_models$Y[i])
+  simul_plot <- gam_simul_CI(H2d_adj_models$fit[i][[1]], H2d_adj_models$dat[i][[1]], xlab=res$X, ylab=res$Y, title="")
+  H2d_adj_plot_list[[i]] <-  simul_plot$p
+  H2d_adj_plot_data <-  rbind(H2d_adj_plot_data, data.frame(Xvar=res$X, Yvar=res$Y, adj=0, simul_plot$pred %>% subset(., select = c(Y,X,id,fit,se.fit,uprP, lwrP,uprS,lwrS))))
+}
+
+```
+
+```{r}
+H2d <- H2d_adj_res %>% 
+  left_join(readRDS(here("results/adjusted/H2d_adj_res.RDS")),
+            by = c("X", "Y"),
+            suffix = c("_bf", "_nobf")) %>% 
+  select(Y, X, starts_with("N", ignore.case = FALSE),
+         starts_with("point.diff"), starts_with("lb.diff"), starts_with("ub.diff"),
+         starts_with("Pval")) %>% 
+  relocate(ends_with("_nobf"), .after = last_col()) %>% 
+  mutate(change = case_when(Pval_nobf < 0.05 & Pval_bf > 0.05 ~ as.character(emo::ji("sad")), # addition is no longer sig
+                            Pval_nobf < 0.05 & Pval_bf < 0.05 ~ as.character(emo::ji("happy")), # addition is still sig
+                            Pval_nobf > 0.05 & Pval_bf < 0.05 ~ as.character(emo::ji("exclamation")))) # addition makes sig
+```
+
+```{r}
+##########################
+# adjustment sets 24-25
+## exposure: urine markers t2
+## outcome: easq t3
+##########################
+
+Xvars <- c('ln_L_conc_t2', 'ln_M_conc_t2')           
+Yvars <- c("z_age2mo_personal_no4", "z_age2mo_motor_no4", 
+           "z_age2mo_combined_no4", "z_age2mo_com_no4")
+
+H2f_W <- c(H2_W, 'ageday_ut2', 'agedays_easq', 
+           'month_ut2',	'month_easq', 'curr_bf_ml')
+H2f_W[!(H2f_W %in% colnames(d))]
+
+#Fit models
+H2f_adj_models <- NULL
+for(i in Xvars){
+  for(j in Yvars){
+    print(i)
+    print(j)
+    res_adj <- fit_RE_gam(d=d, X=i, Y=j,  W=H2f_W, forcedW = 'curr_bf_ml')
+    res <- data.frame(X=i, Y=j, fit=I(list(res_adj$fit)), dat=I(list(res_adj$dat)))
+    H2f_adj_models <- bind_rows(H2f_adj_models, res)
+  }
+}
+
+
+
+#Get primary contrasts
+H2f_adj_res <- NULL
+for(i in 1:nrow(H2f_adj_models)){
+  res <- data.frame(X=H2f_adj_models$X[i], Y=H2f_adj_models$Y[i])
+  preds <- predict_gam_diff(fit=H2f_adj_models$fit[i][[1]], d=H2f_adj_models$dat[i][[1]], quantile_diff=c(0.25,0.75), Xvar=res$X, Yvar=res$Y)
+  H2f_adj_res <-  bind_rows(H2f_adj_res , preds$res)
+}
+
+#Make list of plots
+H2f_adj_plot_list <- NULL
+H2f_adj_plot_data <- NULL
+for(i in 1:nrow(H2f_adj_models)){
+  res <- data.frame(X=H2f_adj_models$X[i], Y=H2f_adj_models$Y[i])
+  simul_plot <- gam_simul_CI(H2f_adj_models$fit[i][[1]], H2f_adj_models$dat[i][[1]], xlab=res$X, ylab=res$Y, title="")
+  H2f_adj_plot_list[[i]] <-  simul_plot$p
+  H2f_adj_plot_data <-  rbind(H2f_adj_plot_data, data.frame(Xvar=res$X, Yvar=res$Y, adj=0, simul_plot$pred %>% subset(., select = c(Y,X,id,fit,se.fit,uprP, lwrP,uprS,lwrS))))
+}
+
+```
+
+```{r}
+H2f <- H2f_adj_res %>% 
+  left_join(readRDS(here("results/adjusted/H2f_adj_res.RDS")),
+            by = c("X", "Y"),
+            suffix = c("_bf", "_nobf")) %>% 
+  select(Y, X, starts_with("N", ignore.case = FALSE),
+         starts_with("point.diff"), starts_with("lb.diff"), starts_with("ub.diff"),
+         starts_with("Pval")) %>% 
+  relocate(ends_with("_nobf"), .after = last_col()) %>% 
+  mutate(change = case_when(Pval_nobf < 0.05 & Pval_bf > 0.05 ~ as.character(emo::ji("sad")), # addition is no longer sig
+                            Pval_nobf < 0.05 & Pval_bf < 0.05 ~ as.character(emo::ji("happy")), # addition is still sig
+                            Pval_nobf > 0.05 & Pval_bf < 0.05 ~ as.character(emo::ji("exclamation")))) # addition makes sig
+```
+
+```{r}
+##########################
+# adjustment sets 29-30
+## exposure: urine markers t2
+## outcome: cdi t3
+##########################
+
+Xvars <- c('ln_L_conc_t2', 'ln_M_conc_t2')           
+Yvars <- c("z_age2mo_cdi_undyr2_all_no4", "z_age2mo_cdi_sayyr2_all_no4")
+
+H2h_W <- c(H2_W, 'ageday_ut2', 'agedays_cdi3',
+           'month_ut2', 'month_cdi3','curr_bf_ml')
+H2h_W[!(H2h_W %in% colnames(d))]
+
+#Fit models
+H2h_adj_models <- NULL
+for(i in Xvars){
+  for(j in Yvars){
+    print(i)
+    print(j)
+    res_adj <- fit_RE_gam(d=d, X=i, Y=j,  W=H2h_W, forcedW = 'curr_bf_ml')
+    res <- data.frame(X=i, Y=j, fit=I(list(res_adj$fit)), dat=I(list(res_adj$dat)))
+    H2h_adj_models <- bind_rows(H2h_adj_models, res)
+  }
+}
+
+
+
+#Get primary contrasts
+H2h_adj_res <- NULL
+for(i in 1:nrow(H2h_adj_models)){
+  res <- data.frame(X=H2h_adj_models$X[i], Y=H2h_adj_models$Y[i])
+  preds <- predict_gam_diff(fit=H2h_adj_models$fit[i][[1]], d=H2h_adj_models$dat[i][[1]], quantile_diff=c(0.25,0.75), Xvar=res$X, Yvar=res$Y)
+  H2h_adj_res <-  bind_rows(H2h_adj_res , preds$res)
+}
+
+#Make list of plots
+H2h_adj_plot_list <- NULL
+H2h_adj_plot_data <- NULL
+for(i in 1:nrow(H2h_adj_models)){
+  res <- data.frame(X=H2h_adj_models$X[i], Y=H2h_adj_models$Y[i])
+  simul_plot <- gam_simul_CI(H2h_adj_models$fit[i][[1]], H2h_adj_models$dat[i][[1]], xlab=res$X, ylab=res$Y, title="")
+  H2h_adj_plot_list[[i]] <-  simul_plot$p
+  H2h_adj_plot_data <-  rbind(H2h_adj_plot_data, data.frame(Xvar=res$X, Yvar=res$Y, adj=0, simul_plot$pred %>% subset(., select = c(Y,X,id,fit,se.fit,uprP, lwrP,uprS,lwrS))))
+}
+```
+
+```{r}
+H2h <- H2h_adj_res %>% 
+  left_join(readRDS(here("results/adjusted/H2h_adj_res.RDS")),
+            by = c("X", "Y"),
+            suffix = c("_bf", "_nobf")) %>% 
+  select(Y, X, starts_with("N", ignore.case = FALSE),
+         starts_with("point.diff"), starts_with("lb.diff"), starts_with("ub.diff"),
+         starts_with("Pval")) %>% 
+  relocate(ends_with("_nobf"), .after = last_col()) %>% 
+  mutate(change = case_when(Pval_nobf < 0.05 & Pval_bf > 0.05 ~ as.character(emo::ji("sad")), # addition is no longer sig
+                            Pval_nobf < 0.05 & Pval_bf < 0.05 ~ as.character(emo::ji("happy")), # addition is still sig
+                            Pval_nobf > 0.05 & Pval_bf < 0.05 ~ as.character(emo::ji("exclamation")))) # addition makes sig
+```
+
+```{r}
+writexl::write_xlsx(list("H1b" = H1b,
+                         "H1d" = H1d,
+                         "H2b" = H2b, 
+                         "H2d" = H2d, 
+                         "H2f" = H2f, 
+                         "H2h" = H2h,
+                         "combined" = bind_rows(H1b, H1d, H2b, H2d, H2f, H2h)),
+                    here("results/bf-sensitivity-analysis.xlsx"))
+```
+
+

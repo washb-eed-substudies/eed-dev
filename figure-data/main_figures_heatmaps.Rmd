@@ -1,0 +1,341 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r setup}
+knitr::opts_chunk$set(echo = F,
+                      message = F, 
+                      warning = F)
+
+library(dplyr)
+library(googlesheets4)
+library(stringr)
+library(purrr)
+library(washbgam)
+library(cowplot)
+
+source(here::here("0-config.R"))
+
+who_hr <- readRDS(here("results/final/cleaned_hr_results.RDS"))
+gam <- readRDS(here("results/final/cleaned_gam_results.RDS"))
+
+for(df in gam){
+  assign(paste0("gam_h", select(df, hyp)[1, ]), df)
+}
+
+for(df in who_hr){
+  assign(paste0("hr_h", select(df, hyp)[1, ]), df)
+}
+```
+
+```{r}
+bg_tables <- bind_rows(
+  gam_h1, 
+  gam_h2, 
+  gam_h3
+)
+
+k_tables <- bind_rows(
+  gam_h4, 
+  gam_h5
+)
+```
+
+```{r include = F}
+plot_sig_heatmap <- function (d, 
+                              pval_var = "Pval", 
+                              x_var = Exposure, 
+                              y_var = Outcome,
+                              point.est_var = "point.est",
+                              title = "", 
+                              Outcome = "Outcome", 
+                              Exposure = "Exposure", 
+                              null = 0, 
+                              footnote_var = NULL, 
+                              print.est = T,
+                              print.ci = F) {
+  pval_var_sym <- sym(pval_var)
+  x_var_sym <- sym(x_var)
+  y_var_sym <- sym(y_var)
+  point.est_var_sym <- sym(point.est_var)
+  footnote_var_sym <- sym(footnote_var)
+  browser()
+  # account for overlaping axis labels
+  if(nrow(d) > 3){
+    
+    if(is.ordered(d[[x_var]])){
+      new_levels <- levels(d[[x_var]]) %>% 
+        stringr::str_replace(" \\(", "\n\\(")
+    }
+    
+    d <- d %>% 
+      mutate(!!x_var_sym := stringr::str_replace(!!x_var_sym, " \\(", "\n\\("),
+             !!y_var_sym := stringr::str_replace(!!y_var_sym, " \\(", "\n\\("))
+    
+    if(exists("new_levels")){
+      d <- d %>% 
+        mutate(!!x_var_sym := factor(!!x_var_sym,
+                                     levels = new_levels, 
+                                     ordered = TRUE))
+    }
+  }
+  
+  
+  dfull <- tidyr::expand_grid(unique(d[y_var_sym]), unique(d[x_var_sym]))
+  
+  d <- dplyr::left_join(dfull, d, 
+                        by = c(y_var, x_var)) %>% 
+    dplyr::distinct()
+  
+  if (null == 0) {
+    d$sign <- sign(d[[point.est_var_sym]])
+  }
+  else {
+    d$sign <- case_when(d[[point.est_var_sym]] > 1 ~ 1,
+                        d[[point.est_var_sym]] == 1 ~ 0,
+                        d[[point.est_var_sym]] < 1 ~ -1)
+  }
+  
+  d <- d %>% 
+    dplyr::mutate(sign = factor(sign,
+                                levels = c(-1, 0, 1)))
+  
+  pval_labels <- c("<0.01", "<0.05", "0.05-0.2", "0.2-0.5", "0.5-1")
+  
+  cut_and_factor <- function(value){
+    
+    value <- cut(value,
+                 breaks = c(-1, 0.01, 0.05, 0.2, 0.5, 2), 
+                 labels = pval_labels,
+                 ordered_results = TRUE) %>% 
+      factor(levels = pval_labels) %>% 
+      addNA(.)
+    
+    
+    levels(value) <- c(levels(value), "Not estimated")
+    
+    value[is.na(value)] <- "Not estimated"
+    
+    return(value)
+  }
+  
+  d <- d %>% 
+    dplyr::mutate(pval_cat := cut_and_factor(!!pval_var_sym),
+                  tile_text = "")
+  
+  pval_labels <- seq(0, 1, length.out = 6) %>% 
+    set_names(nm = c("Not estimated", rev(pval_labels)))
+  
+  table(d$pval_cat)
+  
+  table(is.na(d$pval_cat))
+  
+  
+  d <- d %>% 
+    dplyr::mutate(est := round(!!point.est_var_sym, 2),
+                  footnote_mark := case_when(!!footnote_var_sym ~ "*",
+                                             TRUE ~ ""),
+                  ci = paste0("\n(", round(lb, 2), ", ", round(ub, 2), ")")
+                  )
+  
+  
+  if (print.est) {
+    d <- d %>% 
+      mutate(tile_text = case_when(est == 0 ~ "0.00",
+                                   !between(est, -100, 100) ~ NA_character_,
+                                   TRUE ~ as.character(est)))
+  }
+  
+  if (!is.null(footnote_var)){
+    # should be logical column
+    
+    d$tile_text <- paste0(" ", d$tile_text, d$footnote_mark)
+  }
+  
+  if (print.ci) {
+    d$tile_text <- paste0(d$tile_text, d$ci)
+  }
+  
+
+  
+  d$est = gsub("NA \\(NA, NA\\)", "", d$est)
+  textcol = "grey20"
+    
+  
+  
+  # colours <- c(`<0.01 decrease` = cols[1], `<0.05 decrease` = cols[2], 
+  #              `0.05-0.2 decrease` = cols[3], `0.2-0.5 decrease` = cols[4], 
+  #              `0.5-1` = cols[5], `0.2-0.5 increase` = cols[6], `0.05-0.2 increase` = cols[7], 
+  #              `<0.05 increase` = cols[8], `<0.01 increase` = cols[9], 
+  #              `Not estimated` = "gray80")
+  # d <- droplevels(d)
+  
+  plot <- ggplot2::ggplot(d, aes(x = !!x_var_sym, y = !!y_var_sym, 
+                                 alpha = forcats::fct_rev(pval_cat), fill = sign)) +
+    ggplot2::geom_tile(colour = "white",
+                       show.legend = FALSE) + 
+    ggplot2::scale_x_discrete(expand = c(0, 0)) +
+    ggplot2::scale_y_discrete(expand = c(0, 0)) + theme_minimal(base_size = 10) +
+    ggplot2::scale_fill_manual(values = c("#CB4C4E", "grey80", "#3b719f"), drop = FALSE) +
+    ggplot2::scale_alpha_manual(values = pval_labels) +
+    ggplot2::geom_text(aes(label = paste(tile_text, pval_cat, sep = "\n")), 
+                       size = 2.5, 
+                       alpha = 1) + 
+    ggplot2::theme(
+      aspect.ratio = 1/2.75,
+      # legend.title = element_text(color = textcol, size = 8),
+      # legend.margin = margin(grid::unit(0.1, "cm")),
+      # legend.text = element_text(
+      #   colour = textcol,
+      #   size = 7,
+      #   face = "bold"
+      # ),
+      # legend.key.height = grid::unit(0.2,
+      #                                "cm"),
+      # legend.key.width = grid::unit(1, "cm"),
+      # legend.position = "right",
+      axis.text.x = element_text(
+        size = 8, 
+        colour = textcol, 
+        angle = 35,
+        vjust = 0.9,
+        hjust = 1
+        ),
+      axis.text.y = element_text(
+        size = 8,
+        vjust = 0.2,
+        colour = textcol
+      ),
+      axis.ticks = element_line(size = 0.4),
+      plot.title = element_text(
+        colour = textcol,
+        hjust = 0,
+        size = 12,
+        face = "bold"
+      ),
+      strip.text.x = element_text(size = 10),
+      strip.text.y = element_text(angle = 0, size = 10),
+      plot.background = element_blank(),
+      # plot.margin = margin(grid::unit(c(0.25, 0.9, 0.25, 0), "cm")), 
+      panel.border = element_blank(),
+      strip.background = element_blank(),
+      panel.background = element_rect(fill = "grey80", colour = "grey80"),
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank()
+    ) +
+    ggplot2::guides(fill = guide_legend("P-value", ncol = 1)) +
+    ggplot2::labs(x = Exposure, y = Outcome, title = title)
+  
+  
+  plot_legend <- tidyr::expand_grid(sign = c("-1", "0", "1"), 
+                                    pval = levels(d$pval_cat)) %>% 
+    ggplot2::ggplot() + 
+    ggplot2::geom_tile(aes(x = sign, y = pval, alpha = pval,
+                       fill = sign),    
+                       show.legend = FALSE) + 
+    ggplot2::scale_fill_manual(values = c("#CB4C4E", "grey80", "#3b719f")) + 
+    ggplot2::scale_x_discrete(labels = c("< null", "= null", " > null"),
+                              expand = expansion(0.05)) + 
+    
+    ggplot2::scale_alpha_manual(values = pval_labels) +
+    ggplot2::labs(x = paste0("Point Estimate\nDirection\n(null = ", null, ")"),
+                  y = "P-Value") +
+    ggplot2::theme_minimal() + 
+    ggplot2::theme(panel.grid.major = element_blank(), 
+                   panel.grid.minor = element_blank(),
+                   aspect.ratio = 2.25,
+                   axis.title = element_text(size = 8, 
+                                             margin = 0),
+                   axis.text = element_text(size = 5.6,
+                                            margin = 0))
+  
+  hm <- cowplot::ggdraw(plot, 
+                        xlim = c(0, 1.3)) + 
+    cowplot::draw_plot(plot_legend,
+                       x = 1.1, 
+                       y = 0.5,
+                       scale = 0.6,
+                       halign = 0.7, 
+                       hjust = 0.55,
+                       vjust = 0.45)
+  
+  
+  return(hm)
+}
+
+tables_cleaned$bg_cdi_y2 %>%
+  plot_sig_heatmap(., pval_var = "Adj. P-value",
+                                 Outcome = "Outcome Subdomain",
+                                 Exposure = "Exposure",
+                                 footnote = "sig_fdr_correction",
+                                 title = paste(.$`Outcome Domain`[[1]],
+                                               case_when(any(between(.$hyp, 1, 3)) ~ "(Bangladesh)",
+                                                   any(.$hyp > 3) ~ "(Kenya)")),
+                                 null = 1)
+```
+
+
+```{r}
+rename_cols <- c("pointest_ci" = "Adj. HR (95% CI)", 
+                 "pointest_ci" = "Adj. Diff (95% CI)",
+                 "Outcome Subdomain" = "Motor Milestone")
+
+ordered_exposures <- c( "alpha-1 antitrypsin (3 mo)", "alpha-1 antitrypsin (6 mo)", 
+                        "alpha-1 antitrypsin (14 mo)", "alpha-1 antitrypsin (17 mo)", 
+                        "lactulose (3 mo)", "lactulose (6 mo)", "lactulose (14 mo)", "lactulose (17 mo)", 
+                        "mannitol (3 mo)", "mannitol (6 mo)", "mannitol (14 mo)", "mannitol (17 mo)", 
+                        "myeloperoxidase (3 mo)", "myeloperoxidase (6 mo)", "myeloperoxidase (14 mo)", "myeloperoxidase (17 mo)", 
+                        "neopterin (3 mo)", "neopterin (6 mo)", "neopterin (14 mo)", "neopterin (17 mo)", 
+                        "regenerating gene 1B (14 mo)")
+
+tables_cleaned <- list(bg_tables, k_tables, hr_h1, hr_h4) %>%
+  map(~ rename(., any_of(rename_cols)) %>%
+        mutate(sig_fdr_correction = str_detect(`Adj. P-value`, "\\*"),
+               `Adj. P-value` = str_remove_all(`Adj. P-value`, "\\*") %>%
+                 as.numeric(),
+               Exposure = factor(Exposure, 
+                                  levels = ordered_exposures, 
+                                  ordered = TRUE)) %>%
+        separate(pointest_ci, c("point.est", "lb", "ub"),
+                 sep = "[,]? ",
+                 remove = F) %>%
+        mutate(across(c(lb, ub, point.est),
+                      ~ as.numeric(str_remove(., "\\(|\\)")))) %>% 
+        group_by(`Outcome Domain`) %>% 
+        group_split()) %>%
+  flatten() %>% 
+  set_names(c("bg_cdi_y1", "bg_cdi_y2", "bg_easq_y2", "bg_who_y1", "k_easq_y2", "k_who_y1", "bg_who_hr", "k_who_hr")) %>% 
+  map_at(c("bg_who_hr", "k_who_hr"),
+         ~ mutate(., 
+                  `Outcome Domain` = "WHO Motor Milestones - Hazard Ratios (Year 1)"))
+
+
+```
+
+
+
+```{r}
+tables_cleaned %>% 
+  map_at(.at = c("bg_who_hr", "k_who_hr"),
+         .f = ~ plot_sig_heatmap(., pval_var = "Adj. P-value",
+                                 Outcome = "Outcome Subdomain",
+                                 Exposure = "Exposure", 
+                                 footnote = "sig_fdr_correction",
+                                 title = case_when(any(between(.$hyp, 1, 3)) ~ "WHO Motor Milestones (Hazard Ratios) (Bangladesh)",
+                                                   any(.$hyp > 3) ~ "WHO Motor Milestones (Hazard Ratios) (Kenya)"),
+                                 null = 1)) %>% 
+  map_at(.at = c("bg_cdi_y1", "bg_cdi_y2", "bg_easq_y2", "bg_who_y1", "k_easq_y2", "k_who_y1"),
+         .f = ~ plot_sig_heatmap(., pval_var = "Adj. P-value",
+                                 Outcome = "Outcome Subdomain",
+                                 Exposure = "Exposure", 
+                                 footnote = "sig_fdr_correction",
+                                 title = paste(.$`Outcome Domain`[[1]], 
+                                               case_when(any(between(.$hyp, 1, 3)) ~ "(Bangladesh)",
+                                                   any(.$hyp > 3) ~ "(Kenya)")),
+                                 null = 0)) %>% 
+  imap(~ save_plot(file.path(here("figures", paste0(.y, ".png"))), 
+                   .x,
+                   base_width = 7,
+                   base_asp = 5))
+```

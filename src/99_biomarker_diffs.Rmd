@@ -1,0 +1,56 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(haven)
+library(dplyr)
+library(ggplot2)
+library(here)
+library(stringr)
+library(boxr)
+
+box_auth()
+```
+
+
+```{r}
+bg_eed <- box_read_rds(880476292412) %>% 
+  select(ends_with("id"), starts_with("aat"), starts_with("Lact"), 
+         starts_with("Man"), starts_with("neo"), starts_with("mpo"), starts_with("reg"))
+```
+```{r}
+avg_eed_bg <- bg_eed %>% 
+  summarize(across(.fns = ~ mean(., na.rm = TRUE))) %>% 
+  t() %>% 
+  as.data.frame() %>% 
+  tibble::rownames_to_column() %>% 
+  rename(bg_avg = V1)
+```
+
+```{r}
+k_eed <- readRDS(here('final-data/eed-dev_k.RDS')) %>% 
+  select(ends_with("id"), starts_with("aat"), starts_with("Lact"), 
+         starts_with("Man"), starts_with("neo"), starts_with("mpo"), starts_with("reg"))
+```
+
+```{r}
+avg_eed_k <- k_eed %>% 
+  summarize(across(.fns = ~ mean(., na.rm = TRUE))) %>% 
+  t() %>% 
+  as.data.frame() %>% 
+  tibble::rownames_to_column() %>% 
+  rename(kenya_avg = V1)
+```
+
+```{r}
+comparison <- avg_eed_bg %>% 
+  inner_join(avg_eed_k,
+             by = "rowname") %>% 
+  mutate(diff = format(bg_avg - kenya_avg, scientific = F),
+         ln_diff = log(as.numeric(diff))) %>% 
+  filter(str_detect(rowname, "id", negate = TRUE))
+comparison
+```
+
