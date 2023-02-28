@@ -9,7 +9,8 @@ source(here::here("0-config.R"))
 # ----
 # Bangladesh
 
-d <- readRDS('eed-dev_bg.RDS')
+try(d <- readRDS('eed-dev_bg.RDS'))
+try(d <- readRDS("C:/Users/andre/Dropbox/WASHB-EE-analysis/WBB-EE-analysis/Data/Cleaned/Andrew/eed-dev_bg.RDS"))
 
 ## Unadjusted 
 
