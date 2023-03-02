@@ -1,8 +1,10 @@
 ---
 title: "Breastfeeding"
-subtitle: "Post Hoc Analyses"
 author: "Gene Ho"
-output: html_notebook
+subtitle: Post Hoc Analyses
+output:
+  html_document:
+    df_print: paged
 ---
 
 
@@ -393,14 +395,14 @@ bf_ml <- read_dta(here("raw-data/bangladesh/ffq/EE_Midline_FFQ_Raw_data_28Sep201
                                  c607, c607a, 
                                  starts_with("c608"),
                                  starts_with("c609")))
-# bf_el <- read_dta(here("raw-data/bangladesh/ffq/EE_Endline_FFQ_raw_data_07March2017_deidentified.dta"), 
+# bf_el <- read_dta(here("raw-data/bangladesh/ffq/EE_Endline_FFQ_raw_data_07March2017_deidentified.dta"),
 #                   col_select = c(contains("id"), starts_with("child"),
-#                                  c607, c607a, 
+#                                  c607, c607a,
 #                                  starts_with("c608"),
 #                                  starts_with("c609")))
-
-labelled::lookfor(bf_el) %>% 
-  View()
+# 
+# labelled::lookfor(bf_el) %>% 
+#   View()
 
 
 ```
@@ -504,7 +506,7 @@ is child still bf or completely weaned
 any amount of bf affects eed markers
 
 ```{r}
-k_ffq <- read_dta(here("/Users/geneho/Downloads/washk_excbf_20180531_share.dta")) %>% 
+k_ffq <- read_dta(here("raw-data/kenya/washk_excbf_20180531_share.dta")) %>% 
   select(childid, contains("excbf"))
 
 k_eed <- read_rds(here("final-data/eed-dev_k.RDS")) %>% 
