@@ -1,6 +1,8 @@
 ---
 title: "R Notebook"
-output: html_notebook
+output:
+  word_document: default
+  html_notebook: default
 ---
 
 ```{r setup}
@@ -14,6 +16,7 @@ library(stringr)
 library(purrr)
 library(washbgam)
 library(cowplot)
+library(ggtext)
 
 source(here::here("0-config.R"))
 
@@ -60,7 +63,7 @@ plot_sig_heatmap <- function (d,
   y_var_sym <- sym(y_var)
   point.est_var_sym <- sym(point.est_var)
   footnote_var_sym <- sym(footnote_var)
-  browser()
+  
   # account for overlaping axis labels
   if(nrow(d) > 3){
     
@@ -80,6 +83,16 @@ plot_sig_heatmap <- function (d,
                                      ordered = TRUE))
     }
   }
+  
+  # set aspect ratio to be taller if lots of rows
+  asp.ratio <- case_when(length(unique(d[[y_var]])) > 4 ~ 1/1.5, 
+                         length(unique(d[[x_var]])) > 6 ~ 1/3.5,
+                         TRUE ~ 1/2.5)
+  
+  font.size <- case_when(length(unique(d[[x_var]])) > 6 ~ c(2.25, 6),
+                         TRUE ~ c(3.25, 8))
+    
+  
   
   
   dfull <- tidyr::expand_grid(unique(d[y_var_sym]), unique(d[x_var_sym]))
@@ -137,15 +150,18 @@ plot_sig_heatmap <- function (d,
                   footnote_mark := case_when(!!footnote_var_sym ~ "*",
                                              TRUE ~ ""),
                   ci = paste0("\n(", round(lb, 2), ", ", round(ub, 2), ")")
-                  )
+    )
   
   
   if (print.est) {
     d <- d %>% 
       mutate(tile_text = case_when(est == 0 ~ "0.00",
-                                   !between(est, -100, 100) ~ NA_character_,
+                                   !between(est, -100, 100) ~ " --^",
                                    TRUE ~ as.character(est)))
   }
+  d <- d %>% 
+    mutate(tile_text = case_when(!!pval_var_sym < 0.05 ~ paste0("**", tile_text, "**"),
+                                 TRUE ~ tile_text)) 
   
   if (!is.null(footnote_var)){
     # should be logical column
@@ -157,7 +173,7 @@ plot_sig_heatmap <- function (d,
     d$tile_text <- paste0(d$tile_text, d$ci)
   }
   
-
+  
   
   d$est = gsub("NA \\(NA, NA\\)", "", d$est)
   textcol = "grey20"
@@ -179,11 +195,13 @@ plot_sig_heatmap <- function (d,
     ggplot2::scale_y_discrete(expand = c(0, 0)) + theme_minimal(base_size = 10) +
     ggplot2::scale_fill_manual(values = c("#CB4C4E", "grey80", "#3b719f"), drop = FALSE) +
     ggplot2::scale_alpha_manual(values = pval_labels) +
-    ggplot2::geom_text(aes(label = paste(tile_text, pval_cat, sep = "\n")), 
-                       size = 2.5, 
-                       alpha = 1) + 
+    ggtext::geom_richtext(aes(label = tile_text), 
+                          size = font.size[[1]], 
+                          fill = NA, 
+                          label.colour = NA, 
+                          alpha = 1) + 
     ggplot2::theme(
-      aspect.ratio = 1/2.75,
+      aspect.ratio = asp.ratio,
       # legend.title = element_text(color = textcol, size = 8),
       # legend.margin = margin(grid::unit(0.1, "cm")),
       # legend.text = element_text(
@@ -196,14 +214,14 @@ plot_sig_heatmap <- function (d,
       # legend.key.width = grid::unit(1, "cm"),
       # legend.position = "right",
       axis.text.x = element_text(
-        size = 8, 
+        size = font.size[[2]], 
         colour = textcol, 
         angle = 35,
         vjust = 0.9,
         hjust = 1
-        ),
+      ),
       axis.text.y = element_text(
-        size = 8,
+        size = font.size[[2]],
         vjust = 0.2,
         colour = textcol
       ),
@@ -227,12 +245,18 @@ plot_sig_heatmap <- function (d,
     ggplot2::guides(fill = guide_legend("P-value", ncol = 1)) +
     ggplot2::labs(x = Exposure, y = Outcome, title = title)
   
+  if(any(str_detect(pull(d, tile_text), "--"))){
+    plot <- plot + 
+      labs(caption = "^ Not estimated due to sparse data.") + 
+      theme(plot.caption = element_text(hjust = 0))
+  }
+  
   
   plot_legend <- tidyr::expand_grid(sign = c("-1", "0", "1"), 
                                     pval = levels(d$pval_cat)) %>% 
     ggplot2::ggplot() + 
     ggplot2::geom_tile(aes(x = sign, y = pval, alpha = pval,
-                       fill = sign),    
+                           fill = sign),    
                        show.legend = FALSE) + 
     ggplot2::scale_fill_manual(values = c("#CB4C4E", "grey80", "#3b719f")) + 
     ggplot2::scale_x_discrete(labels = c("< null", "= null", " > null"),
@@ -251,11 +275,11 @@ plot_sig_heatmap <- function (d,
                                             margin = 0))
   
   hm <- cowplot::ggdraw(plot, 
-                        xlim = c(0, 1.3)) + 
+                        xlim = c(0, 1.45)) + 
     cowplot::draw_plot(plot_legend,
-                       x = 1.1, 
+                       x = 1.2, 
                        y = 0.5,
-                       scale = 0.6,
+                       scale = 0.5,
                        halign = 0.7, 
                        hjust = 0.55,
                        vjust = 0.45)
@@ -264,7 +288,7 @@ plot_sig_heatmap <- function (d,
   return(hm)
 }
 
-tables_cleaned$bg_cdi_y2 %>%
+tables_cleaned$bg_who_hr %>%
   plot_sig_heatmap(., pval_var = "Adj. P-value",
                                  Outcome = "Outcome Subdomain",
                                  Exposure = "Exposure",
@@ -287,16 +311,22 @@ ordered_exposures <- c( "alpha-1 antitrypsin (3 mo)", "alpha-1 antitrypsin (6 mo
                         "mannitol (3 mo)", "mannitol (6 mo)", "mannitol (14 mo)", "mannitol (17 mo)", 
                         "myeloperoxidase (3 mo)", "myeloperoxidase (6 mo)", "myeloperoxidase (14 mo)", "myeloperoxidase (17 mo)", 
                         "neopterin (3 mo)", "neopterin (6 mo)", "neopterin (14 mo)", "neopterin (17 mo)", 
-                        "regenerating gene 1B (14 mo)")
+                        "regenerating gene 1β (14 mo)") %>% 
+  str_to_sentence()
 
 tables_cleaned <- list(bg_tables, k_tables, hr_h1, hr_h4) %>%
   map(~ rename(., any_of(rename_cols)) %>%
         mutate(sig_fdr_correction = str_detect(`Adj. P-value`, "\\*"),
                `Adj. P-value` = str_remove_all(`Adj. P-value`, "\\*") %>%
                  as.numeric(),
-               Exposure = factor(Exposure, 
+               Exposure = factor(Exposure %>% 
+                                   str_replace("1B", 
+                                               "1β") %>% 
+                                   str_to_sentence(), 
                                   levels = ordered_exposures, 
-                                  ordered = TRUE)) %>%
+                                  ordered = TRUE),
+               `Outcome Subdomain` = str_replace(`Outcome Subdomain`, "\\(w/o support\\)", "\nwithout support") %>% 
+                                        str_replace("\\(w/ support\\)", "\nwith support")) %>%
         separate(pointest_ci, c("point.est", "lb", "ub"),
                  sep = "[,]? ",
                  remove = F) %>%
@@ -315,7 +345,7 @@ tables_cleaned <- list(bg_tables, k_tables, hr_h1, hr_h4) %>%
 
 
 
-```{r}
+```{r eval = FALSE}
 tables_cleaned %>% 
   map_at(.at = c("bg_who_hr", "k_who_hr"),
          .f = ~ plot_sig_heatmap(., pval_var = "Adj. P-value",
@@ -339,3 +369,64 @@ tables_cleaned %>%
                    base_width = 7,
                    base_asp = 5))
 ```
+
+
+```{r}
+plot_hr <- partial(plot_sig_heatmap,
+                   pval_var = "Adj. P-value",
+                   y_var = "Outcome Subdomain",
+                   x_var = "Exposure", 
+                   footnote = "sig_fdr_correction",
+                   null = 1)
+
+plot_gam <- partial(plot_sig_heatmap,
+                    pval_var = "Adj. P-value",
+                    y_var = "Outcome Subdomain",
+                    x_var = "Exposure", 
+                    footnote = "sig_fdr_correction",
+                    null = 0)
+```
+
+```{r}
+
+plot_list <- list()
+# bangladesh
+
+plot_list$bg_cdi_y1 <- tables_cleaned$bg_cdi_y1 %>% 
+  plot_gam(Outcome = "CDI Scores at Year 1",
+           Exposure = "EED Markers at 3 Months")
+
+plot_list$bg_cdi_y2 <- tables_cleaned$bg_cdi_y2 %>%
+  plot_gam(Outcome = "CDI Scores at Year 2",
+           Exposure = "EED Markers at 3 and 14 Months")
+
+plot_list$bg_who_y1 <- tables_cleaned$bg_who_y1 %>% 
+  plot_gam(Outcome = "WHO Motor Milestone Scores at Year 1",
+           Exposure = "EED Markers at 3 Months")
+
+plot_list$bg_who_hr <- tables_cleaned$bg_who_hr %>% 
+  plot_hr(Outcome = "Hazard Ratios of Motor \nMilestone Attainment at 1 Year",
+          Exposure = "EED Biomarkers at 3 Months")
+
+plot_list$bg_easq_y2 <- tables_cleaned$bg_easq_y2 %>% 
+  plot_gam(Outcome = "EASQ Scores at Year 2",
+           Exposure = "EED Markers at 3 and 14 Months")
+
+# kenya
+plot_list$k_easq_y2 <- tables_cleaned$k_easq_y2 %>% 
+  plot_gam(Outcome = "EASQ Scores at Year 2",
+           Exposure = "EED Markers at 6 and 17 Months")
+
+plot_list$k_who_hr <- tables_cleaned$k_who_hr %>% 
+  plot_hr(Outcome = "Hazard Ratios of Motor \nMilestone Attainment at 1 Year",
+          Exposure = "EED Biomarkers at 6 Months")
+```
+
+```{r}
+plot_list %>% 
+  imap(~ save_plot(file.path(here("figures", paste0(.y, ".png"))), 
+                   .x,
+                   base_width = 6,
+                   base_asp = 5))
+```
+
