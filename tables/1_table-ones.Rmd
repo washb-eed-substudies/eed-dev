@@ -1,6 +1,10 @@
 ---
 title: "EED-Development Draft Table 1"
-output: html_notebook
+output:
+  officedown::rdocx_document: 
+    tables:
+      style: Table Normal
+  html_notebook: default
 ---
 
 ```{r setup, include = F}
@@ -16,6 +20,7 @@ library(flextable)
 library(officer)
 library(here)
 library(labelled)
+library(gtsummary)
 
 # CoopG/tableone2flextable
 tableone2flextable <- function(tableone){
@@ -47,29 +52,17 @@ bg <- readRDS(here('final-data/eed-dev_bg.RDS')) %>%
                   pss_sum_mom_t3), 
                 as.numeric), 
          life_viol_any_t3 = case_when(as.character(life_viol_any_t3) == "missing" ~ NA_character_, 
-                                      TRUE ~ as.character(life_viol_any_t3)),
-         across(c(sex, life_viol_any_t3), 
-                as.factor), 
+                                      TRUE ~ as.character(life_viol_any_t3)) %>% 
+           factor(),
+         sex = factor(sex, c("female", "male")),
          country = 'Bangladesh', 
          )
 
 k <- readRDS(here('final-data/eed-dev_k.RDS')) %>% 
   mutate(across(c(pss_score, phq_score_t3), 
                 as.numeric), 
-         across(c(sex), 
-                as.factor), 
+         sex = factor(sex, c("female", "male")),
          country = 'Kenya')
-```
-
-
-```{r}
-myVars <- c("laz_t1", "waz_t1", "laz_t2", "waz_t2", 
-            "cesd_sum_t2", "cesd_sum_ee_t3", "pss_sum_mom_t3",
-            "sex", "life_viol_any_t3", "momage", "momheight_raw", 
-            "momedu", "hfiacat", "floor")
-
-bg <- bg %>% 
-  select(all_of(myVars))
 ```
 
 ```{r}
@@ -87,49 +80,63 @@ var_label(bg) <- list(# tr = "Treatment Arm",
                       waz_t1 = "Weight-for-age Z score (3 mo)", 
                       laz_t2 = "Length-for-age Z score (14 mo)", 
                       waz_t2 = "Weight-for-age Z score (14 mo)", 
-                      cesd_sum_t2 = "Maternal Depressive Symptoms (14 mo)", 
-                      cesd_sum_ee_t3 = "Maternal Depressive Symptoms (24 mo)", # check month
-                      pss_sum_mom_t3 = "Maternal Perceived Stress Scale (PSS) (24 mo)",
-                      # sex,
-                      life_viol_any_t3 = "Cumulative maternal exposure to intimate partner violence",
+                      diar7d_t2 = "Caregiver reported diarrhea 7-day recall (3 mo)",
+                      diar7d_t3 = "Caregiver reported diarrhea 7-day recall (14 mo)",
+                      cesd_sum_t2 = "Depressive symptoms (CESD-R score*) at Year 1", 
+                      cesd_sum_ee_t3 = "Depressive symptoms (CESD-R score*) at Year 1",
+                      pss_sum_mom_t3 = "Maternal Perceived Stress Scale (PSS) at Year 2",
+                      sex = "Female (%)",
+                      momage = "Age (years)", 
+                      momheight_raw = "Height (cm)", 
+                      momedu = "Education completed", 
+                      hfiacat = "Household food insecurity**"
+                      # life_viol_any_t3 = "Cumulative maternal exposure to intimate partner violence",
+                      # floor = "Housing material, improved floor" 
                       # birthord = "Birth Order", 
-                      momage = "Maternal Age", 
-                      momheight_raw = "Maternal Height", 
-                      momedu = "Highest Completed Schooling (Years), mom", 
-                      hfiacat = "Household food insecurity", 
                       # Nlt18 = "Number of children < 18 years old", 
                       # Ncomp = "Total individuals in compound",
                       # watmin = "Minutes to primary water source", 
                       # walls = "Housing material, improved walls", 
-                      floor = "Housing material, improved floor" 
                       # roof = "Housing material, improved roof", 
                       # hh_index = "Household wealth index"
                       )
 ```
 
+# Table 1. Characteristics of participants in Bangladesh
 
-```{r}
-setdiff(myVars, colnames(bg))
+```{r, tab.cap = "Bangladesh"}
+bg_child <- bg %>% 
+  tbl_summary(include = c(sex, laz_t1, waz_t1, 
+                          laz_t2, waz_t2,
+                          diar7d_t2, diar7d_t3),
+              type = list(sex ~ "dichotomous"),
+              value = list(sex ~ "female"),
+              missing = "no")
 
-tab1_bg <- CreateTableOne(vars = myVars, data = bg, test = FALSE)
+bg_mom <- bg %>% 
+  tbl_summary(include = c(momage, momheight_raw,
+                          cesd_sum_t2, cesd_sum_ee_t3,
+                          pss_sum_mom_t3, momedu),
+              missing = "no")
 
-print(tab1_bg, nonnormal = myVars, varLabels = TRUE)
+bg_house <- bg %>% 
+  tbl_summary(include = hfiacat,
+              missing = "no")
+
+list(bg_child, bg_mom, bg_house) %>% 
+  tbl_stack(group_header = c("Child", "Mother", "Household")) %>%
+  as_gt() %>%
+  gt::tab_style(
+    style = gt::cell_text(weight = "bold"),
+    locations = gt::cells_row_groups(groups = everything())
+  ) 
 ```
-# Export to CSV
 
-```{r}
-print(tab1_bg, nonnormal = myVars, quote = TRUE, noSpaces = TRUE, printToggle = FALSE, varLabels = TRUE) %>% 
-  write.csv(here('tables/table_one_bg.csv'))
-```
 
-```{r}
-myVars <- c("laz_t1", "waz_t1", "laz_t2", "waz_t2", 
-            "pss_score", "phq_score_t3",
-            "sex", "momage", "momheight_raw", 
-            "momedu", "floor")
-k <- k %>% 
-  select(all_of(myVars))
-```
+\* CESD-R = Center for Epidemiologic Studies Depression Scale Revised.
+
+** Any level of food insecurity assessed using the Household Food Insecurity Access Scale 
+
 
 ```{r}
 k <- k %>% 
@@ -139,95 +146,64 @@ k <- k %>%
                          labels = c("Primary", "Incomplete Primary", 
                                     "Any Secondary", "Missing"), 
                          ordered = T),
-         # birthord = factor(birthord,
-         #                   levels = c("first", "second or greater",
-         #                              "missing"),
-         #                   ordered = TRUE),
-         # roof = factor(roof, 
-         #                levels = c(0, 1, "missing"),
-         #                labels = c("thatch/leaf", 
-                                   # "iron/other", "missing")),
-         floor = factor(floor, 
-                        levels = c(0, 1, "missing"),
-                        labels = c("earth/dung", "cement/concrete",
-                                   "missing")))
+         hhs_mod_sev = HHS %in% c(2, 3))
 
 var_label(k) <- list(# tr = "Treatment Arm", 
-                     laz_t1 = "Length-for-age Z score (6 mo)", 
-                     waz_t1 = "Weight-for-age Z score (6 mo)", 
-                     laz_t2 = "Length-for-age Z score (17 mo)", 
-                     waz_t2 = "Weight-for-age Z score (17 mo)", 
-                     pss_score = "Maternal Perceived Stress Scale (PSS) (25 mo)", 
-                     phq_score_t3 = "Maternal Depressive Symptoms (PHQ) (25 mo)",
-                     # birthord = "Birth Order",
-                     momage = "Maternal Age",
-                     momheight_raw = "Maternal Height", 
-                     momedu = "Highest Completed Schooling (Years), mom",
-                     # HHS = "Household Hunger Scale", 
-                     # Nlt18 = "Number of children < 18 years old", 
-                     # Ncomp = "Total individuals in compound",
-                     # water_time = "Minutes to primary water source", 
-                     # wall = "Housing material, walls", 
-                     floor = "Housing material, floor"
-                     # roof = "Housing material, roof", 
+                      laz_t1 = "Length-for-age Z score (6 mo)", 
+                      waz_t1 = "Weight-for-age Z score (6 mo)", 
+                      laz_t2 = "Length-for-age Z score (17 mo)", 
+                      waz_t2 = "Weight-for-age Z score (17 mo)", 
+                      diarr7_t0 = "Caregiver reported diarrhea 7-day recall (6 mo)",
+                      diarr7_t1 = "Caregiver reported diarrhea 7-day recall (17 mo)",
+                      pss_score = "Maternal Perceived Stress Scale (PSS) at Year 2",
+                      phq_score_t3 = "Depressive symptoms (PHQ*) at Year 2",
+                      sex = "Female (%)",
+                      momage = "Age (years)", 
+                      momheight_raw = "Height (cm)", 
+                      momedu = "Education completed", 
+                      hhs_mod_sev = "Prevalence of moderate to severe household hunger**"
+                      # Nlt18 = "Number of children < 18 years old", 
+                      # Ncomp = "Total individuals in compound",
+                      # water_time = "Minutes to primary water source", 
+                      # wall = "Housing material, walls", 
+                      # floor = "Housing material, floor"
+                      # roof = "Housing material, roof", 
                      # hh_index = "Household wealth index"
                      )
 
 ```
 
+# Table 2. Characteristics of participants in Kenya
 
+```{r, tab.cap = "Kenya"}
+k_child <- k %>% 
+  tbl_summary(include = c(sex, laz_t1, waz_t1, 
+                          laz_t2, waz_t2,
+                          diarr7_t0, diarr7_t1),
+              type = list(sex ~ "dichotomous"),
+              value = list(sex ~ "female"),
+              missing = "no")
 
-```{r}
-setdiff(myVars, colnames(k))
+k_mom <- k %>% 
+  tbl_summary(include = c(momage, momheight_raw,
+                          phq_score_t3,
+                          pss_score, momedu),
+              missing = "no")
 
-tab1_k <- CreateTableOne(vars = myVars, data = k, test = FALSE)
+k_house <- k %>% 
+  tbl_summary(include = hhs_mod_sev,
+              missing = "no")
 
-print(tab1_k, nonnormal = myVars, varLabels = TRUE)
+list(k_child, k_mom, k_house) %>% 
+  tbl_stack(group_header = c("Child", "Mother", "Household")) %>%
+  as_gt() %>%
+  gt::tab_style(
+    style = gt::cell_text(weight = "bold"),
+    locations = gt::cells_row_groups(groups = everything())
+  ) 
 ```
 
 
-# Export to CSV
+\* PHQ = Patient Health Questionnaire 
 
-```{r}
-print(tab1_k, nonnormal = myVars, quote = TRUE, noSpaces = TRUE, printToggle = FALSE, varLabels = TRUE) %>% 
-  write.csv(here('tables/table_one_k.csv'))
-```
-
-
-# Put both in a single Word doc
-
-
-```{r}
-table_1_ft <- function(table_1_csv, caption){
-  read_csv(table_1_csv) %>%   
-    mutate(across(.fns = ~ case_when(str_detect(., "NA|NaN") ~ NA_character_, 
-                                     TRUE ~ .)),
-           across(.fns = ~ str_remove_all(., '\\"'))) %>% 
-    flextable() %>% 
-    hline(part="header", border=fp_border(color="black")) %>% 
-    set_header_labels(X1 = "", 
-                      '"Overall"' = caption) %>% 
-    hline_bottom(part="body", border=fp_border(color="black")) %>% 
-    hline_top(part="header", border=fp_border(color="black")) %>% 
-    autofit(part = "all") %>% 
-    set_caption(caption, style = "Table Caption",
-                autonum = run_autonum())
-}
-```
-
-
-```{r}
-save_as_docx(table_1_ft(here('tables/table_one_bg.csv'), "Bangladesh"), 
-             table_1_ft(here('tables/table_one_k.csv'), "Kenya"),
-
-             path = here::here('tables/eed-dev-both-tableones.docx'), 
-             pr_section = prop_section(
-               page_size = page_size(orient = 'portrait'), 
-               page_margins = page_mar(bottom = 0.1, 
-                                       top = 0.1, 
-                                       right = 0.1, 
-                                       left = 0.1), 
-               type = 'nextPage'
-             ) )
-```
-
+** Moderate to severe hunger defined using the Household Hunger Scale
