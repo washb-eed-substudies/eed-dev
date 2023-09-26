@@ -1,6 +1,7 @@
 rm(list=ls())
 source(here::here("0-config.R"))
 library(tibble)
+library(glue)
 data <- tibble(x = -10:100, y= -10:100)
 head(data)
 
@@ -21,151 +22,123 @@ exposures_y2 <- c("ln_aat2",
                   "ln_neo2", 
                   "ln_L_conc_t2", 
                   "ln_M_conc_t2", 
-                  "ln_reg1b2")
+                  "ln_reg2")
 outcomes_y2 <- c("z_age2mo_cdi_undyr2_all_no4", 
                  "z_age2mo_cdi_sayyr2_all_no4")
 
-#function for filtering for only participants with at least one outcome
-filtering <- function(row){
-  any(!is.na(row))}
+# get numbers for analysis box
 
-y1_has_exposures<-d[apply(select(d, all_of(exposures_y1)), 1, filtering),]
-y1_has_both<-y1_has_exposures[apply(select(y1_has_exposures, all_of(outcomes_y1)), 1, filtering),]
-y1_clusters<-length(unique(y1_has_both$clusterid))
-y1_n<-nrow(y1_has_both)
+n_exp_outcome <- d %>% 
+  mutate(has_exp_t1 = if_any(all_of(exposures_y1), 
+                             ~ !is.na(.)),
+         has_exp_t2 = if_any(all_of(exposures_y2), 
+                             ~ !is.na(.)),
+         has_outcome_t1 = if_any(all_of(outcomes_y1), 
+                                 ~ !is.na(.)),
+         has_outcome_t2 = if_any(all_of(outcomes_y2), 
+                             ~ !is.na(.)),
+         
+         has_all_t1 = has_exp_t1 & has_outcome_t1,
+         has_all_t2 = has_exp_t2 & has_outcome_t2,
+         
+         has_t1_t2 = has_all_t1 & has_all_t2
+         ) 
 
-if(is.null(exposures_y2)){
-  y2_has_exposures <- y1_has_exposures
-}else{
-  y2_has_exposures <- d[apply(select(d, all_of(exposures_y2)), 1, filtering),]
+n_children <- n_exp_outcome %>% 
+  summarize(across(c(has_all_t1, has_all_t2, has_t1_t2),
+                   sum))
+
+n_clusters <- c("has_all_t1", "has_all_t2") %>% 
+  map(function(col_name){
+    n_exp_outcome %>% 
+      filter(!!ensym(col_name)) %>% 
+      summarize(!!paste0("n_cluster_", col_name) := n_distinct(clusterid))
+  }) %>% 
+  list_cbind()
+
+n_children; n_clusters
+
+# create diagram ----
+# from https://docs.google.com/spreadsheets/d/1QUadSAPBwV8mM3fs_NZ-PQjXX22BXBF1jVpwySshb1s/edit#gid=1841173490
+raw_consort <- read_csv("tables/bangaldesh_consort_raw.csv") %>% 
+  filter(!if_all(everything(), is.na))
+
+raw_consort <- raw_consort %>% 
+  group_by(stage, timepoint) %>% 
+  summarize(across(where(is.numeric),
+                   sum)) %>% 
+  ungroup()
+
+pluck_count <- function(stage_val, t, desc){
+  
+  if(stage_val == "allocation"){
+    n <- raw_consort %>% 
+      filter(stage == stage_val) %>% 
+      pluck(desc)
+  } else {
+    n <- raw_consort %>% 
+      filter(stage == stage_val, 
+             timepoint == t) %>% 
+      pluck(desc)
+  }
+  
+  n <- scales::comma(n)
+
+  
+  assertthat::are_equal(length(n), 1)
+  
+  return(n)
 }
-y2_has_both<-y2_has_exposures[apply(select(y2_has_exposures, all_of(outcomes_y2)), 1, filtering),]
-y2_clusters<-length(unique(y2_has_both$clusterid))
-y2_n<-nrow(y2_has_both)
 
-data %>% 
-  ggplot(aes(x, y)) +
-  scale_x_continuous(minor_breaks = seq(10, 100, 10)) +
-  scale_y_continuous(minor_breaks = seq(-10, 100, 10)) +
-  theme_void() ->
-  p
-
-p +
-  geom_rect(xmin = 25, xmax=75, ymin=96, ymax=100, color='black',
-            fill='white', size=0.25) +
-  annotate('text', x= 50, y=98,label= '13,279 compounds assessed for eligibility', size=3) ->
-  p
-
-p +
-  geom_rect(xmin = 54, xmax=92, ymin=84, ymax=94, color='black',
-            fill='white', size=0.25) +
-  annotate('text', x= 73, y=89, label= 'Excluded: 7,728 compounds \n 7,429 compounds excluded to create buffer zones\n 219 compounds did not meet enrollment criteria\n 80 compounds declined to participate', size=3) +
-  annotate('text', x= 10, y=89,label= 'Enrollment', size=4) +
-  
-  
-  geom_rect(xmin = 20, xmax=80, ymin=76, ymax=82, color='black',
-            fill='white', size=0.25) +
-  annotate('text', x= 50, y=79,label= '720 clusters created and randomly allocated across 7 arms \n 5,551 compounds randomly allocated across 7 arms \n 2 of 7 arms selected into substudy', size=3)  +
-  annotate('text', x= 10, y=79,label= 'Allocation', size=4) +
-  
-  geom_rect(xmin = 27, xmax=73, ymin=64, ymax=74, color='black',
-            fill='white', size=0.25) +
-  annotate('text', x= 50, y=70,label= "paste(bold('                            Control arm and\nNutrition + Water + Sanitation + Handwashing arm'))", parse=TRUE, size=3) +
-  annotate('text', x= 50, y=68.5,label= '\n270 clusters \n2,068 households', size=3) +
-  annotate('text', x= 10, y=63,label= 'Subsample Target', size=4) +
-  
-  
-  geom_rect(xmin = 76, xmax=96, ymin=58, ymax=68, color='black',
-            fill='white', size=0.25) +
-  annotate('text', x= 86, y=64.8,label= "paste(bold('Number of clusters not \n selected into substudy'))", parse=TRUE, size=3) + 
-  annotate('text', x= 86, y=63.4,label= "paste(bold('Year 1 '))", parse=TRUE, size=3) + 
-  annotate('text', x= 86, y=62.1,label= '139 clusters', size=3) + 
-  annotate('text', x= 86, y=60.9,label= "paste(bold('Year 2'))", parse=TRUE, size=3) + 
-  annotate('text', x= 86, y=59.7,label= '135 clusters', size=3) +
-  
-  geom_rect(xmin = 42, xmax=58, ymin=52, ymax=62, color='black',
-            fill='white', size=0.25) +
-  annotate('text', x=50, y=61.2,label= "paste(bold('Year 1'))", parse=TRUE, size=3) + 
-  annotate('text', x=50, y=60.2,label= '\n\n131 clusters \n996 children', size=3) +
-  annotate('text', x=50, y=56.2,label= "paste(bold('Year 2'))", parse=TRUE, size=3) + 
-  annotate('text', x=50, y=55.2,label= '\n\n135 clusters \n1,021 children', size=3) +
-  
-  
-  geom_rect(xmin = 37, xmax=63, ymin=26, ymax=50, color='black',
-            fill='white', size=0.25) +
-  annotate('text', x= 50, y=48.9,label= "paste(bold('Year 1'))", parse=TRUE, size=3) + 
-  annotate('text', x= 50, y=45.1,label= '\n\n240 children lost to follow-up \n23 moved \n45 absent \n76 withdrew \n66 no live birth \n30 child death ', size=3) + 
-  annotate('text', x= 50, y=37.7,label= "paste(bold('Year 2'))", parse=TRUE, size=3) + 
-  annotate('text', x= 50, y=32.3,label= '\n  25 new children measured \n262 children lost to follow-up \n63 moved \n5 absent \n90 withdrew \n67 no live birth \n37 child death ', size=3) + 
-  annotate('text', x= 10, y=38.1,label= 'Follow-up', size=4) +
-  
-  geom_rect(xmin = 42, xmax=58, ymin=14, ymax=24, color='black',
-            fill='white', size=0.25) +
-  annotate('text', x= 50, y=23.2,label= "paste(bold('Year 1'))", parse=TRUE, size=3) +
-  annotate('text', x= 50, y=22.2,label= '\n\n131 clusters \n756 children', size=3) + 
-  annotate('text', x= 50, y=18.2,label= "paste(bold('Year 2'))", parse=TRUE, size=3) +
-  annotate('text', x= 50, y=17.2,label= '\n\n135 clusters \n759 children  ', size=3) + 
-  annotate('text', x= 10, y=19,label= 'Subsample Enrollment', size=4) +
-  
-  
-  geom_rect(xmin = 32, xmax=68, ymin=4, ymax=12, color='black',
-            fill='white', size=0.25) +
-  annotate('text', x= 50, y=10.2,label= "paste(bold('Year 1'))", parse=TRUE, size=3) + 
-  annotate('text', x= 50, y=9.6,label= paste("\n", 756-y1_n, ' missing maternal exposure or outcome', sep=""), size=3) + 
-  annotate('text', x= 50, y=7.2,label= "paste(bold('Year 2'))", parse=TRUE, size=3) + 
-  annotate('text', x= 50, y=6.6,label= paste("\n", 759-y2_n, ' missing maternal exposure or outcome', sep=""), size=3) + 
-  annotate('text', x= 10, y=8,label= 'Specimen Collection', size=4) +
-  
-  
-  geom_rect(xmin = 42, xmax=58, ymin=-8, ymax=2, color='black',
-            fill='white', size=0.25) +
-  annotate('text', x= 50, y=1.2,label= "paste(bold('Year 1'), sep='')", parse=T, size=3) +
-  annotate('text', x= 50, y=.2,label= paste("\n\n", y1_clusters, ' clusters \n ', y1_n, ' children', sep=''), size=3) +
-  annotate('text', x= 50, y=-3.8,label= "paste(bold('Year 2'), sep='')", parse=T, size=3) +
-  annotate('text', x= 50, y=-4.8,label= paste("\n\n", y2_clusters, ' clusters \n ', y2_n, ' children', sep=''), size=3) +
-  annotate('text', x= 10, y=-3,label= 'Analysis', size=4) ->
-  p
-
-
-p +
-  geom_segment(
-    x=50, xend=50, y=96, yend=82, 
-    size=0.15, linejoin = "mitre", lineend = "butt",
-    arrow = arrow(length = unit(1, "mm"), type= "closed")) +
-  geom_segment(
-    x=50, xend=54, y=89, yend=89, 
-    size=0.15, linejoin = "mitre", lineend = "butt",
-    arrow = arrow(length = unit(1, "mm"), type= "closed")) +
-  geom_segment(
-    x=50, xend=50, y=76, yend=74, 
-    size=0.15, linejoin = "mitre", lineend = "butt",
-    arrow = arrow(length = unit(1, "mm"), type= "closed")) +
-  geom_segment(
-    x=50, xend=50, y=64, yend=62, 
-    size=0.15, linejoin = "mitre", lineend = "butt",
-    arrow = arrow(length = unit(1, "mm"), type= "closed")) +
-  geom_segment(
-    x=50, xend=76, y=63, yend=63, 
-    size=0.15, linejoin = "mitre", lineend = "butt",
-    arrow = arrow(length = unit(1, "mm"), type= "closed")) +
-  geom_segment(
-    x=50, xend=50, y=52, yend=50, 
-    size=0.15, linejoin = "mitre", lineend = "butt",
-    arrow = arrow(length = unit(1, "mm"), type= "closed")) +
-  geom_segment(
-    x=50, xend=50, y=26, yend=24, 
-    size=0.15, linejoin = "mitre", lineend = "butt",
-    arrow = arrow(length = unit(1, "mm"), type= "closed")) +
-  geom_segment(
-    x=50, xend=50, y=14, yend=12, 
-    size=0.15, linejoin = "mitre", lineend = "butt",
-    arrow = arrow(length = unit(1, "mm"), type= "closed")) +
-  geom_segment(
-    x=50, xend=50, y=4, yend=2, 
-    size=0.15, linejoin = "mitre", lineend = "butt",
-    arrow = arrow(length = unit(1, "mm"), type= "closed")) ->
-  p
-p
-
-# YOU MAY NEED TO CHANGE THE FILE PATHS HERE
-ggsave(p, file = here("figures/bg_enrollment-figure.jpg"), height=14, width=9)
+# create labels
+label_df <- tribble(
+  ~ stage, ~ label, 
+  "Enrollment",      "13,279 compounds assessed for eligibility",
+  "Allocation_all",      "720 clusters created and randomly allocated across 7 arms<br>
+                      5,551 compounds randomly allocated across 7 arms<br>
+                      4 of 7 arms selected into substudy",
+  "Allocation_substudy", glue("**Control arm, Nutrition arm,<br>
+                           Water + Sanitation + Handwashing arm, and <br>
+                           Nutrition + Water + Sanitation + Handwashing arm**<br><br>
+                           {pluck_count('allocation', NA, 'n_cluster')} clusters<br>
+                           {pluck_count('allocation', NA, 'n_households')} households"),
+  "Subsample Target", glue("**Month 14**<br>
+                           {pluck_count('subsample target', 14, 'n_cluster')} clusters<br>
+                           {pluck_count('subsample target', 14, 'n_children')} children<br>
+                           **Month 28**<br>
+                           {pluck_count('subsample target', 28, 'n_cluster')} clusters<br>
+                           {pluck_count('subsample target', 28, 'n_children')} children<br>"),
+  "Follow-up",         glue("**Month 14**<br>
+                           {pluck_count('follow-up', 14, 'ltf')}  children lost to follow-up<br>
+                           {pluck_count('follow-up', 14, 'moved')} moved<br>
+                           {pluck_count('follow-up', 14, 'absent')}  children lost to follow-up<br>
+                           {pluck_count('follow-up', 14, 'withdrew')} moved<br>
+                           {pluck_count('follow-up', 14, 'no_live_birth')}  children lost to follow-up<br>
+                           {pluck_count('follow-up', 14, 'child_death')} child death<br>
+                           **Month 28**<br>
+                           {pluck_count('follow-up', 28, 'new_measured')}  new children measured<br>
+                           {pluck_count('follow-up', 28, 'ltf')}  children lost to follow-up<br>
+                           {pluck_count('follow-up', 28, 'moved')} moved<br>
+                           {pluck_count('follow-up', 28, 'absent')}  children lost to follow-up<br>
+                           {pluck_count('follow-up', 28, 'withdrew')} moved<br>
+                           {pluck_count('follow-up', 28, 'no_live_birth')}  children lost to follow-up<br>
+                           {pluck_count('follow-up', 28, 'child_death')} child death<br>"),
+  "Subsample Enrollment", glue("**Month 14**<br>
+                           {pluck_count('subsample enrollment', 14, 'n_cluster')} clusters<br>
+                           {pluck_count('subsample enrollment', 14, 'n_children')} children<br>
+                           **Month 28**<br>
+                           {pluck_count('subsample enrollment', 28, 'n_cluster')} clusters<br>
+                           {pluck_count('subsample enrollment', 28, 'n_children')} children<br>"),
+  "Specimen Collection",  glue("**Month 14**<br>
+                           {pluck_count('specimen collection', 14, 'missing_stool')} missing stool<br>
+                           {pluck_count('specimen collection', 14, 'missing_urine')} missing urine<br>
+                           **Month 28**<br>
+                           {pluck_count('specimen collection', 28, 'missing_stool')} missing stool<br>
+                           {pluck_count('specimen collection', 28, 'missing_urine')} missing urine<br>"),
+  "Analysis", glue("**Month 14**<br>
+                           {pluck_count('analysis', 14, 'n_cluster')} clusters<br>
+                           {pluck_count('analysis', 14, 'n_children')} children<br>
+                           **Month 28**<br>
+                           {pluck_count('analysis', 28, 'n_cluster')} clusters<br>
+                           {pluck_count('analysis', 28, 'n_children')} children<br>"),
+) 
