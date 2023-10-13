@@ -1,12 +1,17 @@
 # combine results
 
 library(fs)
+library(dplyr)
+library(stringr)
+library(purrr)
+library(here)
+
+# read in analysis output ----
 
 adj_file_list <- dir_ls("results/adjusted") %>% 
   str_subset("_all")
 
 unadj_file_list <- dir_ls("results/unadjusted")
-
 
 
 for (file in adj_file_list){
@@ -19,27 +24,6 @@ for (file in adj_file_list){
 }
 
 
-
-# for (file in unadj_file_list){
-#   
-#   obj_name <- str_match(file, "/unadjusted/(H.*)_res.RDS")[2] %>%
-#     str_to_lower() %>% 
-#     print()
-#   
-#   assign(paste0(obj_name, "_unadj"), readRDS(file))
-# }
-
-
-paste0("h", 1:5)
-
-
-# h1_adj %>% 
-#   full_join(h1_unadj %>% 
-#               select(-c(N, q1, q3, starts_with("pred"))), 
-#             by = c("Y", "X"), 
-#             suffix = c("_adj", "_unadj")) %>% 
-#   mutate(across(.cols = where(is.numeric), 
-#               .fns = ~ round(., 2)))
 
 
 clean_results <- function(data, hyp_num, measure = "gam"){
@@ -57,12 +41,29 @@ clean_results <- function(data, hyp_num, measure = "gam"){
   
   y_sd_name <- case_when(measure == "gam" ~ "Outcome Subdomain", 
                          measure == "hr" ~ "Motor Milestone")
-
+  
+  format_ci <- function(point.est, lower, upper){
+    format_num <- function(number, digits = 2){
+      rounded_num <- round(number, digits = digits)
+      ifelse(rounded_num == 0,
+             case_when(sign(number) == -1 ~ paste0(">-0.", rep.int("0", digits - 1), "1"),
+                       sign(number) == 1  ~ paste0("<0.", rep.int("0", digits - 1), "1"),
+                       sign(number) == 0  ~ "0.000"),
+             as.character(rounded_num))
+    }
+    
+    fmt_point <- format_num(point.est)
+    fmt_lb <- format_num(lower)
+    fmt_ub <- format_num(upper)
+    
+    paste0(fmt_point, " (", fmt_lb, ", ", fmt_ub, ")")
+  }
+  
   
   data %>% 
     select(-starts_with("pred")) %>% 
-    mutate(across(.cols = where(is.numeric),
-                  .fns = ~ round(., 2)), 
+    mutate(# across(.cols = where(is.numeric),
+                  # .fns = ~ round(., 2)), 
            hyp = hyp_num, 
            t_exp = str_sub(X, start = -1, end = -1),
            outcome_domain = case_when(str_detect(Y, "who") ~ "WHO Motor Milestones", 
@@ -107,9 +108,7 @@ clean_results <- function(data, hyp_num, measure = "gam"){
            y_subdomain = case_when(str_detect(Y, "nosupp") ~ str_c(y_subdomain, " (w/o support)"), 
                                    str_detect(Y, "supp") ~ str_c(y_subdomain, " (w/ support)"), 
                                    TRUE ~ y_subdomain),
-           pasted_results := str_c(!!rlang::sym(point), " (", !!rlang::sym(lb), ", ", !!rlang::sym(ub), ")"), 
-           p_star = case_when(Pval < 0.05 ~ str_c(Pval, "*"), 
-                              TRUE ~ as.character(Pval))) %>% 
+           pasted_results := format_ci(!!rlang::sym(point), !!rlang::sym(lb), !!rlang::sym(ub))) %>% 
     select(hyp,
            "Outcome Domain" = outcome_domain, 
            !!y_sd_name := y_subdomain, 
@@ -117,11 +116,11 @@ clean_results <- function(data, hyp_num, measure = "gam"){
            "n" = N, 
            "Q1" = q1, "Q3" = q3, 
            !!pasted_var := pasted_results, 
-           "Adj. P-value" = p_star)
+           "Adj. P-value" = Pval)
 }
 
-h3_adj %>% 
-  clean_results(5)
+# h2_adj %>%
+#   clean_results(2)
 
 
 # create list of dfs
@@ -134,11 +133,41 @@ cleaned_results <- map2(list_hyp, 1:5, clean_results)
 list_who_hyp <- list(h1_who_hr_adj, h4_who_hr_adj)
 cleaned_who <- map2(list_who_hyp, c(1,4), clean_results, measure = "hr")
 
+# FDR correction ---- 
 
-saveRDS(cleaned_results, here("results/final/cleaned_gam_results.RDS"))
-saveRDS(cleaned_who, here("results/final/cleaned_hr_results.RDS"))
+cleaned_results <- cleaned_results %>% 
+  map(\(df) mutate(df, 
+                   corrected.Pval_adj = p.adjust(`Adj. P-value`, "BH")))
 
-# ---- 
+cleaned_who <- cleaned_who %>% 
+  map(\(df) mutate(df, 
+                   corrected.Pval_adj = p.adjust(`Adj. P-value`, "BH")))
+
+# flag significant p-values ----
+
+flag_p_values <- function(column){
+  case_when(column < 0.01 ~ "***", 
+            column < 0.05 ~ "**", 
+            column < 0.2 ~ "*")
+}
 
 
+cleaned_results <- cleaned_results %>% 
+  map(~ mutate(., 
+               adj_p_significance = flag_p_values(`Adj. P-value`),
+               fdr_significance = flag_p_values(corrected.Pval_adj)))
 
+cleaned_results %>% 
+  map(~ filter(., if_any(.cols = c(ends_with("significance")), compose(`!`, is.na))))
+
+cleaned_who <- cleaned_who %>% 
+  map(~ mutate(., 
+               adj_p_significance = flag_p_values(`Adj. P-value`),
+               fdr_significance = flag_p_values(corrected.Pval_adj)))
+
+cleaned_who %>% 
+  map(~ filter(., if_any(.cols = c(ends_with("significance")), compose(`!`, is.na))))
+# write data ----
+
+# saveRDS(cleaned_results, here("results/final/cleaned_gam_results.RDS"))
+# saveRDS(cleaned_who, here("results/final/cleaned_hr_results.RDS"))
