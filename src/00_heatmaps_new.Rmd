@@ -1,0 +1,313 @@
+---
+date: "`r Sys.Date()`"
+author: "Your Name"
+title: "officedown template"
+output: 
+  officedown::rdocx_document:
+    mapstyles:
+      Normal: ['First Paragraph']
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,
+                      warning = FALSE,
+                      message = FALSE,
+                      fig.cap = TRUE,
+                      fig.width = 6.5,
+                      fig.height = 6,
+                      dpi = 1200)
+library(officedown)
+library(officer)
+
+library(dplyr)
+library(googlesheets4)
+library(stringr)
+library(purrr)
+library(washbgam)
+library(cowplot)
+library(ggtext)
+library(colorspace)
+library(knitr)
+library(here)
+
+source(here::here("0-config.R"))
+
+who_hr <- readRDS(here("results/final/cleaned_hr_results.RDS"))
+gam <- readRDS(here("results/final/cleaned_gam_results.RDS"))
+
+for(df in gam){
+  assign(paste0("gam_h", select(df, hyp)[1, ]), df)
+}
+
+for(df in who_hr){
+  assign(paste0("hr_h", select(df, hyp)[1, ]), df)
+}
+
+bg_tables <- bind_rows(
+  gam_h1, 
+  gam_h2, 
+  gam_h3
+)
+
+k_tables <- bind_rows(
+  gam_h4, 
+  gam_h5
+)
+
+```
+
+```{r}
+# data cleaning, pt 1 ----
+
+rename_cols <- c("pointest_ci" = "Adj. HR (95% CI)", 
+                 "pointest_ci" = "Adj. Diff (95% CI)",
+                 "Outcome Subdomain" = "Motor Milestone")
+
+ordered_exposures <- c( "alpha-1 antitrypsin (3 mo)", "alpha-1 antitrypsin (6 mo)", 
+                        "alpha-1 antitrypsin (14 mo)", "alpha-1 antitrypsin (17 mo)", 
+                        "lactulose (3 mo)", "lactulose (6 mo)", "lactulose (14 mo)", "lactulose (17 mo)", 
+                        "mannitol (3 mo)", "mannitol (6 mo)", "mannitol (14 mo)", "mannitol (17 mo)", 
+                        "myeloperoxidase (3 mo)", "myeloperoxidase (6 mo)", "myeloperoxidase (14 mo)", "myeloperoxidase (17 mo)", 
+                        "neopterin (3 mo)", "neopterin (6 mo)", "neopterin (14 mo)", "neopterin (17 mo)", 
+                        "regenerating gene 1β (14 mo)") %>% 
+  str_to_sentence()
+
+tables_cleaned <- list(bg_tables, k_tables, hr_h1, hr_h4) %>%
+  map(~ rename(., any_of(rename_cols)) %>%
+        mutate(Exposure = factor(Exposure %>% 
+                                   str_replace("1B", 
+                                               "1β") %>% 
+                                   str_to_sentence(), 
+                                 levels = ordered_exposures, 
+                                 ordered = TRUE),
+               `Outcome Subdomain` = case_match(`Outcome Subdomain`, 
+                                                "Sitting (w/o support)"  ~ "Sitting without support", 
+                                                "Crawling (w/ support)"  ~ "Hands-and-knees crawling",
+                                                "Standing (w/ support)"  ~ "Standing with assistance",
+                                                "Standing (w/o support)" ~ "Standing alone",
+                                                "Walking (w/ support)"   ~ "Walking with assistance",
+                                                "Walking (w/o support)"  ~ "Walking alone",
+                                                .default = `Outcome Subdomain`),
+               pointest_ci_cleaned = str_squish(str_remove_all(pointest_ci, "\\(|\\)"))) %>%
+        separate(pointest_ci_cleaned, 
+                 c("point.est", "lb", "ub"),
+                 sep = "[,]? +",
+                 remove = F) %>%
+        mutate(across(c(point.est, lb, ub),
+                      as.numeric)) %>% 
+        group_by(`Outcome Domain`) %>% 
+        group_split()) %>%
+  flatten() %>% 
+  set_names(c("bg_cdi_y1", "bg_cdi_y2", "bg_easq_y2", "bg_who_y1", "k_easq_y2", "k_who_y1", "bg_who_hr", "k_who_hr")) %>% 
+  map_at(c("bg_who_hr", "k_who_hr"),
+         ~ mutate(., 
+                  `Outcome Domain` = "WHO Motor Milestones - Hazard Ratios (Year 1)"))
+
+```
+
+
+
+```{r}
+plot_heatmap <- function(data, 
+                         xlab, 
+                         ylab, 
+                         null,
+                         caption = "",
+                         digits = 2){
+  # fix factor ordering
+  
+  exp_levels <- levels(data$Exposure) %>% 
+    str_replace(" \\(", "\n\\(")
+  
+  # data cleaning, pt 2 ---- 
+  # for the plot itself
+  data <- data %>% 
+    mutate(
+      # add line breaks for timepoints
+      across(c(`Outcome Domain`, 
+               `Exposure`), 
+             ~ str_replace(.x, " \\(", "\n\\(")),
+      `Exposure` = factor(`Exposure`, 
+                          levels = exp_levels, 
+                          ordered = TRUE),
+      est_clean = case_when(is.infinite(ub) ~ NA,
+                            !between(point.est, -100, 100) ~ NA,
+                            ub-lb > 100 ~ NA,
+                            point.est == 0 ~ 0,
+                            TRUE ~ round(point.est, 2)),
+      est_label = est_clean %>% 
+                    format(nsmall = digits, scientific = FALSE) %>% 
+                    str_c("", fdr_significance),
+      fontformat = if_else(fdr_significance != "", "bold", "plain"),
+      fontcolor = if_else(between(est_clean, 
+                                  null - 0.1, 
+                                  null + 0.1),
+                          "grey20", 
+                          "white"))
+                          
+
+  
+  
+  # plot ----
+  ggplot(data, 
+         aes(x = `Exposure`,
+             y = `Outcome Subdomain`)) + 
+    geom_tile(aes(fill = est_clean)) + 
+    geom_richtext(data = subset(data, is.na(est_clean)),
+                  aes(label = "--"),
+                  fontface = "plain", 
+                  text.color = "white",
+                  label.color = NA,
+                  fill = NA) + 
+    geom_richtext(aes(label = est_label,
+                      fontface = fontformat,
+                      text.color = fontcolor),
+                  label.color = NA,
+                  fill = NA) + 
+    scale_fill_continuous_divergingx(palette = 'PuOr', 
+                                     mid = null) + 
+    labs(x = xlab,
+         y = ylab,
+         fill = "Estimate^",
+         caption = caption) + 
+    theme_minimal() + 
+    theme(axis.text.x = element_text(
+      angle = 35,
+      vjust = 1.15,
+      hjust = 1
+    ),
+    panel.grid = element_blank(),
+    strip.text = element_text(size = 10),
+    legend.position = "bottom",
+    legend.text = element_text(size = 8,
+                               angle = 35,
+                               vjust = 1.15,
+                               hjust = 1),
+    plot.caption = element_text(hjust = 0))
+}
+
+plot_gam <- partial(plot_heatmap, 
+                    null = 0)
+plot_hr <- partial(plot_heatmap, 
+                   null = 1)
+
+```
+
+\newpage
+
+```{r fig.cap = "Flowchart of participants’ progress through enrollment, sample collection, and statistical analysis in Bangladesh", fig.height=7.5}
+include_graphics(here("figures/bg_enrollment-figure.png"))
+```
+
+\newpage
+
+```{r fig.cap = "Flowchart of participants’ progress through enrollment, sample collection, and statistical analysis in Kenya", fig.height=7.5}
+include_graphics(here("figures/k_enrollment-figure.png"))
+```
+
+\newpage
+
+```{r fig.cap = "Adjusted mean differences in MacArthur-Bates Communicative Development Inventories (CDI) scores  at 1 year between the 25th and 75th percentile of EED biomarker at 3 months in Bangladesh"}
+# create plots ----
+
+plot_list <- list()
+# bangladesh
+
+plot_list$bg_cdi_y1 <- tables_cleaned$bg_cdi_y1 %>% 
+  plot_gam(ylab = "CDI Scores at Year 1",
+           xlab = "EED Markers at 3 Months",
+           caption = "p-value corrected for false discovery rate: *** <0.01, ** <0.05, * <0.2 \n
+^ Mean difference of development outcome comparing the 25th and 75th percentile of the \n  EED exposure marker distribution")
+
+plot_list$bg_cdi_y1
+```
+
+
+\newpage
+
+```{r fig.cap = "Adjusted mean differences in WHO motor milestone scores at 1 year between the 25th and 75th percentile of environmental enteric dysfunction (EED) biomarkers at 3 months in Bangladesh"}
+plot_list$bg_who_y1 <- tables_cleaned$bg_who_y1 %>% 
+  plot_gam(ylab = "WHO Motor Milestone \nScores at Year 1",
+           xlab = "EED Markers at 3 Months",
+           caption = "p-value corrected for false discovery rate: *** <0.01, ** <0.05, * <0.2 \n
+^ Mean difference of development outcome comparing the 25th and 75th percentile of the \n  EED exposure marker distribution")
+
+plot_list$bg_who_y1
+```
+
+\newpage
+
+```{r fig.cap = "Relative rate of WHO motor milestone attainment at 1 year between the 25th and 75th percentile of EED biomarkers at 3 months in Bangladesh"}
+plot_list$bg_who_hr <- tables_cleaned$bg_who_hr %>% 
+  plot_hr(ylab = "Hazard Ratios of Motor \nMilestone Attainment \nat Year 1",
+          xlab = "EED Biomarkers at 3 Months",
+          caption = "p-value corrected for false discovery rate: *** <0.01, ** <0.05, * <0.2 \n
+^ Hazard ratio of development outcome comparing the 25th and 75th percentile of the \n   EED exposure marker distribution\n
+-- Hazard ratio was not calculated due to data sparsity")
+
+plot_list$bg_who_hr
+```
+
+\newpage
+
+```{r fig.cap = "Adjusted mean differences in scores on the communication, gross motor, personal social, and combined scales of the Extended Ages and Stages Questionnaire at 2 years between the 25th and 75th percentile of environmental enteric dysfunction (EED) biomarkers at 3 and 14 months in Bangladesh"}
+plot_list$bg_easq_y2 <- tables_cleaned$bg_easq_y2 %>% 
+  plot_gam(ylab = "EASQ Scores at Year 2",
+           xlab = "EED Markers at 3 and 14 Months",
+           caption = "p-value corrected for false discovery rate: *** <0.01, ** <0.05, * <0.2 \n
+^ Mean difference of development outcome comparing the 25th and 75th percentile of the \n  EED exposure marker distribution")
+
+plot_list$bg_easq_y2
+```
+
+
+\newpage
+
+```{r fig.cap = "Relative rate of WHO motor milestone attainment at 1 year between the 25th and 75th percentile of environmental enteric dysfunction (EED) biomarkers at 6 months in Kenya."}
+plot_list$k_who_hr <- tables_cleaned$k_who_hr %>% 
+  plot_hr(ylab = "Hazard Ratios of Motor \nMilestone Attainment \nat Year 1",
+          xlab = "EED Biomarkers at 6 Months",
+          caption = "p-value corrected for false discovery rate: *** <0.01, ** <0.05, * <0.2 \n
+^ Hazard ratio of development outcome comparing the 25th and 75th percentile of the \n   EED exposure marker distribution\n
+-- Hazard ratio was not calculated due to data sparsity")
+
+plot_list$k_who_hr
+```
+
+
+\newpage
+
+```{r fig.cap = "Adjusted mean differences in scores on the communication, gross motor, personal social, and combined scales of the Extended Ages and Stages Questionnaire at 2 years between the 25th and 75th percentile of environmental enteric dysfunction (EED) biomarkers at 6 and 17 months in Kenya"}
+# kenya
+plot_list$k_easq_y2 <- tables_cleaned$k_easq_y2 %>% 
+  plot_gam(ylab = "EASQ Scores at Year 2",
+           xlab = "EED Markers at 6 and 17 Months",
+           caption = "p-value corrected for false discovery rate: *** <0.01, ** <0.05, * <0.2 \n
+^ Mean difference of development outcome comparing the 25th and 75th percentile of the \n  EED exposure marker distribution")
+
+plot_list$k_easq_y2
+```
+
+\newpage
+
+
+```{r fig.cap = "Adjusted mean differences in MacArthur-Bates Communicative Development Inventories (CDI) scores  at 2 years between the 25th and 75th percentile of environmental enteric dysfunction (EED) biomarkers at 3 and 14 months in Bangladesh"}
+plot_list$bg_cdi_y2 <- tables_cleaned$bg_cdi_y2 %>%
+  plot_gam(ylab = "CDI Scores at Year 2",
+           xlab = "EED Markers at 3 and 14 Months",
+           caption = "p-value corrected for false discovery rate: *** <0.01, ** <0.05, * <0.2 \n
+^ Mean difference of development outcome comparing the 25th and 75th percentile of the \n  EED exposure marker distribution")
+
+plot_list$bg_cdi_y2
+```
+
+
+```{r save plots, eval = F}
+plot_list %>% 
+  imap(~ save_plot(file.path(here("figures", paste0(.y, ".png"))), 
+                   .x,
+                   base_width = 6,
+                   base_asp = 5))
+
+```
+
