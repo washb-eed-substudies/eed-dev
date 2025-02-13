@@ -1,5 +1,5 @@
 ---
-title: "Heatmaps: GAM results"
+title: "Heatmaps: sensitivity analysis- GLM results"
 output:
   html_notebook: default
   # pdf_document: default
@@ -24,7 +24,7 @@ for (file in adj_file_list){
     str_replace_all("-", "_") %>% 
     str_to_lower()
   
-  assign(paste0(obj_name, "_adj"), readRDS(file))
+  assign(paste0(obj_name, "_glm"), readRDS(file))
 }
 
 ```
@@ -32,44 +32,46 @@ for (file in adj_file_list){
 ## Hypothesis 1
 ```{r}
 # cdi
-h1_adj %>% 
-  filter(str_detect(Y, "cdi")) %>% 
+h1_glm %>%
+  filter(str_detect(Y, "cdi")) %>%
   mutate(Y = case_when(str_detect(Y, "und") ~ "Understanding",
                        str_detect(Y, "say") ~ "Expressing"),
          X = case_when(str_detect(X, "aat") ~ "AAT",
                        str_detect(X, "mpo") ~ "MPO",
-                       str_detect(X, "neo") ~ "NEO", 
-                       str_detect(X, "L_") ~ "Lact", 
-                       str_detect(X, "M_") ~ "Mann")) %>% 
+                       str_detect(X, "neo") ~ "NEO",
+                       str_detect(X, "L_") ~ "Lact",
+                       str_detect(X, "M_") ~ "Mann")) %>%
+  rename(point.diff = coef) %>%
   plot_sig_heatmap(Outcome = "Communicative Development Inventory")
 
 
 # who
-h1_adj %>% 
-  filter(str_detect(Y, "who")) %>% 
+h1_glm %>%
+  filter(str_detect(Y, "who")) %>%
   mutate(Y = case_when(str_detect(Y, "sub") ~ "Milestones 2,4,5,6",
                        str_detect(Y, "sum") ~ "Sum Total"),
          X = case_when(str_detect(X, "aat") ~ "AAT",
                        str_detect(X, "mpo") ~ "MPO",
-                       str_detect(X, "neo") ~ "NEO", 
-                       str_detect(X, "L_") ~ "Lact", 
-                       str_detect(X, "M_") ~ "Mann")) %>% 
+                       str_detect(X, "neo") ~ "NEO",
+                       str_detect(X, "L_") ~ "Lact",
+                       str_detect(X, "M_") ~ "Mann")) %>%
+    rename(point.diff = coef) %>%
   plot_sig_heatmap(Outcome = "WHO Motor Milestones (Mean Diff)")
 
-h1_who_hr_adj %>% 
-  mutate(y_subdomain = case_when(str_detect(Y, "sit") ~ "Sitting", 
-                       str_detect(Y, "crawl") ~ "Crawling", 
-                       str_detect(Y, "walk") ~ "Walking", 
+h1_who_hr_glm %>%
+  mutate(y_subdomain = case_when(str_detect(Y, "sit") ~ "Sitting",
+                       str_detect(Y, "crawl") ~ "Crawling",
+                       str_detect(Y, "walk") ~ "Walking",
                        str_detect(Y, "stand") ~ "Standing"),
-         Y = case_when(str_detect(Y, "nosupp") ~ str_c(y_subdomain, " (w/o support)"), 
-                       str_detect(Y, "supp") ~ str_c(y_subdomain, " (w/ support)"), 
-                       TRUE ~ y_subdomain), 
+         Y = case_when(str_detect(Y, "nosupp") ~ str_c(y_subdomain, " (w/o support)"),
+                       str_detect(Y, "supp") ~ str_c(y_subdomain, " (w/ support)"),
+                       TRUE ~ y_subdomain),
          X = case_when(str_detect(X, "aat") ~ "AAT",
                        str_detect(X, "mpo") ~ "MPO",
-                       str_detect(X, "neo") ~ "NEO", 
-                       str_detect(X, "L_") ~ "Lact", 
-                       str_detect(X, "M_") ~ "Mann")) %>% 
-  rename(point.diff = point.HR) %>% 
+                       str_detect(X, "neo") ~ "NEO",
+                       str_detect(X, "L_") ~ "Lact",
+                       str_detect(X, "M_") ~ "Mann")) %>%
+  rename(point.diff = point.HR) %>%
   plot_sig_heatmap(Outcome = "WHO Motor Milestones (HR)", null = 1)
 ```
 
@@ -77,7 +79,7 @@ h1_who_hr_adj %>%
 ```{r}
 # cdi
 # t1 markers
-h2_adj %>% 
+h2_glm %>% 
   filter(str_detect(Y, "cdi"),
          str_detect(X, "1")) %>% 
   mutate(Y = case_when(str_detect(Y, "und") ~ "Understanding",
@@ -91,10 +93,11 @@ h2_adj %>%
                        str_detect(X, "neo") ~ "NEO", 
                        str_detect(X, "L_") ~ "Lact", 
                        str_detect(X, "M_") ~ "Mann")) %>% 
+    rename(point.diff = coef) %>%
   plot_sig_heatmap(Outcome = "Communicative Development Inventory")
 
 # t2 markers
-h2_adj %>% 
+h2_glm %>% 
   filter(str_detect(Y, "cdi"),
          str_detect(X, "2")) %>% 
   mutate(Y = case_when(str_detect(Y, "und") ~ "Understanding",
@@ -108,11 +111,12 @@ h2_adj %>%
                        str_detect(X, "neo") ~ "NEO", 
                        str_detect(X, "L_") ~ "Lact", 
                        str_detect(X, "M_") ~ "Mann")) %>% 
+    rename(point.diff = coef) %>%
   plot_sig_heatmap(Outcome = "Communicative Development Inventory")
 
 # EASQ
 # t1 markers
-h2_adj %>% 
+h2_glm %>% 
   filter(str_detect(Y, "cdi", negate = TRUE),
          str_detect(X, "1")) %>% 
   mutate(Y = case_when(str_detect(Y, "und") ~ "Understanding",
@@ -126,11 +130,12 @@ h2_adj %>%
                        str_detect(X, "neo") ~ "NEO", 
                        str_detect(X, "L_") ~ "Lact", 
                        str_detect(X, "M_") ~ "Mann")) %>% 
+    rename(point.diff = coef) %>%
   plot_sig_heatmap(Outcome = "Extended Ages and Stages Questionnaire")
 
 
 # t2 markers 
-h2_adj %>% 
+h2_glm %>% 
   filter(str_detect(Y, "cdi", negate = TRUE),
          str_detect(X, "2")) %>% 
   mutate(Y = case_when(str_detect(Y, "und") ~ "Understanding",
@@ -144,13 +149,14 @@ h2_adj %>%
                        str_detect(X, "neo") ~ "NEO", 
                        str_detect(X, "L_") ~ "Lact", 
                        str_detect(X, "M_") ~ "Mann")) %>% 
+    rename(point.diff = coef) %>%
   plot_sig_heatmap(Outcome = "Extended Ages and Stages Questionnaire")
 ```
 
 ## Hypothesis 3
 ```{r}
 # cdi
-h3_adj %>% 
+h3_glm %>% 
   filter(str_detect(Y, "cdi")) %>% 
   mutate(Y = case_when(str_detect(Y, "und") ~ "Understanding",
                        str_detect(Y, "say") ~ "Expressing",
@@ -164,10 +170,11 @@ h3_adj %>%
                        str_detect(X, "L_") ~ "Lact", 
                        str_detect(X, "M_") ~ "Mann",
                        str_detect(X, "reg") ~ "REG1B")) %>% 
+    rename(point.diff = coef) %>%
   plot_sig_heatmap(Outcome = "Communicative Development Inventory")
 
 # EASQ
-h3_adj %>% 
+h3_glm %>% 
   filter(str_detect(Y, "cdi", negate = TRUE)) %>% 
   mutate(Y = case_when(str_detect(Y, "und") ~ "Understanding",
                        str_detect(Y, "say") ~ "Expressing",
@@ -181,13 +188,14 @@ h3_adj %>%
                        str_detect(X, "L_") ~ "Lact", 
                        str_detect(X, "M_") ~ "Mann",
                        str_detect(X, "reg") ~ "REG1B")) %>% 
+    rename(point.diff = coef) %>%
   plot_sig_heatmap(Outcome = "Extended Ages and Stages Questionnaire")
 ```
 
 ## Hypothesis 4
 ```{r}
 # who
-h4_adj %>% 
+h4_glm %>% 
   filter(str_detect(Y, "who")) %>% 
   mutate(Y = case_when(str_detect(Y, "sub") ~ "Milestones 2,4,5,6",
                        str_detect(Y, "sum") ~ "Sum Total"),
@@ -196,9 +204,10 @@ h4_adj %>%
                        str_detect(X, "neo") ~ "NEO", 
                        str_detect(X, "Lact") ~ "Lact", 
                        str_detect(X, "Mann") ~ "Mann")) %>% 
+      rename(point.diff = coef) %>%
   plot_sig_heatmap(Outcome = "WHO Motor Milestones (Mean Diff)")
 
-h4_who_hr_adj %>% 
+h4_who_hr_glm %>% 
   mutate(y_subdomain = case_when(str_detect(Y, "sit") ~ "Sitting", 
                        str_detect(Y, "crawl") ~ "Crawling", 
                        str_detect(Y, "walk") ~ "Walking", 
@@ -220,7 +229,7 @@ h4_who_hr_adj %>%
 ```{r}
 # EASQ
 # t1 markers
-h5_adj %>% 
+h5_glm %>% 
   filter(str_detect(Y, "cdi", negate = TRUE),
          str_detect(X, "1")) %>% 
   mutate(Y = case_when(str_detect(Y, "pstot") ~ "Personal Social", 
@@ -232,10 +241,11 @@ h5_adj %>%
                        str_detect(X, "neo") ~ "NEO", 
                        str_detect(X, "Lact") ~ "Lact", 
                        str_detect(X, "Mann") ~ "Mann")) %>% 
+    rename(point.diff = coef) %>%
   plot_sig_heatmap(Outcome = "Extended Ages and Stages Questionnaire")
 
 # t2 markers 
-h5_adj %>% 
+h5_glm %>% 
   filter(str_detect(Y, "cdi", negate = TRUE),
          str_detect(X, "2")) %>% 
   mutate(Y = case_when(str_detect(Y, "pstot") ~ "Personal Social", 
@@ -247,5 +257,6 @@ h5_adj %>%
                        str_detect(X, "neo") ~ "NEO", 
                        str_detect(X, "Lact") ~ "Lact", 
                        str_detect(X, "Mann") ~ "Mann")) %>% 
+    rename(point.diff = coef) %>%
   plot_sig_heatmap(Outcome = "Extended Ages and Stages Questionnaire")
 ```

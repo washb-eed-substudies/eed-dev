@@ -169,5 +169,5 @@ cleaned_who %>%
   map(~ filter(., if_any(.cols = c(ends_with("significance")), compose(`!`, is.na))))
 # write data ----
 
-# saveRDS(cleaned_results, here("results/final/cleaned_gam_results.RDS"))
-# saveRDS(cleaned_who, here("results/final/cleaned_hr_results.RDS"))
+saveRDS(cleaned_results, here("results/final/cleaned_gam_results.RDS"))
+saveRDS(cleaned_who, here("results/final/cleaned_hr_results.RDS"))
