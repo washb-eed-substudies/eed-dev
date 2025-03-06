@@ -79,7 +79,10 @@ k_easq <- read_dta(here('raw-data/kenya/kenya_easq_no4_14april2021.dta'),
 # covariates
 
 k_cov <- read_csv(here('raw-data/kenya/washb-kenya-enrol.csv')) %>% 
-  rename(tr_enrol = tr)
+  rename(tr_enrol = tr) %>% 
+  left_join(k_stool %>% 
+              select(childid, hhid, 
+                     starts_with("father")))
 
 k_anthro <- read_csv(here('raw-data/kenya/kenya-dm-ee-anthro-ee.csv')) %>% 
   select(childid, laz_t1, waz_t1, 
