@@ -12,7 +12,8 @@ k_stool <- read_csv(here('raw-data/kenya/washb-kenya-eed-stool.csv'))
 
 k_stool <- k_stool %>% 
   select(childid, hhid, clusterid,
-         setdiff(colnames(k_stool), colnames(k_urine))) 
+         setdiff(colnames(k_stool), colnames(k_urine)),
+         starts_with("father")) 
 
 k_eed <- k_urine %>% 
   full_join(k_stool, 
