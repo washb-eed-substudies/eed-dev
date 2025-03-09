@@ -1,0 +1,84 @@
+---
+title: "EED Development  supplementary materials"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+
+library(here)
+library(tidyverse)
+```
+
+
+# Hypothesis 1 splines
+
+```{r, echo=F}
+# "C:\Users\andre\OneDrive\Documents\washb_substudies\eed-dev\figure-data\H2b_adj_spline_data.RDS"
+# "C:\Users\andre\OneDrive\Documents\washb_substudies\eed-dev\figure-data\H2c_adj_spline_data.RDS"
+# "C:\Users\andre\OneDrive\Documents\washb_substudies\eed-dev\figure-data\H2d_adj_spline_data.RDS"
+# "C:\Users\andre\OneDrive\Documents\washb_substudies\eed-dev\figure-data\H2e_adj_spline_data.RDS"
+# "C:\Users\andre\OneDrive\Documents\washb_substudies\eed-dev\figure-data\H2f_adj_spline_data.RDS"
+# "C:\Users\andre\OneDrive\Documents\washb_substudies\eed-dev\figure-data\H2g_adj_spline_data.RDS"
+# "C:\Users\andre\OneDrive\Documents\washb_substudies\eed-dev\figure-data\H2h_adj_spline_data.RDS"
+
+# "C:\Users\andre\OneDrive\Documents\washb_substudies\eed-dev\figure-data\H3_unadj_spline_data.RDS"
+# "C:\Users\andre\OneDrive\Documents\washb_substudies\eed-dev\figure-data\H3a_adj_spline_data.RDS"
+# "C:\Users\andre\OneDrive\Documents\washb_substudies\eed-dev\figure-data\H3b_adj_spline_data.RDS"
+# "C:\Users\andre\OneDrive\Documents\washb_substudies\eed-dev\figure-data\H4_unadj_spline_data.RDS"
+# "C:\Users\andre\OneDrive\Documents\washb_substudies\eed-dev\figure-data\H4_who_unadj_spline_data.RDS"
+# "C:\Users\andre\OneDrive\Documents\washb_substudies\eed-dev\figure-data\H4_who-hr_unadj_spline_data.RDS"
+# "C:\Users\andre\OneDrive\Documents\washb_substudies\eed-dev\figure-data\H4a_adj_spline_data.RDS"
+# "C:\Users\andre\OneDrive\Documents\washb_substudies\eed-dev\figure-data\H4b_adj_spline_data.RDS"
+# "C:\Users\andre\OneDrive\Documents\washb_substudies\eed-dev\figure-data\H5_unadj_spline_data.RDS"
+# "C:\Users\andre\OneDrive\Documents\washb_substudies\eed-dev\figure-data\H5a_adj_spline_data.RDS"
+# "C:\Users\andre\OneDrive\Documents\washb_substudies\eed-dev\figure-data\H5b_adj_spline_data.RDS"
+# "C:\Users\andre\OneDrive\Documents\washb_substudies\eed-dev\figure-data\H5c_adj_spline_data.RDS"
+# "C:\Users\andre\OneDrive\Documents\washb_substudies\eed-dev\figure-data\H5d_adj_spline_data.RDS"
+# "C:\Users\andre\OneDrive\Documents\washb_substudies\eed-dev\figure-data\main_figures_heatmaps.nb.html"
+# "C:\Users\andre\OneDrive\Documents\washb_substudies\eed-dev\figure-data\main_figures_heatmaps.Rmd"
+# "C:\Users\andre\OneDrive\Documents\washb_substudies\eed-dev\figure-data\H1_unadj_spline_data.RDS"
+# "C:\Users\andre\OneDrive\Documents\washb_substudies\eed-dev\figure-data\H1_who_unadj_spline_data.RDS"
+# "C:\Users\andre\OneDrive\Documents\washb_substudies\eed-dev\figure-data\H1_who-hr_unadj_spline_data.RDS"
+# "C:\Users\andre\OneDrive\Documents\washb_substudies\eed-dev\figure-data\H1a_adj_spline_data.RDS"
+# "C:\Users\andre\OneDrive\Documents\washb_substudies\eed-dev\figure-data\H1b_adj_spline_data.RDS"
+# "C:\Users\andre\OneDrive\Documents\washb_substudies\eed-dev\figure-data\H1c_adj_spline_data.RDS"
+
+h1a<-readRDS(here("figure-data", "H1a_adj_spline_data.RDS")) 
+h1b<-readRDS(here("figure-data", "H1b_adj_spline_data.RDS")) 
+h1c<-readRDS(here("figure-data", "H1c_adj_spline_data.RDS")) 
+h1d<-readRDS(here("figure-data", "H1d_adj_spline_data.RDS")) 
+h2a<-readRDS(here("figure-data", "H2a_adj_spline_data.RDS")) 
+h3a<-readRDS(here("figure-data", "H3a_adj_spline_data.RDS")) 
+h4a<-readRDS(here("figure-data", "H4a_adj_spline_data.RDS")) 
+H1a_adj_res <- readRDS(here("results/adjusted/H1a_adj_res.RDS")) %>% rename(Yvar=Y, Xvar=X)
+H1b_adj_res <- readRDS(here("results/adjusted/H1b_adj_res.RDS")) %>% rename(Yvar=Y, Xvar=X)
+H1c_adj_res <- readRDS(here("results/adjusted/H1c_adj_res.RDS")) %>% rename(Yvar=Y, Xvar=X)
+H1d_adj_res <- readRDS(here("results/adjusted/H1d_adj_res.RDS")) %>% rename(Yvar=Y, Xvar=X)
+
+h1a <- left_join(h1a, H1a_adj_res, by = c("Xvar", "Yvar")) 
+h1b <- left_join(h1b, H1b_adj_res, by = c("Xvar", "Yvar")) 
+h1c <- left_join(h1c, H1c_adj_res, by = c("Xvar", "Yvar")) 
+h1d <- left_join(h1d, H1d_adj_res, by = c("Xvar", "Yvar")) 
+
+plot_splines <- function(d, title){
+  p <- ggplot(d) + geom_ribbon(aes(x = X, ymin = lwrS, ymax = uprS), 
+        alpha = 0.5, fill="grey70") + geom_path(aes(x = X, y = lwrS), color = "grey70") + 
+        facet_wrap(Xvar~Yvar, scale="free") +
+        geom_path(aes(x = X, y = uprS), color = "grey70") + 
+        geom_path(aes(x = X, 
+        y = fit), color = "black") + xlab("") + ylab("") + 
+  geom_vline(aes(xintercept = q1), linetype="dashed") + 
+  geom_vline(aes(xintercept = q3), linetype="dashed") +
+    ggtitle(title)
+  return(p)
+}
+
+plot_splines(h1a, "H1a")
+plot_splines(h1b, "H1b")
+plot_splines(h1c, "H1c")
+plot_splines(h1d, "H1d")
+
+
+```
+

@@ -4,18 +4,34 @@ source(here::here("0-config.R"))
 
 d <- readRDS(here('final-data/eed-dev_bg.RDS'))
 
+#clean covariates to avoid high missingness
+d <- d %>% mutate(
+  laz_t1 = factor(case_when(is.na(laz_t1) ~ "Missing",
+                            laz_t1 < -2 ~ "Stunted",
+                            laz_t1 >= (-2) ~ "Not stunted")),
+  waz_t1 = factor(case_when(is.na(waz_t1) ~ "Missing",
+                            waz_t1 < -2 ~ "Wasted",
+                            waz_t1 >= (-2) ~ "Not wasted")),
+  cesd_sum_t2=as.numeric(as.character(cesd_sum_t2)),
+  cesd_sum_t2 = factor(case_when(is.na(cesd_sum_t2) ~ "Missing",
+                                 cesd_sum_t2 < 16 ~ "Not depressed",
+                                 cesd_sum_t2 >= 16 ~ "Depressed"))
+)
+
+
+
 #Set list of adjustment variables
 #Make vectors of adjustment variable names
 Wvars<-c("sex","birthord", "momage","momheight","momedu", 
          "hfiacat", "Nlt18","Ncomp", "watmin", "walls", 
          "floor", 'roof', "HHwealth", 
          "life_viol_any_t3", "tr",
-         
          'laz_t1', 'waz_t1', "cesd_sum_t2")
 
 Wvars[!(Wvars %in% colnames(d))]
 
 # Loop over exposure-outcome pairs
+
 
 # --------------------------------------------------------------------------
 #### Hypothesis 1 ####
@@ -70,17 +86,18 @@ for(i in 1:nrow(H1a_adj_models)){
 
 
 #Save models
-saveRDS(H1a_adj_models, paste0(dropboxDir,"results/stress-growth-models/models/H1a_adj_models.RDS"))
+saveRDS(H1a_adj_models, paste0(dropboxDir,"results/eed-dev-models/H1a_adj_models.RDS"))
+
 
 #Save results
 saveRDS(H1a_adj_res, here("results/adjusted/H1a_adj_res.RDS"))
 
 
 #Save plots
-saveRDS(H1a_adj_plot_list, paste0(dropboxDir,"results/stress-growth-models/figure-objects/H1a_adj_splines.RDS"))
+saveRDS(H1a_adj_plot_list, paste0(dropboxDir,"results/eed-dev-models/figure-objects/H1a_adj_splines.RDS"))
 
 #Save plot data
-saveRDS(H1a_adj_plot_data, paste0(dropboxDir,"results/stress-growth-models/figure-data/H1a_adj_spline_data.RDS"))
+saveRDS(H1a_adj_plot_data,  here("figure-data/H1a_adj_spline_data.RDS"))
 
 ##########################
 # adjustment sets 4-5
@@ -129,17 +146,17 @@ for(i in 1:nrow(H1b_adj_models)){
 
 
 #Save models
-saveRDS(H1b_adj_models, paste0(dropboxDir,"results/stress-growth-models/models/H1b_adj_models.RDS"))
+saveRDS(H1b_adj_models, paste0(dropboxDir,"results/eed-dev-models/models/H1b_adj_models.RDS"))
 
 #Save results
 saveRDS(H1b_adj_res, here("results/adjusted/H1b_adj_res.RDS"))
 
 
 #Save plots
-saveRDS(H1b_adj_plot_list, paste0(dropboxDir,"results/stress-growth-models/figure-objects/H1b_adj_splines.RDS"))
+saveRDS(H1b_adj_plot_list, paste0(dropboxDir,"results/eed-dev-models/figure-objects/H1b_adj_splines.RDS"))
 
 #Save plot data
-saveRDS(H1b_adj_plot_data, paste0(dropboxDir,"results/stress-growth-models/figure-data/H1b_adj_spline_data.RDS"))
+saveRDS(H1b_adj_plot_data,  here("figure-data/H1b_adj_spline_data.RDS"))
 
 
 ##########################
@@ -190,17 +207,17 @@ for(i in 1:nrow(H1c_adj_models)){
 
 
 #Save models
-saveRDS(H1c_adj_models, paste0(dropboxDir,"results/stress-growth-models/models/H1c_adj_models.RDS"))
+saveRDS(H1c_adj_models, paste0(dropboxDir,"results/eed-dev-models/models/H1c_adj_models.RDS"))
 
 #Save results
 saveRDS(H1c_adj_res, here("results/adjusted/H1c_adj_res.RDS"))
 
 
 #Save plots
-saveRDS(H1c_adj_plot_list, paste0(dropboxDir,"results/stress-growth-models/figure-objects/H1c_adj_splines.RDS"))
+saveRDS(H1c_adj_plot_list, paste0(dropboxDir,"results/eed-dev-models/figure-objects/H1c_adj_splines.RDS"))
 
 #Save plot data
-saveRDS(H1c_adj_plot_data, paste0(dropboxDir,"results/stress-growth-models/figure-data/H1c_adj_spline_data.RDS"))
+saveRDS(H1c_adj_plot_data,  here("figure-data/H1c_adj_spline_data.RDS"))
 
 ##########################
 # adjustment sets 9-10
@@ -250,17 +267,17 @@ for(i in 1:nrow(H1d_adj_models)){
 
 
 #Save models
-saveRDS(H1d_adj_models, paste0(dropboxDir,"results/stress-growth-models/models/H1d_adj_models.RDS"))
+saveRDS(H1d_adj_models, paste0(dropboxDir,"results/eed-dev-models/models/H1d_adj_models.RDS"))
 
 #Save results
 saveRDS(H1d_adj_res, here("results/adjusted/H1d_adj_res.RDS"))
 
 
 #Save plots
-saveRDS(H1d_adj_plot_list, paste0(dropboxDir,"results/stress-growth-models/figure-objects/H1d_adj_splines.RDS"))
+saveRDS(H1d_adj_plot_list, paste0(dropboxDir,"results/eed-dev-models/figure-objects/H1d_adj_splines.RDS"))
 
 #Save plot data
-saveRDS(H1d_adj_plot_data, paste0(dropboxDir,"results/stress-growth-models/figure-data/H1d_adj_spline_data.RDS"))
+saveRDS(H1d_adj_plot_data,  here("figure-data/H1d_adj_spline_data.RDS"))
 
 
 
@@ -319,17 +336,17 @@ for(i in 1:nrow(H2a_adj_models)){
 
 
 #Save models
-saveRDS(H2a_adj_models, paste0(dropboxDir,"results/stress-growth-models/models/H2a_adj_models.RDS"))
+saveRDS(H2a_adj_models, paste0(dropboxDir,"results/eed-dev-models/models/H2a_adj_models.RDS"))
 
 #Save results
 saveRDS(H2a_adj_res, here("results/adjusted/H2a_adj_res.RDS"))
 
 
 #Save plots
-saveRDS(H2a_adj_plot_list, paste0(dropboxDir,"results/stress-growth-models/figure-objects/H2a_adj_splines.RDS"))
+saveRDS(H2a_adj_plot_list, paste0(dropboxDir,"results/eed-dev-models/figure-objects/H2a_adj_splines.RDS"))
 
 #Save plot data
-saveRDS(H2a_adj_plot_data, paste0(dropboxDir,"results/stress-growth-models/figure-data/H2a_adj_spline_data.RDS"))
+saveRDS(H2a_adj_plot_data,  here("figure-data/H2a_adj_spline_data.RDS"))
 
 ##########################
 # adjustment sets 14-15
@@ -379,17 +396,17 @@ for(i in 1:nrow(H2b_adj_models)){
 
 
 #Save models
-saveRDS(H2b_adj_models, paste0(dropboxDir,"results/stress-growth-models/models/H2b_adj_models.RDS"))
+saveRDS(H2b_adj_models, paste0(dropboxDir,"results/eed-dev-models/models/H2b_adj_models.RDS"))
 
 #Save results
 saveRDS(H2b_adj_res, here("results/adjusted/H2b_adj_res.RDS"))
 
 
 #Save plots
-saveRDS(H2b_adj_plot_list, paste0(dropboxDir,"results/stress-growth-models/figure-objects/H2b_adj_splines.RDS"))
+saveRDS(H2b_adj_plot_list, paste0(dropboxDir,"results/eed-dev-models/figure-objects/H2b_adj_splines.RDS"))
 
 #Save plot data
-saveRDS(H2b_adj_plot_data, paste0(dropboxDir,"results/stress-growth-models/figure-data/H2b_adj_spline_data.RDS"))
+saveRDS(H2b_adj_plot_data,  here("figure-data/H2b_adj_spline_data.RDS"))
 
 
 ##########################
@@ -439,17 +456,17 @@ for(i in 1:nrow(H2c_adj_models)){
 
 
 #Save models
-saveRDS(H2c_adj_models, paste0(dropboxDir,"results/stress-growth-models/models/H2c_adj_models.RDS"))
+saveRDS(H2c_adj_models, paste0(dropboxDir,"results/eed-dev-models/models/H2c_adj_models.RDS"))
 
 #Save results
 saveRDS(H2c_adj_res, here("results/adjusted/H2c_adj_res.RDS"))
 
 
 #Save plots
-saveRDS(H2c_adj_plot_list, paste0(dropboxDir,"results/stress-growth-models/figure-objects/H2c_adj_splines.RDS"))
+saveRDS(H2c_adj_plot_list, paste0(dropboxDir,"results/eed-dev-models/figure-objects/H2c_adj_splines.RDS"))
 
 #Save plot data
-saveRDS(H2c_adj_plot_data, paste0(dropboxDir,"results/stress-growth-models/figure-data/H2c_adj_spline_data.RDS"))
+saveRDS(H2c_adj_plot_data,  here("figure-data/H2c_adj_spline_data.RDS"))
 
 ##########################
 # adjustment sets 19-20
@@ -498,17 +515,17 @@ for(i in 1:nrow(H2d_adj_models)){
 
 
 #Save models
-saveRDS(H2d_adj_models, paste0(dropboxDir,"results/stress-growth-models/models/H2d_adj_models.RDS"))
+saveRDS(H2d_adj_models, paste0(dropboxDir,"results/eed-dev-models/models/H2d_adj_models.RDS"))
 
 #Save results
 saveRDS(H2d_adj_res, here("results/adjusted/H2d_adj_res.RDS"))
 
 
 #Save plots
-saveRDS(H2d_adj_plot_list, paste0(dropboxDir,"results/stress-growth-models/figure-objects/H2d_adj_splines.RDS"))
+saveRDS(H2d_adj_plot_list, paste0(dropboxDir,"results/eed-dev-models/figure-objects/H2d_adj_splines.RDS"))
 
 #Save plot data
-saveRDS(H2d_adj_plot_data, paste0(dropboxDir,"results/stress-growth-models/figure-data/H2d_adj_spline_data.RDS"))
+saveRDS(H2d_adj_plot_data,  here("figure-data/H2d_adj_spline_data.RDS"))
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
@@ -560,17 +577,17 @@ for(i in 1:nrow(H2e_adj_models)){
 
 
 #Save models
-saveRDS(H2e_adj_models, paste0(dropboxDir,"results/stress-growth-models/models/H2e_adj_models.RDS"))
+saveRDS(H2e_adj_models, paste0(dropboxDir,"results/eed-dev-models/models/H2e_adj_models.RDS"))
 
 #Save results
 saveRDS(H2e_adj_res, here("results/adjusted/H2e_adj_res.RDS"))
 
 
 #Save plots
-saveRDS(H2e_adj_plot_list, paste0(dropboxDir,"results/stress-growth-models/figure-objects/H2e_adj_splines.RDS"))
+saveRDS(H2e_adj_plot_list, paste0(dropboxDir,"results/eed-dev-models/figure-objects/H2e_adj_splines.RDS"))
 
 #Save plot data
-saveRDS(H2e_adj_plot_data, paste0(dropboxDir,"results/stress-growth-models/figure-data/H2e_adj_spline_data.RDS"))
+saveRDS(H2e_adj_plot_data,  here("figure-data/H2e_adj_spline_data.RDS"))
 
 ##########################
 # adjustment sets 24-25
@@ -620,17 +637,17 @@ for(i in 1:nrow(H2f_adj_models)){
 
 
 #Save models
-saveRDS(H2f_adj_models, paste0(dropboxDir,"results/stress-growth-models/models/H2f_adj_models.RDS"))
+saveRDS(H2f_adj_models, paste0(dropboxDir,"results/eed-dev-models/models/H2f_adj_models.RDS"))
 
 #Save results
 saveRDS(H2f_adj_res, here("results/adjusted/H2f_adj_res.RDS"))
 
 
 #Save plots
-saveRDS(H2f_adj_plot_list, paste0(dropboxDir,"results/stress-growth-models/figure-objects/H2f_adj_splines.RDS"))
+saveRDS(H2f_adj_plot_list, paste0(dropboxDir,"results/eed-dev-models/figure-objects/H2f_adj_splines.RDS"))
 
 #Save plot data
-saveRDS(H2f_adj_plot_data, paste0(dropboxDir,"results/stress-growth-models/figure-data/H2f_adj_spline_data.RDS"))
+saveRDS(H2f_adj_plot_data,  here("figure-data/H2f_adj_spline_data.RDS"))
 
 
 ##########################
@@ -680,17 +697,17 @@ for(i in 1:nrow(H2g_adj_models)){
 
 
 #Save models
-saveRDS(H2g_adj_models, paste0(dropboxDir,"results/stress-growth-models/models/H2g_adj_models.RDS"))
+saveRDS(H2g_adj_models, paste0(dropboxDir,"results/eed-dev-models/models/H2g_adj_models.RDS"))
 
 #Save results
 saveRDS(H2g_adj_res, here("results/adjusted/H2g_adj_res.RDS"))
 
 
 #Save plots
-saveRDS(H2g_adj_plot_list, paste0(dropboxDir,"results/stress-growth-models/figure-objects/H2g_adj_splines.RDS"))
+saveRDS(H2g_adj_plot_list, paste0(dropboxDir,"results/eed-dev-models/figure-objects/H2g_adj_splines.RDS"))
 
 #Save plot data
-saveRDS(H2g_adj_plot_data, paste0(dropboxDir,"results/stress-growth-models/figure-data/H2g_adj_spline_data.RDS"))
+saveRDS(H2g_adj_plot_data,  here("figure-data/H2g_adj_spline_data.RDS"))
 
 ##########################
 # adjustment sets 29-30
@@ -739,17 +756,17 @@ for(i in 1:nrow(H2h_adj_models)){
 
 
 #Save models
-saveRDS(H2h_adj_models, paste0(dropboxDir,"results/stress-growth-models/models/H2h_adj_models.RDS"))
+saveRDS(H2h_adj_models, paste0(dropboxDir,"results/eed-dev-models/models/H2h_adj_models.RDS"))
 
 #Save results
 saveRDS(H2h_adj_res, here("results/adjusted/H2h_adj_res.RDS"))
 
 
 #Save plots
-saveRDS(H2h_adj_plot_list, paste0(dropboxDir,"results/stress-growth-models/figure-objects/H2h_adj_splines.RDS"))
+saveRDS(H2h_adj_plot_list, paste0(dropboxDir,"results/eed-dev-models/figure-objects/H2h_adj_splines.RDS"))
 
 #Save plot data
-saveRDS(H2h_adj_plot_data, paste0(dropboxDir,"results/stress-growth-models/figure-data/H2h_adj_spline_data.RDS"))
+saveRDS(H2h_adj_plot_data,  here("figure-data/H2h_adj_spline_data.RDS"))
 
 
 # --------------------------------------------------------------------------
@@ -808,17 +825,17 @@ for(i in 1:nrow(H3a_adj_models)){
 
 
 #Save models
-saveRDS(H3a_adj_models, paste0(dropboxDir,"results/stress-growth-models/models/H3a_adj_models.RDS"))
+saveRDS(H3a_adj_models, paste0(dropboxDir,"results/eed-dev-models/models/H3a_adj_models.RDS"))
 
 #Save results
 saveRDS(H3a_adj_res, here("results/adjusted/H3a_adj_res.RDS"))
 
 
 #Save plots
-saveRDS(H3a_adj_plot_list, paste0(dropboxDir,"results/stress-growth-models/figure-objects/H3a_adj_splines.RDS"))
+saveRDS(H3a_adj_plot_list, paste0(dropboxDir,"results/eed-dev-models/figure-objects/H3a_adj_splines.RDS"))
 
 #Save plot data
-saveRDS(H3a_adj_plot_data, paste0(dropboxDir,"results/stress-growth-models/figure-data/H3a_adj_spline_data.RDS"))
+saveRDS(H3a_adj_plot_data,  here("figure-data/H3a_adj_spline_data.RDS"))
 
 ##########################
 # adjustment sets 32
@@ -867,17 +884,17 @@ for(i in 1:nrow(H3b_adj_models)){
 
 
 #Save models
-saveRDS(H3b_adj_models, paste0(dropboxDir,"results/stress-growth-models/models/H3b_adj_models.RDS"))
+saveRDS(H3b_adj_models, paste0(dropboxDir,"results/eed-dev-models/models/H3b_adj_models.RDS"))
 
 #Save results
 saveRDS(H3b_adj_res, here("results/adjusted/H3b_adj_res.RDS"))
 
 
 #Save plots
-saveRDS(H3b_adj_plot_list, paste0(dropboxDir,"results/stress-growth-models/figure-objects/H3b_adj_splines.RDS"))
+saveRDS(H3b_adj_plot_list, paste0(dropboxDir,"results/eed-dev-models/figure-objects/H3b_adj_splines.RDS"))
 
 #Save plot data
-saveRDS(H3b_adj_plot_data, paste0(dropboxDir,"results/stress-growth-models/figure-data/H3b_adj_spline_data.RDS"))
+saveRDS(H3b_adj_plot_data,  here("figure-data/H3b_adj_spline_data.RDS"))
 
 
 # ------------------------------------------------------------------------
@@ -951,17 +968,17 @@ for(i in 1:nrow(H4a_adj_models)){
 
 
 #Save models
-saveRDS(H4a_adj_models, paste0(dropboxDir,"results/stress-growth-models/models/H4a_adj_models.RDS"))
+saveRDS(H4a_adj_models, paste0(dropboxDir,"results/eed-dev-models/models/H4a_adj_models.RDS"))
 
 #Save results
 saveRDS(H4a_adj_res, here("results/adjusted/H4a_adj_res.RDS"))
 
 
 #Save plots
-saveRDS(H4a_adj_plot_list, paste0(dropboxDir,"results/stress-growth-models/figure-objects/H4a_adj_splines.RDS"))
+saveRDS(H4a_adj_plot_list, paste0(dropboxDir,"results/eed-dev-models/figure-objects/H4a_adj_splines.RDS"))
 
 #Save plot data
-saveRDS(H4a_adj_plot_data, paste0(dropboxDir,"results/stress-growth-models/figure-data/H4a_adj_spline_data.RDS"))
+saveRDS(H4a_adj_plot_data,  here("figure-data/H4a_adj_spline_data.RDS"))
 
 ##########################
 # adjustment sets 36-37
@@ -1009,17 +1026,17 @@ for(i in 1:nrow(H4b_adj_models)){
 
 
 #Save models
-saveRDS(H4b_adj_models, paste0(dropboxDir,"results/stress-growth-models/models/H4b_adj_models.RDS"))
+saveRDS(H4b_adj_models, paste0(dropboxDir,"results/eed-dev-models/models/H4b_adj_models.RDS"))
 
 #Save results
 saveRDS(H4b_adj_res, here("results/adjusted/H4b_adj_res.RDS"))
 
 
 #Save plots
-saveRDS(H4b_adj_plot_list, paste0(dropboxDir,"results/stress-growth-models/figure-objects/H4b_adj_splines.RDS"))
+saveRDS(H4b_adj_plot_list, paste0(dropboxDir,"results/eed-dev-models/figure-objects/H4b_adj_splines.RDS"))
 
 #Save plot data
-saveRDS(H4b_adj_plot_data, paste0(dropboxDir,"results/stress-growth-models/figure-data/H4b_adj_spline_data.RDS"))
+saveRDS(H4b_adj_plot_data,  here("figure-data/H4b_adj_spline_data.RDS"))
 
 # --------------------------------------------------------------------------
 #### Hypothesis 5 ####
@@ -1078,17 +1095,17 @@ for(i in 1:nrow(H5a_adj_models)){
 
 
 #Save models
-saveRDS(H5a_adj_models, paste0(dropboxDir,"results/stress-growth-models/models/H5a_adj_models.RDS"))
+saveRDS(H5a_adj_models, paste0(dropboxDir,"results/eed-dev-models/models/H5a_adj_models.RDS"))
 
 #Save results
 saveRDS(H5a_adj_res, here("results/adjusted/H5a_adj_res.RDS"))
 
 
 #Save plots
-saveRDS(H5a_adj_plot_list, paste0(dropboxDir,"results/stress-growth-models/figure-objects/H5a_adj_splines.RDS"))
+saveRDS(H5a_adj_plot_list, paste0(dropboxDir,"results/eed-dev-models/figure-objects/H5a_adj_splines.RDS"))
 
 #Save plot data
-saveRDS(H5a_adj_plot_data, paste0(dropboxDir,"results/stress-growth-models/figure-data/H5a_adj_spline_data.RDS"))
+saveRDS(H5a_adj_plot_data,  here("figure-data/H5a_adj_spline_data.RDS"))
 
 ##########################
 # adjustment sets 41-42
@@ -1136,17 +1153,17 @@ for(i in 1:nrow(H5b_adj_models)){
 
 
 #Save models
-saveRDS(H5b_adj_models, paste0(dropboxDir,"results/stress-growth-models/models/H5b_adj_models.RDS"))
+saveRDS(H5b_adj_models, paste0(dropboxDir,"results/eed-dev-models/models/H5b_adj_models.RDS"))
 
 #Save results
 saveRDS(H5b_adj_res, here("results/adjusted/H5b_adj_res.RDS"))
 
 
 #Save plots
-saveRDS(H5b_adj_plot_list, paste0(dropboxDir,"results/stress-growth-models/figure-objects/H5b_adj_splines.RDS"))
+saveRDS(H5b_adj_plot_list, paste0(dropboxDir,"results/eed-dev-models/figure-objects/H5b_adj_splines.RDS"))
 
 #Save plot data
-saveRDS(H5b_adj_plot_data, paste0(dropboxDir,"results/stress-growth-models/figure-data/H5b_adj_spline_data.RDS"))
+saveRDS(H5b_adj_plot_data,  here("figure-data/H5b_adj_spline_data.RDS"))
 
 
 ##########################
@@ -1195,17 +1212,17 @@ for(i in 1:nrow(H5c_adj_models)){
 
 
 #Save models
-saveRDS(H5c_adj_models, paste0(dropboxDir,"results/stress-growth-models/models/H5c_adj_models.RDS"))
+saveRDS(H5c_adj_models, paste0(dropboxDir,"results/eed-dev-models/models/H5c_adj_models.RDS"))
 
 #Save results
 saveRDS(H5c_adj_res, here("results/adjusted/H5c_adj_res.RDS"))
 
 
 #Save plots
-saveRDS(H5c_adj_plot_list, paste0(dropboxDir,"results/stress-growth-models/figure-objects/H5c_adj_splines.RDS"))
+saveRDS(H5c_adj_plot_list, paste0(dropboxDir,"results/eed-dev-models/figure-objects/H5c_adj_splines.RDS"))
 
 #Save plot data
-saveRDS(H5c_adj_plot_data, paste0(dropboxDir,"results/stress-growth-models/figure-data/H5c_adj_spline_data.RDS"))
+saveRDS(H5c_adj_plot_data,  here("figure-data/H5c_adj_spline_data.RDS"))
 
 ##########################
 # adjustment sets 46-47
@@ -1253,17 +1270,17 @@ for(i in 1:nrow(H5d_adj_models)){
 
 
 #Save models
-saveRDS(H5d_adj_models, paste0(dropboxDir,"results/stress-growth-models/models/H5d_adj_models.RDS"))
+saveRDS(H5d_adj_models, paste0(dropboxDir,"results/eed-dev-models/models/H5d_adj_models.RDS"))
 
 #Save results
 saveRDS(H5d_adj_res, here("results/adjusted/H5d_adj_res.RDS"))
 
 
 #Save plots
-saveRDS(H5d_adj_plot_list, paste0(dropboxDir,"results/stress-growth-models/figure-objects/H5d_adj_splines.RDS"))
+saveRDS(H5d_adj_plot_list, paste0(dropboxDir,"results/eed-dev-models/figure-objects/H5d_adj_splines.RDS"))
 
 #Save plot data
-saveRDS(H5d_adj_plot_data, paste0(dropboxDir,"results/stress-growth-models/figure-data/H5d_adj_spline_data.RDS"))
+saveRDS(H5d_adj_plot_data,  here("figure-data/H5d_adj_spline_data.RDS"))
 
 
 # --------------------------------------------------------------------------
