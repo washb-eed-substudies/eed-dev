@@ -1,6 +1,8 @@
 ---
 title: "3_results"
-output: html_notebook
+output:
+  html_document:
+    df_print: paged
 ---
 ```{r}
 # requires 2_sig-hyp.Rmd to be run

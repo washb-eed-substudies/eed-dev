@@ -9,8 +9,23 @@ source(here::here("0-config.R"))
 # ----
 # Bangladesh
 
-try(d <- readRDS('eed-dev_bg.RDS'))
-try(d <- readRDS("C:/Users/andre/Dropbox/WASHB-EE-analysis/WBB-EE-analysis/Data/Cleaned/Andrew/eed-dev_bg.RDS"))
+d <- readRDS(here('final-data/eed-dev_bg.RDS'))
+
+
+#clean covariates to avoid high missingness
+d <- d %>% mutate(
+  laz_t1 = factor(case_when(is.na(laz_t1) ~ "Missing",
+                            laz_t1 < -2 ~ "Stunted",
+                            laz_t1 >= (-2) ~ "Not stunted")),
+  waz_t1 = factor(case_when(is.na(waz_t1) ~ "Missing",
+                            waz_t1 < -2 ~ "Wasted",
+                            waz_t1 >= (-2) ~ "Not wasted")),
+  cesd_sum_t2=as.numeric(as.character(cesd_sum_t2)),
+  cesd_sum_t2 = factor(case_when(is.na(cesd_sum_t2) ~ "Missing",
+                                 cesd_sum_t2 < 16 ~ "Not depressed",
+                                 cesd_sum_t2 >= 16 ~ "Depressed"))
+)
+
 
 
 ## Unadjusted 
@@ -96,7 +111,8 @@ for(i in Xvars){
   for(j in Yvars){
     print(i)
     print(j)
-    res_adj <- fit_HR_GAM(d=d, X=i, Y=j, age = "agedays_motor", W=H1a_who_W)
+    res_adj=NULL
+    res_adj <- try(fit_HR_GAM(d=d, X=i, Y=j, age = "agedays_motor", W=H1a_who_W))
     res <- data.frame(X=i, Y=j, fit=I(list(res_adj$fit)), dat=I(list(res_adj$dat)))
     H1a_who_adj_models <- bind_rows(H1a_who_adj_models, res)
   }
@@ -205,7 +221,7 @@ H1a_who_adj_res %>%
 ####### kenya hypotheses ####### 
 # ------------------------------------------------------------------------
 
-d <- readRDS('final-data/eed-dev_k.RDS')
+d <- readRDS(here('final-data/eed-dev_k.RDS'))
 
 # Unadjusted Models
 

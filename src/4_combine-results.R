@@ -9,7 +9,7 @@ library(here)
 # read in analysis output ----
 
 adj_file_list <- dir_ls("results/adjusted") %>% 
-  str_subset("_all")
+  str_subset("_all_adj")
 
 unadj_file_list <- dir_ls("results/unadjusted")
 
