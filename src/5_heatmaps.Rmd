@@ -1,8 +1,9 @@
 ---
-title: "Heatmaps: GAM results"
+title: 'Heatmaps: GAM results'
 output:
+  html_document:
+    df_print: paged
   html_notebook: default
-  # pdf_document: default
 ---
 
 ```{r include = F}
@@ -15,7 +16,7 @@ knitr::opts_chunk$set(echo = FALSE,
                       message = FALSE)
 
 adj_file_list <- dir_ls(here("results/adjusted")) %>% 
-  str_subset("_all")
+  str_subset("_all_adj")
 
 
 for (file in adj_file_list){

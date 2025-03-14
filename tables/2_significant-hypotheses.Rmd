@@ -1,7 +1,9 @@
 ---
 title: "Significant Analyses"
 subtitle: "WASH Benefits: EED-Development"
-output: html_notebook
+output:
+  html_document:
+    df_print: paged
 ---
 
 ```{r}
@@ -69,6 +71,7 @@ sig_gam <- gam_analyses %>%
   filter(signif != "Unadj.")
 
 sig_gam
+saveRDS(sig_gam, here("tables/sig_gam.RDS"))
 ```
 
 ```{r, include = TRUE}
@@ -93,6 +96,8 @@ sig_hr <- hr_analyses %>%
   filter(signif != "Unadj.")
 
 sig_hr
+saveRDS(sig_hr, here("tables/sig_hr.RDS"))
+
 ```
 
 

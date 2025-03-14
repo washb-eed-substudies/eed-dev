@@ -8,6 +8,10 @@ output:
 # requires 2_sig-hyp.Rmd to be run
 source(here::here("0-config.R"))
 
+sig_gam=readRDS(here("tables/sig_gam.RDS"))
+sig_hr=readRDS(here("tables/sig_hr.RDS"))
+
+
 ```
 
 

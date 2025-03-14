@@ -1,8 +1,10 @@
 ---
 title: "EED-Development Draft Tables"
-subtitle: "WASH Benefits, Bangladesh" 
+subtitle: WASH Benefits, Bangladesh
 date: "`r format(Sys.Date(), '%d %B %Y')`"
-output: 
+output:
+  html_document:
+    df_print: paged
   html_notebook:
     theme: sandstone
 ---
