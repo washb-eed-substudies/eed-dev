@@ -62,58 +62,67 @@ tableone2flextable <- function(tableone){
 
 ```{r}
 bg_tables <- bind_rows(
-  gam_h1, 
-  gam_h2, 
-  gam_h3
-)
+  gam_h1 %>% 
+    mutate(hyp = 1), 
+  gam_h2%>% 
+    mutate(hyp = 2), 
+  gam_h3%>% 
+    mutate(hyp = 3)
+) %>%
+  mutate(Q1=round(Q1, 2), 
+         Q3=round(Q3, 2), 
+    `Adj. P-value`=round(`Adj. P-value`,3))
 
 k_tables <- bind_rows(
   gam_h4, 
   gam_h5
-)
+)%>%
+  mutate(Q1=round(Q1, 2), 
+         Q3=round(Q3, 2), 
+    `Adj. P-value`=round(`Adj. P-value`,3))
 ```
 
 
 ```{r, eval = FALSE}
-bg_tables <- bind_rows(
-  all_h1 %>% 
-    mutate(hyp = 1), 
-  all_h2 %>% 
-    mutate(hyp = 2), 
-  all_h3 %>% 
-    mutate(hyp = 3)
-) %>% 
-  group_by(hyp) %>% 
-  mutate_if(is.numeric, round, 2) %>% 
-  mutate(across(contains('P-value'), 
-                ~ case_when(.x <= 0.05 ~ paste0(.x, "*"), 
-                            TRUE ~ as.character(.x))), 
-         Exposure = case_when(t_exp == 1 ~ str_c(Exposure, " (3 mo)"), 
-                              t_exp == 2 ~ str_c(Exposure, " (14 mo)")), 
-         `Outcome Domain` = case_when(hyp == 1 ~ str_c(`Outcome Domain`, " (Year 1)"), 
-                                      hyp %in% c(2, 3) ~ str_c(`Outcome Domain`, " (Year 2)"))) %>% 
-  rename(`Adj. Diff. (95% CI)` = `Adjusted Difference (95% CI)`, 
-         `Adj. P-value` = `Adjusted P-value`, 
-         `FDR Corr. P-value` = `FDR Corrected P-value`)
-
-k_tables <- bind_rows(
-  all_h4 %>% 
-    mutate(hyp = 4), 
-  all_h5 %>% 
-    mutate(hyp = 5)
-) %>% 
-  group_by(hyp) %>% 
-  mutate_if(is.numeric, round, 2) %>% 
-  mutate(across(contains('P-value'), 
-                ~ case_when(.x <= 0.05 ~ paste0(.x, "*"), 
-                            TRUE ~ as.character(.x))), 
-         Exposure = case_when(t_exp == 1 ~ str_c(Exposure," (3 mo)"), 
-                              t_exp == 2 ~ str_c(Exposure, " (14 mo)")),  
-         `Outcome Domain` = case_when(hyp == 4 ~ str_c(`Outcome Domain`, " (Year 1)"), 
-                                      hyp == 5 ~ str_c(`Outcome Domain`, " (Year 2)"))) %>% 
-  rename(`Adj. Diff. (95% CI)` = `Adjusted Difference (95% CI)`, 
-         `Adj. P-value` = `Adjusted P-value`, 
-         `FDR Corr. P-value` = `FDR Corrected P-value`)
+# bg_tables <- bind_rows(
+#   all_h1 %>% 
+#     mutate(hyp = 1), 
+#   all_h2 %>% 
+#     mutate(hyp = 2), 
+#   all_h3 %>% 
+#     mutate(hyp = 3)
+# ) %>% 
+#   group_by(hyp) %>% 
+#   mutate_if(is.numeric, round, 2) %>% 
+#   mutate(across(contains('P-value'), 
+#                 ~ case_when(.x <= 0.05 ~ paste0(.x, "*"), 
+#                             TRUE ~ as.character(.x))), 
+#          Exposure = case_when(t_exp == 1 ~ str_c(Exposure, " (3 mo)"), 
+#                               t_exp == 2 ~ str_c(Exposure, " (14 mo)")), 
+#          `Outcome Domain` = case_when(hyp == 1 ~ str_c(`Outcome Domain`, " (Year 1)"), 
+#                                       hyp %in% c(2, 3) ~ str_c(`Outcome Domain`, " (Year 2)"))) %>% 
+#   rename(`Adj. Diff. (95% CI)` = `Adjusted Difference (95% CI)`, 
+#          `Adj. P-value` = `Adjusted P-value`, 
+#          `FDR Corr. P-value` = `FDR Corrected P-value`)
+# 
+# k_tables <- bind_rows(
+#   all_h4 %>% 
+#     mutate(hyp = 4), 
+#   all_h5 %>% 
+#     mutate(hyp = 5)
+# ) %>% 
+#   group_by(hyp) %>% 
+#   mutate_if(is.numeric, round, 2) %>% 
+#   mutate(across(contains('P-value'), 
+#                 ~ case_when(.x <= 0.05 ~ paste0(.x, "*"), 
+#                             TRUE ~ as.character(.x))), 
+#          Exposure = case_when(t_exp == 1 ~ str_c(Exposure," (3 mo)"), 
+#                               t_exp == 2 ~ str_c(Exposure, " (14 mo)")),  
+#          `Outcome Domain` = case_when(hyp == 4 ~ str_c(`Outcome Domain`, " (Year 1)"), 
+#                                       hyp == 5 ~ str_c(`Outcome Domain`, " (Year 2)"))) %>% 
+#   rename(`Adj. Diff. (95% CI)` = `Adjusted Difference (95% CI)`, 
+#          `Adj. P-value` = `Adjusted P-value`, 
+#          `FDR Corr. P-value` = `FDR Corrected P-value`)
 ```
 
 
@@ -159,7 +168,9 @@ k_hr <- hr_h4 %>%
 # Table 1
 
 ```{r eval = F}
-bg <- readRDS(here('eed-dev_bg.RDS')) %>% 
+
+
+bg <- readRDS(here('final-data/eed-dev_bg.RDS')) %>% 
   rename(hh_index = HHwealth) %>% 
   mutate(across(c(cesd_sum_t2, cesd_sum_ee_t3,
                   pss_sum_mom_t3), 
@@ -171,7 +182,7 @@ bg <- readRDS(here('eed-dev_bg.RDS')) %>%
          country = 'Bangladesh', 
          )
 
-k <- readRDS(here('eed-dev_k.RDS')) %>% 
+k <- readRDS(here('final-data/eed-dev_k.RDS')) %>% 
   mutate(across(c(quantile_phq, quantile_pss), 
                 as.numeric), 
          across(c(sex), 
@@ -194,12 +205,12 @@ print(tab1, nonnormal = myVars)
 ```
 
 ```{r eval = F}
-print(tab1, nonnormal = myVars, quote = FALSE, noSpaces = TRUE, printToggle = FALSE) %>% 
-  write.csv(here('tables/tableone.csv'))
-
-table_1 <- read_csv(here('tables/tableone.csv')) %>% 
-  mutate(across(.fns = ~ case_when(str_detect(., "NA|NaN") ~ NA_character_, 
-                                   TRUE ~ .)))
+# print(tab1, nonnormal = myVars, quote = FALSE, noSpaces = TRUE, printToggle = FALSE) %>% 
+#   write.csv(here('tables/tableone.csv'))
+# 
+# table_1 <- read_csv(here('tables/tableone.csv')) %>% 
+#   mutate(across(.fns = ~ case_when(str_detect(., "NA|NaN") ~ NA_character_, 
+#                                    TRUE ~ .)))
 ```
 
 
@@ -209,7 +220,7 @@ table_1 <- read_csv(here('tables/tableone.csv')) %>%
 keep_cols <- c('Outcome Domain', 'Outcome Subdomain',
                'Exposure', 'n', 
                'Q1', 'Q3', # append(x, value, after = 6)
-               'Adj. P-value')
+               'Adj. P-value', 'corrected.Pval_adj')
 
 ft_default <- set_flextable_defaults(
   font.size = 10
@@ -253,7 +264,7 @@ bg_cdi_tab <- flextable(bg_cdi_tbl,
                                      append(keep_cols, "Adj. Diff (95% CI)", 6))) %>% 
     merge_v("CDI Year") %>% 
   valign(j = "CDI Year", valign = 'top') %>% 
-  flex_format(9) %>% 
+  flex_format(1+9) %>% 
   set_caption("Communicative Development Inventories (Bangladesh)", style = "Table Caption",
               autonum = autonum)
 ```
@@ -263,7 +274,7 @@ bg_easq_tbl <- bg_easq
 
 bg_easq_tab <- flextable(bg_easq_tbl,
                          col_keys = append(keep_cols, "Adj. Diff (95% CI)", 6)) %>% 
-  flex_format(8) %>% 
+  flex_format(1+8) %>% 
   set_caption("Extended Ages and Stages Questionnaire, Year 2 (Bangladesh)", style = "Table Caption",
               autonum = autonum)
 ```
@@ -316,7 +327,7 @@ bg_hr_tbl <- bg_hr
 bg_hr_tab <- flextable(bg_hr_tbl, 
           col_keys = c("Motor Milestone", 
                        append(keep_cols, "Adj. HR (95% CI)", 6))) %>% 
-  flex_format(9) %>% 
+  flex_format(1+9) %>% 
   set_caption("Individual WHO Motor Milestones - Hazard Ratios, Year 1 (Bangladesh)", style = "Table Caption",
               autonum = autonum)
 ```
@@ -329,7 +340,7 @@ k_hr_tbl <- k_hr
 k_hr_tab <- flextable(k_hr_tbl, 
           col_keys = c("Motor Milestone", 
                        append(keep_cols, "Adj. HR (95% CI)", 6))) %>% 
-  flex_format(9) %>% 
+  flex_format(1+9) %>% 
   set_caption("Individual WHO Motor Milestones - Hazard Ratios, Year 1 (Kenya)", style = "Table Caption",
               autonum = autonum)
 ```
@@ -338,7 +349,7 @@ k_hr_tab <- flextable(k_hr_tbl,
 ```{r}
 bg_tables_tab <- flextable(bg_tables, 
           col_keys = append(keep_cols, "Adj. Diff (95% CI)", 6)) %>% 
-  flex_format(8) %>% 
+  flex_format(1+8) %>% 
     merge_v("Outcome Domain") %>% 
   valign(j = "Outcome Domain", valign = 'top') %>% 
   width(j = "Outcome Domain", width = 1.25) %>% 
@@ -354,7 +365,7 @@ bg_tables_tab <- flextable(bg_tables,
 ```{r}
 k_tables_tab <- flextable(k_tables, 
           col_keys = append(keep_cols, "Adj. Diff (95% CI)", 6)) %>% 
-  flex_format(8) %>% 
+  flex_format(1+8) %>% 
   merge_v("Outcome Domain") %>% 
   width(j = "Outcome Domain", 
         width = 2.9) %>% 
@@ -365,17 +376,17 @@ k_tables_tab <- flextable(k_tables,
 # Export to Word
 
 ```{r}
-table_1_ft <- table_1 %>% 
-  flextable() %>% 
-  hline(part="header", border=fp_border(color="black")) %>% 
-  hline_bottom(part="body", border=fp_border(color="black")) %>% 
-  hline_top(part="header", border=fp_border(color="black")) %>% 
-  # align(align = "center", part = "all") %>% 
-  # align(j = c(1, 2), align = "left", part="all") %>% 
-  autofit(part = "all") %>% 
-  # fit_to_width(max_width=8) %>% 
-  set_caption("", style = "Table Caption",
-              autonum = autonum)
+# table_1_ft <- table_1 %>% 
+#   flextable() %>% 
+#   hline(part="header", border=fp_border(color="black")) %>% 
+#   hline_bottom(part="body", border=fp_border(color="black")) %>% 
+#   hline_top(part="header", border=fp_border(color="black")) %>% 
+#   # align(align = "center", part = "all") %>% 
+#   # align(j = c(1, 2), align = "left", part="all") %>% 
+#   autofit(part = "all") %>% 
+#   # fit_to_width(max_width=8) %>% 
+#   set_caption("", style = "Table Caption",
+#               autonum = autonum)
 
 ```
 
@@ -402,18 +413,33 @@ save_as_docx(bg_who_tab, k_who_tab,
 ```
 
 ```{r}
-write.xlsx(
-  tibble::lst(bg_who_tbl, k_who_tbl,
-             
-             bg_cdi_tbl,
-             bg_easq_tbl, k_easq_tbl,
-             
-             bg_hr_tbl, k_hr_tbl,
-             
-             # bg_tables_tbl, k_tables_tbl
-             ),
-  here::here("tables/all_tables.xlsx"),
-  overwrite = T
-)
+
+library(openxlsx)
+
+# Create a new workbook
+wb <- createWorkbook()
+
+# Add worksheets
+addWorksheet(wb, "Bangladesh WHO")
+addWorksheet(wb, "Kenya WHO")
+addWorksheet(wb, "Bangladesh EASQ")
+addWorksheet(wb, "Kenya EASQ")
+addWorksheet(wb, "Bangladesh HR")
+addWorksheet(wb, "Kenya HR")
+
+writeData(wb, "Bangladesh WHO", bg_who_tbl)
+writeData(wb, "Kenya WHO", k_who_tbl)
+writeData(wb, "Bangladesh EASQ", bg_easq_tbl)
+writeData(wb, "Kenya EASQ", k_easq_tbl)
+writeData(wb, "Bangladesh HR", bg_hr_tbl)
+writeData(wb, "Kenya HR", k_hr_tbl)
+
+
+# Save the workbook
+saveWorkbook(wb, here::here("tables/all_tables.xlsx"), overwrite = TRUE)
+
+
+
+
 ```
 

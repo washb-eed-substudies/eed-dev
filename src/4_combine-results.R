@@ -45,11 +45,11 @@ clean_results <- function(data, hyp_num, measure = "gam"){
   format_ci <- function(point.est, lower, upper){
     format_num <- function(number, digits = 2){
       rounded_num <- round(number, digits = digits)
-      ifelse(rounded_num == 0,
-             case_when(sign(number) == -1 ~ paste0(">-0.", rep.int("0", digits - 1), "1"),
-                       sign(number) == 1  ~ paste0("<0.", rep.int("0", digits - 1), "1"),
-                       sign(number) == 0  ~ "0.000"),
-             as.character(rounded_num))
+      # ifelse(rounded_num == 0,
+      #        case_when(sign(number) == -1 ~ paste0(">-0.", rep.int("0", digits - 1), "1"),
+      #                  sign(number) == 1  ~ paste0("<0.", rep.int("0", digits - 1), "1"),
+      #                  sign(number) == 0  ~ "0.000"),
+      #        as.character(rounded_num))
     }
     
     fmt_point <- format_num(point.est)
@@ -157,16 +157,17 @@ cleaned_results <- cleaned_results %>%
                adj_p_significance = flag_p_values(`Adj. P-value`),
                fdr_significance = flag_p_values(corrected.Pval_adj)))
 
-cleaned_results %>% 
-  map(~ filter(., if_any(.cols = c(ends_with("significance")), compose(`!`, is.na))))
+# cleaned_results %>% 
+#   map(~ filter(., if_any(.cols = c(ends_with("significance")), compose(`!`, is.na))))
 
 cleaned_who <- cleaned_who %>% 
   map(~ mutate(., 
                adj_p_significance = flag_p_values(`Adj. P-value`),
                fdr_significance = flag_p_values(corrected.Pval_adj)))
 
-cleaned_who %>% 
-  map(~ filter(., if_any(.cols = c(ends_with("significance")), compose(`!`, is.na))))
+# cleaned_who %>% 
+#   map(~ filter(., if_any(.cols = c(ends_with("significance")), compose(`!`, is.na))))
+
 # write data ----
 
 saveRDS(cleaned_results, here("results/final/cleaned_gam_results.RDS"))

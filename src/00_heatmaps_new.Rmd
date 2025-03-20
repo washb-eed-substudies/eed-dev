@@ -54,6 +54,11 @@ k_tables <- bind_rows(
   gam_h5
 )
 
+bg_tables$fdr_significance[is.na(bg_tables$fdr_significance)]=""
+k_tables$fdr_significance[is.na(k_tables$fdr_significance)]=""
+hr_h1$fdr_significance[is.na(hr_h1$fdr_significance)]=""
+hr_h4$fdr_significance[is.na(hr_h4$fdr_significance)]=""
+
 ```
 
 ```{r}
@@ -130,13 +135,14 @@ plot_heatmap <- function(data,
       `Exposure` = factor(`Exposure`, 
                           levels = exp_levels, 
                           ordered = TRUE),
-      est_clean = case_when(is.infinite(ub) ~ NA,
+      est_clean = case_when(#grepl("<",data$pointest_ci) ~ gsub("^(.*?) \\(.*$", "\\1", values),
+                            is.infinite(ub) ~ NA,
                             !between(point.est, -100, 100) ~ NA,
                             ub-lb > 100 ~ NA,
                             point.est == 0 ~ 0,
                             TRUE ~ round(point.est, 2)),
       est_label = est_clean %>% 
-                    format(nsmall = digits, scientific = FALSE) %>% 
+                    #format(nsmall = digits, scientific = FALSE) %>% 
                     str_c("", fdr_significance),
       fontformat = if_else(fdr_significance != "", "bold", "plain"),
       fontcolor = if_else(between(est_clean, 
@@ -196,13 +202,13 @@ plot_hr <- partial(plot_heatmap,
 \newpage
 
 ```{r fig.cap = "Flowchart of participants’ progress through enrollment, sample collection, and statistical analysis in Bangladesh", fig.height=7.5}
-include_graphics(here("figures/bg_enrollment-figure.png"))
+try(include_graphics(here("figures/bg_enrollment-figure.png")))
 ```
 
 \newpage
 
 ```{r fig.cap = "Flowchart of participants’ progress through enrollment, sample collection, and statistical analysis in Kenya", fig.height=7.5}
-include_graphics(here("figures/k_enrollment-figure.png"))
+try(include_graphics(here("figures/k_enrollment-figure.png")))
 ```
 
 \newpage

@@ -80,7 +80,6 @@ Wvars<-c("sex","birthord", "momage","momheight","momedu",
          "hfiacat", "Nlt18","Ncomp", "watmin", "walls", 
          "floor", 'roof', "HHwealth", 
          "life_viol_any_t3", "tr",
-         
          'laz_t1', 'waz_t1', "cesd_sum_t2")
 
 Wvars[!(Wvars %in% colnames(d))]
@@ -101,8 +100,9 @@ H1_W <- c(Wvars)
 
 Xvars <- c('ln_aat1', 'ln_mpo1', 'ln_neo1')           
 
-H1a_who_W <- c(H1_W, 'ageday_st1', 'agedays_motor', 
+H1a_who_W <- c(H1_W, 'ageday_st1', 'agedays_motor',
            'month_st1', 'month_mm')
+
 H1a_who_W[!(H1a_who_W %in% colnames(d))]
 
 #Fit models
@@ -113,6 +113,17 @@ for(i in Xvars){
     print(j)
     res_adj=NULL
     res_adj <- try(fit_HR_GAM(d=d, X=i, Y=j, age = "agedays_motor", W=H1a_who_W))
+    #if fails, try refitting without collinear time variables
+    if(class(res_adj)=="try-error"){
+      
+      res_adj <- try(fit_HR_GAM(d=d, X=i, Y=j, age = "agedays_motor", W=H1_W))
+                     
+                     if(class(res_adj)=="try-error"){
+                     res_adj <- try(fit_HR_GAM(d=d, X=i, Y=j, age = "agedays_motor", W=c("sex","birthord", "momage","momheight","momedu", 
+                                                                          "hfiacat", "Nlt18","Ncomp", "watmin", "walls", 
+                                                                          "floor", 'roof', "HHwealth", "tr")))
+                     }
+    }
     res <- data.frame(X=i, Y=j, fit=I(list(res_adj$fit)), dat=I(list(res_adj$dat)))
     H1a_who_adj_models <- bind_rows(H1a_who_adj_models, res)
   }
@@ -147,10 +158,10 @@ saveRDS(H1a_who_adj_res, here("results/adjusted/H1a_who-hr_adj_res.RDS"))
 
 
 #Save plots
-#saveRDS(H1a_who_adj_plot_list, paste0(dropboxDir,"results/stress-growth-models/figure-objects/H1a_who_adj_splines.RDS"))
+saveRDS(H1a_who_adj_plot_list, paste0(dropboxDir,"results/stress-growth-models/figure-objects/H1a_who_adj_splines.RDS"))
 
 #Save plot data
-#saveRDS(H1a_who_adj_plot_data, paste0(dropboxDir,"results/stress-growth-models/figure-data/H1a_who_adj_spline_data.RDS"))
+saveRDS(H1a_who_adj_plot_data, paste0(dropboxDir,"results/stress-growth-models/figure-data/H1a_who_adj_spline_data.RDS"))
 
 ##########################
 # adjustment sets 4-5
@@ -205,10 +216,10 @@ saveRDS(H1b_who_adj_res, here("results/adjusted/H1b_who-hr_adj_res.RDS"))
 
 
 #Save plots
-#saveRDS(H1b_who_adj_plot_list, paste0(dropboxDir,"results/stress-growth-models/figure-objects/H1b_who_adj_splines.RDS"))
+saveRDS(H1b_who_adj_plot_list, paste0(dropboxDir,"results/stress-growth-models/figure-objects/H1b_who_adj_splines.RDS"))
 
 #Save plot data
-#saveRDS(H1b_who_adj_plot_data, paste0(dropboxDir,"results/stress-growth-models/figure-data/H1b_who_adj_spline_data.RDS"))
+saveRDS(H1b_who_adj_plot_data, paste0(dropboxDir,"results/stress-growth-models/figure-data/H1b_who_adj_spline_data.RDS"))
 
 # ----
 # combine 
@@ -268,10 +279,10 @@ saveRDS(H4_who_res, here("results/unadjusted/H4_who-hr_res.RDS"))
 
 
 #Save plots
-#saveRDS(H4_who_plot_list, here("figure-objects/H4_who_unadj_splines.RDS"))
+saveRDS(H4_who_plot_list, paste0(dropboxDir,"results/stress-growth-models/figure-objects/H4_who_unadj_splines.RDS"))
 
 #Save plot data
-saveRDS(H4_who_plot_data, here("figure-data/H4_who-hr_unadj_spline_data.RDS"))
+saveRDS(H4_who_plot_data, paste0(dropboxDir,"results/stress-growth-models/figure-data/H4_who-hr_unadj_spline_data.RDS"))
 
 
 ## Adjusted Models
@@ -353,10 +364,10 @@ saveRDS(H4a_who_adj_res, here("results/adjusted/H4a_who-hr_adj_res.RDS"))
 
 
 #Save plots
-#saveRDS(H4a_who_adj_plot_list, paste0(dropboxDir,"results/stress-growth-models/figure-objects/H4a_who_adj_splines.RDS"))
+saveRDS(H4a_who_adj_plot_list, paste0(dropboxDir,"results/stress-growth-models/figure-objects/H4a_who_adj_splines.RDS"))
 
 #Save plot data
-#saveRDS(H4a_who_adj_plot_data, paste0(dropboxDir,"results/stress-growth-models/figure-data/H4a_who_adj_spline_data.RDS"))
+saveRDS(H4a_who_adj_plot_data, paste0(dropboxDir,"results/stress-growth-models/figure-data/H4a_who_adj_spline_data.RDS"))
 
 ##########################
 # adjustment sets 36-37
@@ -408,10 +419,10 @@ saveRDS(H4b_who_adj_res, here("results/adjusted/H4b_who-hr_adj_res.RDS"))
 
 
 #Save plots
-#saveRDS(H4b_who_adj_plot_list, paste0(dropboxDir,"results/stress-growth-models/figure-objects/H4b_who_adj_splines.RDS"))
+saveRDS(H4b_who_adj_plot_list, paste0(dropboxDir,"results/stress-growth-models/figure-objects/H4b_who_adj_splines.RDS"))
 
 #Save plot data
-#saveRDS(H4b_who_adj_plot_data, paste0(dropboxDir,"results/stress-growth-models/figure-data/H4b_who_adj_spline_data.RDS"))
+saveRDS(H4b_who_adj_plot_data, paste0(dropboxDir,"results/stress-growth-models/figure-data/H4b_who_adj_spline_data.RDS"))
 
 # ---- 
 H4a_who_adj_res %>% 

@@ -6,13 +6,42 @@
 rm(list=ls())
 
 source(here::here("0-config.R"))
+library(haven)
 
 d_bd <- readRDS(here('final-data/eed-dev_bg.RDS'))
+
+#clean covariates to avoid high missingness
+d_bd <- d_bd %>% mutate(
+  laz_t1 = factor(case_when(is.na(laz_t1) ~ "Missing",
+                            laz_t1 < -2 ~ "Stunted",
+                            laz_t1 >= (-2) ~ "Not stunted")),
+  waz_t1 = factor(case_when(is.na(waz_t1) ~ "Missing",
+                            waz_t1 < -2 ~ "Wasted",
+                            waz_t1 >= (-2) ~ "Not wasted")),
+  cesd_sum_t2=as.numeric(as.character(cesd_sum_t2)),
+  cesd_sum_t2 = factor(case_when(is.na(cesd_sum_t2) ~ "Missing",
+                                 cesd_sum_t2 < 16 ~ "Not depressed",
+                                 cesd_sum_t2 >= 16 ~ "Depressed")))
+
 
 #  block clusterid dataid clusterid_r dataid_r block_r
 sth_bd <- read_csv("C:/Users/andre/OneDrive/Documents/washb_substudies/eed-substudy-data/sth data/washb-bangladesh-sth-public.csv") %>% rename(block_r=block, clusterid_r=clusterid, dataid_r=dataid) %>% filter(personid=="T1") %>% mutate(personid=as.numeric(gsub("T","",personid)))
 bd_public_ID <- read_csv("C:/Users/andre/OneDrive/Documents/washb_substudies/eed-substudy-data/public-ids.csv")
 d_k <- readRDS(here('final-data/eed-dev_k.RDS'))
+#need to merge in Kenya STH data
+sth_k <- read_dta("C:/Users/andre/OneDrive/Documents/washb_substudies/eed-substudy-data/sth data/parasites_kenya_public_ca20230105.dta") 
+head(sth_k)
+head(d_k)
+
+sth_k <- sth_k %>% mutate(hhid=(as.numeric(hhidr2)/10)-3252,
+                          childid=(as.numeric(childidr2)/10)-3252,
+                          clusterid=(as.numeric(clusteridr2)/10)-3252)
+
+
+# gen double hhidr2 = (hhid + 3252)*10
+# gen double childidr2 = (childid + 3252) * 10
+# gen double clusteridr2 = (clusterid + 3252) * 10
+
 
 head(d_bd)
 head(sth_bd)
@@ -25,9 +54,20 @@ d_bd$clusterid <- as.character(d_bd$clusterid)
 d_bd$childid[1:10]
 sth_bd$childid[1:10]
 
-sth_bd <- sth_bd %>% select(block, dataid, clusterid, childid, alepg, hwepg, ttepg)
+
+
+sth_bd <- sth_bd %>% select(block, dataid,  clusterid, childid, aged, alepg, hwepg, ttepg) %>% rename(sth_aged=aged)
+sth_k <- sth_k %>% select(block, hhid,  clusterid, childid, ascaris_yn , trichuris_yn, hook_yn, sth_yn) %>%
+  rename( ascaris=ascaris_yn,trichuris=trichuris_yn,hookworm=hook_yn)
 
 d <- left_join(d_bd, sth_bd, by = c("block","dataid","clusterid","childid"))
+d_k <- left_join(d_k, sth_k, by = c("childid"))
+d$clusterid <- as.numeric(d$clusterid)
+
+#emm analysis
+table(d$ageday_st3 < d$sth_aged)
+
+
 head(d)
 
 table(!is.na(d$alepg))
@@ -38,7 +78,8 @@ table(d$hwepg > 0)
 table(d$ttepg > 0)
 
 d$ascaris <- 1*(d$alepg > 0)
-table(d$ascaris )
+d$trichuris <- 1*(d$ttepg > 0)
+d$hookworm <- 1*(d$hwepg > 0)
 
 
 Wvars<-c("sex","birthord", "momage","momheight","momedu", 
@@ -54,30 +95,112 @@ H1a_W <- c(H1_W, 'ageday_st1', 'agedays_motor',
 H1a_W[!(H1a_W %in% colnames(d))]
 
 
+  
+  
 
-#Fit models
-H1a_adj_res <- NULL
-for(i in Xvars){
-  for(j in Yvars){
-    print(i)
-    print(j) 
-    res <- fit_RE_gam(d=d, X=i, Y=j,  W=H1a_W,  forcedW="sex", V="sex")
-    #modelfit <- data.frame(est = res$boot.coefs[2], ci.lb = res$percentile.interval[2, 1], ci.ub = res$percentile.interval[2, 2], se = res$boot.sds[2])
-    
-    res$X <- i
-    res$Y <- j
-    H1a_adj_res <- bind_rows(H1a_adj_res, res)
+get_emm_res <- function(d, Xvars, Yvars, Wvars, Vvar){
+ 
+  #Fit models
+  H1a_models <- NULL
+  for(i in Xvars){
+    for(j in Yvars){
+      for(k in Vvar){
+      print(i)
+      print(j) 
+      res=NULL
+      res <- fit_RE_gam(d=d, X=i, Y=j,  W=H1a_W,  forcedW=NULL, V=k)
+      res <- data.frame(X=i, Y=j, V=k, int.p =res$int.p, fit=I(list(res$fit)), dat=I(list(res$dat)))
+      H1a_models <- bind_rows(H1a_models, res)
+      }
+    }
   }
+  
+  
+  
+  
+  #Get primary contrasts
+  H1_res <- NULL
+  for(i in 1:nrow(H1a_models)){
+    res <- data.frame(X=H1a_models$X[i], Y=H1a_models$Y[i])
+    if(grepl("_def", H1a_models$X[i])){
+      preds <- predict_gam_emm(fit=H1a_models$fit[i][[1]], d=H1a_models$dat[i][[1]], quantile_diff=c(0.25,0.75), Xvar=H1a_models$X[i], Yvar=H1a_models$Y[i], binaryX=T)
+    }else{
+      preds <- predict_gam_emm(fit=H1a_models$fit[i][[1]], d=H1a_models$dat[i][[1]], quantile_diff=c(0.25,0.75), Xvar=H1a_models$X[i], Yvar=H1a_models$Y[i])
+    }
+    gamm_diff_res <- data.frame(V=H1a_models$V[i] , preds$res) 
+    
+    if(nrow(gamm_diff_res) == 2){
+      gamm_diff_res <- gamm_diff_res %>% mutate(int.Pval = c(NA, H1a_models$int.p[i]))
+    }else{
+      gamm_diff_res$int.Pval=H1a_models$int.p[i]
+    }
+    
+    H1_res <-  bind_rows(H1_res , gamm_diff_res)
+  }
+  
+  
+  return(H1_res) 
 }
 
-res_adj <- fit_RE_gam(d=d_sth, X="", Y=j,  W=NULL, V="ascaris")
+d$ln_mpo1
+d$z_age2mo_personal_all
+
+# Soil-transmitted helminths and multicellular pathogens evoke a primarily TH2 response. 
+# Since STH were assessed in these children, you can (at minimum) compare infection rates in the two settings. 
+# Furthermore, might you test if helminth positivity modified the effect of mannitol on personal social domain score?
+
+Xvar=c("ln_M_conc_t1","ln_M_conc_t2","ln_mpo1","ln_mpo2")
+Yvar =  c('z_age2mo_personal_no4')
+Vvars= c("ascaris","trichuris","hookworm")
+
+
+Wvars = c("sex","birthord", "momage","momheight","momedu", 
+          "hfiacat", "Nlt18","Ncomp", "watmin", "walls", 
+          "floor", 'roof', "HHwealth", 
+          "life_viol_any_t3", "tr",
+          'laz_t1', 'waz_t1', "cesd_sum_t2")
+H2_W <- c(Wvars, 'laz_t2', 'waz_t2',
+          'cesd_sum_ee_t3',	'pss_sum_mom_t3')
+H2a_W <- c(H2_W, 'ageday_st1',	'agedays_easq', 
+           'month_st1',	'month_easq')
+
+
+res=get_emm_res(d=d, Xvars=Xvar, Yvars=Yvar, Wvars=H2a_W, Vvar=Vvars)
+res
+
+table(d$ascaris)
+table(d$trichuris)
+table(d$hookworm)
 
 
 
-
+#-------------------------------------------------------------------------------
+# pre-rejistered EMM analysis
+#-------------------------------------------------------------------------------
 
 # Parental (maternal and paternal, separately) perceived stress (Bangladesh, Follow-up 3)
-# Maternal perceived stress (Kenya, Follow-up 3)●Maternal depressive symptoms(Bangladesh and Kenya, Follow-up 2 and Follow-up 3)
+Xvar=c("ln_M_conc_t1","ln_M_conc_t2","ln_M_conc_t3")
+Yvar =  c('z_age2mo_personal_no4')
+Vvars= c("ascaris","trichuris","hookworm")
+
+Wvars = c("sex","birthord", "momage","momheight","momedu", 
+          "hfiacat", "Nlt18","Ncomp", "watmin", "walls", 
+          "floor", 'roof', "HHwealth", 
+          "life_viol_any_t3", "tr",
+          'laz_t1', 'waz_t1', "cesd_sum_t2")
+H2_W <- c(Wvars, 'laz_t2', 'waz_t2',
+          'cesd_sum_ee_t3',	'pss_sum_mom_t3')
+H2a_W <- c(H2_W, 'ageday_st1',	'agedays_easq', 
+           'month_st1',	'month_easq')
+
+
+res=get_emm_res(d=d, Xvars=Xvar, Yvars=Yvar, Wvars=H2a_W, Vvar=Vvars)
+res
+
+res_K=get_emm_res(d=d_k, Xvars=Xvar, Yvars=Yvar, Wvars=H2a_W, Vvar=Vvars)
+res_K
+
+# Maternal perceived stress (Kenya, Follow-up 3)Maternal depressive symptoms(Bangladesh and Kenya, Follow-up 2 and Follow-up 3)
 # Maternal cortisol (Bangladesh only, measured during pregnancy)
 # Child stress (pre-stressor cortisol, post-stressor cortisol, cortisol reactivity, and F2-isoprostanes) (Bangladesh only, Follow-up 3)
 # Cumulative maternal exposure to intimate partner violenceat Follow-up 2and Follow-up 3(Bangladesh only)
@@ -99,16 +222,4 @@ res_adj <- fit_RE_gam(d=d_sth, X="", Y=j,  W=NULL, V="ascaris")
 # (for binary variables) for all children. We consider these effect-modification 
 # analyses as pre-specified exploratory analyses
 
-
-#Fit models
-H1a_adj_models <- NULL
-for(i in Xvars){
-  for(j in Yvars){
-    print(i)
-    print(j)
-    res_adj <- fit_RE_gam(d=d, X=i, Y=j,  W=H1a_W)
-    res <- data.frame(X=i, Y=j, fit=I(list(res_adj$fit)), dat=I(list(res_adj$dat)))
-    H1a_adj_models <- bind_rows(H1a_adj_models, res)
-  }
-}
 
