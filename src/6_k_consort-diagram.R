@@ -29,7 +29,7 @@ d <- d %>%
          has_exp_t2 = if_any(all_of(exposures_y2),
                              ~ !is.na(.)),
          has_outcome_t1 = if_any(all_of(outcomes_y1),
-                             ~ !is.na(.)),
+                                 ~ !is.na(.)),
          has_outcome_t2 = if_any(all_of(outcomes_y2),
                                  ~ !is.na(.))) %>% 
   mutate(has_all_t1 = has_exp_t1 & has_outcome_t1,
@@ -49,6 +49,43 @@ n_clusters <- c("has_t1_t2", "has_all_t2") %>%
   list_cbind()
 
 n_children; n_clusters
+
+# get number missing by 
+d %>% 
+  filter(if_all(all_of(c("ln_Lact1", 
+                         "ln_Mann1")), ~ is.na(.))) %>% 
+  summarize(n_child = n_distinct(childid), 
+            n_cluster = n_distinct(clusterid))
+
+d %>% 
+  filter(if_all(all_of(c("ln_aat1", 
+                         "ln_mpo1", 
+                         "ln_neo1")), ~ is.na(.))) %>% 
+  summarize(n_child = n_distinct(childid), 
+            n_cluster = n_distinct(clusterid))
+
+d %>% 
+  filter(if_all(all_of(outcomes_y1), ~ is.na(.))) %>% 
+  summarize(n_child = n_distinct(childid), 
+            n_cluster = n_distinct(clusterid))
+
+d %>% 
+  filter(if_all(all_of(outcomes_y2), ~ is.na(.))) %>% 
+  summarize(n_child = n_distinct(childid), 
+            n_cluster = n_distinct(clusterid))
+
+d %>% 
+  filter(if_all(all_of(c("ln_Lact2", 
+                         "ln_Mann2")), ~ is.na(.))) %>% 
+  summarize(n_child = n_distinct(childid), 
+            n_cluster = n_distinct(clusterid))
+
+d %>% 
+  filter(if_all(all_of(c("ln_aat2", 
+                         "ln_mpo2", 
+                         "ln_neo2")), ~ is.na(.))) %>% 
+  summarize(n_child = n_distinct(childid), 
+            n_cluster = n_distinct(clusterid))
 
 # sum numbers across arms
 

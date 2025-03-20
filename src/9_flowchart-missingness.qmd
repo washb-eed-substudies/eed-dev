@@ -1,0 +1,150 @@
+---
+title: "flowchart-missingness"
+format: html
+---
+
+```{r}
+library(tidyverse)
+```
+
+```{r}
+bg <- readRDS(here('final-data/eed-dev_bg.RDS')) 
+
+k <- readRDS(here('final-data/eed-dev_k.RDS'))
+```
+
+```{r}
+bg %>% 
+  filter(if_all(c(ln_Mann1, ln_Lact1, ln_Mann2, ln_Lact2, 
+                  ln_aat1, ln_aat2, ln_mpo1, ln_mpo2, ln_neo1, ln_neo2),
+                is.na))
+```
+
+```{r}
+# t1
+bg %>% 
+  filter(if_all(c(L_conc_t1, M_conc_t1),
+                is.na)) %>% 
+  summarize(n_missing = n_distinct(childid),
+            cluster_missing = n_distinct(clusterid))
+
+bg %>% 
+  filter(if_all(c(mpo1, neo1, aat1),
+                is.na)) %>% 
+  summarize(n_missing = n_distinct(childid),
+            cluster_missing = n_distinct(clusterid))
+
+bg %>% 
+  filter(if_all(c(who_sum_total,
+                  z_age2mo_cdi_undyr1_all_no4, z_age2mo_cdi_sayyr1_all_no4),
+                is.na)) %>% 
+  summarize(n_missing = n_distinct(childid),
+            cluster_missing = n_distinct(clusterid))
+
+# t2
+
+bg %>% 
+  filter(if_all(c(L_conc_t2, M_conc_t2),
+                is.na)) %>% 
+  summarize(n_missing = n_distinct(childid),
+            cluster_missing = n_distinct(clusterid))
+
+
+bg %>% 
+  filter(if_all(c(mpo2, neo2, aat2, ln_reg2),
+                is.na)) %>% 
+  summarize(n_missing = n_distinct(childid),
+            cluster_missing = n_distinct(clusterid))
+
+
+bg %>% 
+  filter(if_all(c(z_age2mo_personal_no4, z_age2mo_motor_no4, z_age2mo_combined_no4, z_age2mo_com_no4),
+                is.na)) %>% 
+  summarize(n_missing = n_distinct(childid),
+            cluster_missing = n_distinct(clusterid))
+```
+
+```{r}
+bg %>% 
+  filter(if_any(c(L_conc_t1, M_conc_t1, mpo1, neo1, aat1),
+                ~ !is.na(.)) & 
+           if_any(c(who_sum_total,
+                    z_age2mo_cdi_undyr1_all_no4, z_age2mo_cdi_sayyr1_all_no4),
+                  ~ !is.na(.))) %>% 
+  summarize(n_missing = n_distinct(childid),
+            cluster_missing = n_distinct(clusterid))
+
+bg %>% 
+  filter(if_all(c(),
+                is.na)) %>% 
+  summarize(n_missing = n_distinct(childid),
+            cluster_missing = n_distinct(clusterid))
+
+bg %>% 
+  filter(if_all(c(who_sum_total,
+                  z_age2mo_cdi_undyr1_all_no4, z_age2mo_cdi_sayyr1_all_no4),
+                is.na)) %>% 
+  summarize(n_missing = n_distinct(childid),
+            cluster_missing = n_distinct(clusterid))
+```
+
+
+```{r}
+# t1
+k %>% 
+  filter(if_all(c(Mann1, Lact1),
+                is.na)) %>% 
+  summarize(n_missing = n_distinct(childid),
+            cluster_missing = n_distinct(clusterid))
+
+k %>% 
+  filter(if_all(c(aat1, mpo1, neo1),
+                is.na)) %>% 
+  summarize(n_missing = n_distinct(childid),
+            cluster_missing = n_distinct(clusterid))
+
+k %>% 
+  filter(if_all(c(who_sum_total),
+                is.na)) %>% 
+  summarize(n_missing = n_distinct(childid),
+            cluster_missing = n_distinct(clusterid))
+
+# t2
+k %>% 
+  filter(if_all(c(Mann2, Lact2),
+                is.na)) %>% 
+  summarize(n_missing = n_distinct(childid),
+            cluster_missing = n_distinct(clusterid))
+
+k %>% 
+  filter(if_all(c(aat2, mpo2, neo2),
+                is.na)) %>% 
+  summarize(n_missing = n_distinct(childid),
+            cluster_missing = n_distinct(clusterid))
+
+k %>% 
+  filter(if_all(c(z_comtot_no4_activec, z_mottot_no4_activec, z_pstot_no4_activec, z_globaltot_no4_activec),
+                is.na)) %>% 
+  summarize(n_missing = n_distinct(childid),
+            cluster_missing = n_distinct(clusterid))
+```
+
+```{r}
+k %>% 
+  filter(if_any(c(Mann1, Lact1, aat1, mpo1, neo1),
+                ~ !is.na(.)) & 
+           if_any(c(who_sum_total),
+                  ~ !is.na(.))) %>% 
+  summarize(n_missing = n_distinct(childid),
+            cluster_missing = n_distinct(clusterid))
+
+k %>% 
+  filter(if_any(c(Mann2, Lact2, aat2, mpo2, neo2),
+                ~ !is.na(.)) & 
+           if_any(c(z_comtot_no4_activec, z_mottot_no4_activec, z_pstot_no4_activec, z_globaltot_no4_activec),
+                  ~ !is.na(.))) %>% 
+  summarize(n_missing = n_distinct(childid),
+            cluster_missing = n_distinct(clusterid))
+
+```
+
