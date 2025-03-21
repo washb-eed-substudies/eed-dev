@@ -1,0 +1,596 @@
+---
+title: "EED-Development Supplementary Tables"
+author: "Gene Ho"
+date: "`r Sys.Date()`"
+output:
+  bookdown::word_document2: default
+    # reference_docx: "/Users/geneho/OneDrive/Berkeley/Course Materials/WASH-B/eed-dev/revisions/EED-Dev Supplementary Tables_v2_GH.docx"
+    # fig_caption: true
+  # bookdown::html_document2:
+  #   df_print: paged
+  #   theme: yeti
+knit: (function(inputFile, encoding) {
+  rmarkdown::render(inputFile, encoding = encoding,
+  output_format = "all") })
+
+---
+
+# Setup 
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,
+                      message = FALSE, warning = FALSE)
+library(officedown)
+library(officer)
+library(gt)
+library(readxl)
+library(glue)
+library(here)
+library(tidyverse)
+library(labelled)
+library(gtsummary)
+library(haven)
+library(janitor)
+
+fp <- fp_par(
+  text.align = "center", 
+  padding.bottom = 20, padding.top = 120, 
+  border.bottom = fp_border())
+
+ft <- fp_text(shading.color='#EFEFEF', bold = TRUE)
+
+```
+
+## Load Data
+
+### Lost to Follow-Up Characteristics
+
+```{r}
+source(here("src/0_table-characteristics-prep.R"))
+```
+
+### Analysis Data
+
+
+```{r}
+# load data
+source(here::here("0-config.R"))
+
+who_hr <- readRDS(here("results/final/cleaned_hr_results.RDS")) %>% 
+  map(remove_rownames)
+gam <- readRDS(here("results/final/cleaned_gam_results.RDS"))
+
+for(df in gam){
+  assign(paste0("gam_h", select(df, hyp)[1, ]), df)
+}
+
+for(df in who_hr){
+  assign(paste0("hr_h", select(df, hyp)[1, ]), df)
+}
+
+bg_tables <- bind_rows(
+  gam_h1, 
+  gam_h2, 
+  gam_h3) %>% 
+  mutate(`Outcome Subdomain` = case_match(`Outcome Subdomain`,
+                                          "Understanding" ~ "Receptive", 
+                                          "Expressing" ~ "Expressive without Language",
+                                          .default = `Outcome Subdomain`))
+
+k_tables <- bind_rows(
+  gam_h4, 
+  gam_h5) %>% 
+  mutate(`Outcome Subdomain` = case_match(`Outcome Subdomain`,
+                                          "Understanding" ~ "Receptive", 
+                                          "Expressing" ~ "Expressive without Language",
+                                          .default = `Outcome Subdomain`))
+
+# clean HR outcome names
+
+hr_h1 <- hr_h1 %>% 
+  mutate(`Motor Milestone` = case_match(`Motor Milestone`,
+                                        "Sitting (w/o support)"     ~ "Sitting without support",
+                                        "Crawling (w/o support)"    ~ "Hands-and-knees crawling",
+                                        "Standing (w/ support)"     ~ "Standing with assistance",
+                                        "Walking (w/ support)"      ~ "Walking with assistance",
+                                        "Standing (w/o support)"    ~ "Standing alone",
+                                        "Walking (w/o support)"     ~ "Walking alone"))
+
+
+hr_h4 <- hr_h4 %>% 
+  mutate(`Motor Milestone` = case_match(`Motor Milestone`,
+                                        "Sitting (w/o support)"     ~ "Sitting without support",
+                                        "Crawling (w/o support)"    ~ "Hands-and-knees crawling",
+                                        "Standing (w/ support)"     ~ "Standing with assistance",
+                                        "Walking (w/ support)"      ~ "Walking with assistance",
+                                        "Standing (w/o support)"    ~ "Standing alone",
+                                        "Walking (w/o support)"     ~ "Walking alone"))
+
+```
+
+```{r create-ebf}
+ebf <- read_rds(here("results/excl_breastfeeding.RDS"))
+
+cleaned_ebf <- ebf %>% 
+  map(~ mutate(., 
+               across(c(N_bf, N_nobf),
+                      as.character),
+               across(is.numeric, 
+                      ~ format(round(., digits = 2), nsmall = 2)),
+               across(c(Pval_bf, Pval_nobf),
+                      ~ case_when(
+                        . == "0.00" | as.numeric(.) < 0.001 ~ "<0.01***",
+                        as.numeric(.) < 0.05 ~ paste0(., "**"),
+                        as.numeric(.) < 0.2  ~ paste0(., "*"),
+                        TRUE ~ as.character(.)
+                      )),
+               # create confidence intervals
+               ci_bf = glue("{point.diff_bf} ({lb.diff_bf}, {ub.diff_bf})"),
+               ci_nobf = glue("{point.diff_nobf} ({lb.diff_nobf}, {ub.diff_nobf})"),
+               outcome_domain = factor(`Outcome Domain`, 
+                                       c("WHO Motor Milestones (Year 1)", 
+                                         "Communicative Development Inventory (Year 1)",
+                                         "WHO Motor Milestones (Year 2)",
+                                         "Communicative Development Inventory (Year 2)",
+                                         "Extended Ages and Stages (Year 2)"))
+  ) %>% 
+    # select(-c(contains("diff_"), X, Y, change, t_exp)) %>% 
+    clean_names() %>% 
+    select(outcome_domain, outcome_subdomain, exposure, n_bf, ci_bf, pval_bf, n_nobf, ci_nobf, pval_nobf) )
+```
+
+```{r}
+
+format_pval <- function(number, digits = 2){
+  number %>% 
+    round(digits = digits) %>% 
+    {case_when(. < 0.001 ~ "<0.001",
+               TRUE ~ format(., nsmall = digits))}
+}
+
+
+prepare_tbl_for_gt <- function(tbl){
+  tbl %>% 
+    mutate(
+      across(c(fdr_significance, adj_p_significance),
+             ~ replace_na(., "")), 
+      `Adj. P-value` = paste0(format_pval(`Adj. P-value`), adj_p_significance),
+      corrected.Pval_adj = paste0(format_pval(corrected.Pval_adj), fdr_significance),
+      across(is.numeric, 
+             ~ round(., digits = 2)),
+      Exposure = str_replace(Exposure, "\\(", "<br>\\(")
+    ) %>% 
+    select(-c(hyp, t_exp, fdr_significance, adj_p_significance))
+}
+
+prepare_hr_for_gt <- function(tbl){
+  tbl %>% 
+    mutate(`Adj. HR (95% CI)` = if_else(str_detect(`Adj. HR (95% CI)`, "Inf"), "--^", `Adj. HR (95% CI)`)) %>% 
+    select(-`Outcome Domain`)
+}
+
+gt_gam <- function(tbl, caption){
+  tbl %>% 
+    gt(groupname_col = "Outcome Domain",
+       row_group_as_column = TRUE) %>% 
+    cols_label(corrected.Pval_adj = "FDR Corrected P-value") %>% 
+    
+    tab_style(cell_text(weight = "bold"),
+              cells_row_groups()) %>% 
+    
+    tab_stubhead("Outcome Domain") %>%
+    tab_header(md(paste0("**", caption, "**"))) %>% 
+    fmt_markdown(columns = "Exposure")
+}
+
+gt_hr <- function(tbl, caption){
+  tbl %>% 
+    gt() %>% 
+    cols_label(corrected.Pval_adj = "FDR Corrected P-value") %>% 
+    tab_header(md(paste0("**", caption, "**"))) %>% 
+    fmt_markdown(columns = "Exposure")
+}
+
+
+add_footnotes <- function(gt){
+  
+  point_est_col <- c("Adj. Diff (95% CI)", "Adj. HR (95% CI)")[c("Adj. Diff (95% CI)", "Adj. HR (95% CI)") %in% colnames(gt$`_data`)]
+  
+  gt <- gt %>%
+    tab_footnote(footnote = "Adjusted for prespecified and prescreened covariates: child sex, child age, child birth order, mother’s age, mother’s height, mother’s education, household food security, number of children < 18 y old in the household, number of people living in the compound, distance (in minutes) to the primary water source, household materials (floor, roof), asset-based household wealth (electricity, clock, working radio, working black/white or color television, bicycle, motorcycle, sewing machine, mobile phone, land phone, stove, number of cows, number of goats, number of dogs, and number of poultry), treatment arm, prior length-for-age Z-score and weight-for-age Z-score, month of measurement, and mother’s perceived stress, mother’s depressive symptoms, and mother’s exposure to intimate partner violence (IPV) during lifetime. See Supplementary Table 1 for more details. ",
+                 location = cells_column_labels(columns = c("n", "Q1", "Q3", "Adj. P-value", "corrected.Pval_adj", point_est_col))) %>%
+    tab_footnote(footnote = "Asterisk denotes level of significance: *** <0.001, ** <0.05, * <0.2",
+                 location = cells_column_labels(columns = c("Adj. P-value", "corrected.Pval_adj")))
+  
+  if(point_est_col == "Adj. HR (95% CI)"){
+    gt <- gt %>% 
+      tab_footnote(footnote = "--^ indicates hazard ratio not calculated due to data sparsity.",
+                   locations = cells_column_labels("Adj. HR (95% CI)"))
+  }
+  
+  if(point_est_col == "Adj. Diff (95% CI)"){
+    gt <- gt %>% 
+      tab_footnote(footnote = "Milestones 2,4,5,6 correspond to hands-and-knees crawling, walking with assistance, standing alone, and walking alone, respectively.",
+                   locations = cells_body(columns = `Outcome Subdomain`,
+                                          rows = `Outcome Subdomain` == "Milestones 2,4,5,6"))
+  }
+  
+  return(gt)
+  
+}
+
+
+
+```
+
+\newpage
+
+
+```{r covariate-list}
+tribble(~ category, ~ covariate, ~ notes, 
+        "Enrollment", "Child sex", NA, 
+        "Enrollment", "Child birth order (first born, second born or greater)", NA,
+        "Enrollment", "Mother’s age (years)", NA,
+        "Enrollment" , "Mother’s height (cm)", NA,
+        "Enrollment" , "Mother’s education level (no education, primary, secondary)", "**Bangladesh:** no education, primary, secondary;\n **Kenya:** none or incomplete primary, complete primary, any secondary",
+        "Enrollment" , "Household food insecurity (4-level HFIAS categories) (Bangladesh only)", NA,
+        "Enrollment" , "Household Hunger Scale (3-level HHS) (Kenya only)", NA,
+        "Enrollment" , "Number of children < 18 years in the household", NA,
+        "Enrollment" , "Number of individuals living in the compound", NA,
+        "Enrollment" , "Distance (in minutes) to the household’s primary drinking water source", NA,
+        "Enrollment" , "Housing materials (each material tested separately)", "**Bangladesh:** floor, walls, roof;\n **Kenya:** floor, roof",
+        "Enrollment" , "Asset-based household-wealth variable (continuous), calculated from the first principal component of a principal components analysis of the following household assets",
+        "**Bangladesh:** electricity, wardrobe, table, chair or bench, watch or clock, khat,
+        chouki, working radio, working black/white or color television, refrigerator, bicycle (not child’s toy), motorcycle, sewing machine, mobile phone, land phone, number of cows, number of goats, number of chickens; \n **Kenya:** electricity, clock, working radio, working black/white or color television, bicycle (not child’s toy), motorcycle, sewing machine, mobile phone, land phone, stove, number of cows, number of goats, number of dogs, number of poultry.",
+        
+        "Follow-up", "Treatment arm (control, nutrition, WSH, N+WSH).", "EED biomarkers were collected in the active control arm in Kenya and the passive control arm in Bangladesh.",
+        "Follow-up", "Child’s length-/height-for-age (LAZ/HAZ) and weight-for-age (WAZ) will be tested as a potential confounder for subsequent time points", NA,
+        "Follow-up", "Month of measurement will be tested as a potential confounder for concurrent and subsequent time points", NA,
+        "Follow-up", "Child age (in days) will be tested as a potential confounder for concurrent and subsequent outcomes", NA,
+        "Follow-up", "The Maternal Perceived Stress Scale (PSS) score at Follow-up 3 will be assessed for confounding of Follow-up 3 outcomes in Kenya and Bangladesh.", NA,
+        "Follow-up", "The WHO Health and Life Experiences Survey, which measured maternal lifetime cumulative exposure to intimate partner violence will be assessed for confounding of outcomes in Bangladesh only (this survey was not administered in Kenya). Intimate partner violence contributes to maternal depression and has been linked to increased parenting stress and to harsher maternal parenting practices.", NA,
+        "Follow-up", "Maternal depressive symptoms", "**Bangladesh:** Center for Epidemiologic Studies Depression (CES-D) Scale score 31 measured at Follow-up 2 will be assessed for confounding of Follow-up 2 and 3 outcomes. The CES-D score measured at Follow-up 3 will be assessed for confounding of Follow-up 3 outcomes. The CES-D score will be a continuous measure, as no cutoff to identify depression has been validated in Bangladesh. A study in Vietnam found maternal depressive symptoms’ effect on child socioemotional development to be mediated by parental efficiency and early parenting practices. Furthermore, inflammation, hormones, and neuroendocrine processes have all been associated with postpartum depression. Intimate partner violence and life stress can also impact maternal depression; \n **Kenya:** Patient Health Questionnaire (PHQ) score measured at Follow-up 2 will be assessed for confounding of Follow-up 2 and 3 outcomes, and the Follow-up 3 PHQ score will be assessed for confounding of Follow-up 3 outcomes."
+) %>% 
+  mutate(category = str_c("Measured at ", category)) %>% 
+  gt(groupname_col = "category",
+     row_group_as_column = TRUE) %>% 
+  cols_label(covariate = "Covariate",
+             notes = "Notes") %>%
+  sub_missing(missing_text = "") %>% 
+  tab_style(cell_text(weight = "bold"),
+            cells_row_groups()) %>% 
+  tab_header(md("**Covariates considered for inclusion in adjusted models**")) %>% 
+  fmt_markdown(columns = "notes")
+
+```
+
+
+## Bangladesh LTF
+
+
+```{r, tab.cap = "Enrollment characteristics within the WASH Benefits parent trial study population, EED and child development substudy population, and children lost to follow-up in Bangladesh"}
+
+bg_ltf <- function(data){
+  default_tbl_summary <- partial(tbl_summary, 
+                                 digits = list(all_categorical() ~ c(0, 2),
+                                               all_continuous() ~ c(2, 2, 2)),
+                                 missing = "no")
+  
+  # maternal 
+  maternal_characteristics <- data %>% 
+    default_tbl_summary(include = c(momage, 
+                                    momheight_raw,
+                                    momedu),
+                        label = list(momage ~ "Maternal age (years)", 
+                                     momheight_raw ~ "Maternal height (cm)",
+                                     momedu ~ "Maternal education completed"),
+                        type = list(momage ~ "continuous"))
+  
+  # household 
+  household_characteristics <- data %>% 
+    tbl_summary(include = c(Ncomp, Nlt18,
+                            has_elec, 
+                            has_floor, has_roof, 
+                            has_asset_phone, has_asset_moto, 
+                            hfiacat),
+                label = list(Ncomp ~ "Number of people per compound", 
+                             Nlt18 ~ "Number of children <18 years in the household",
+                             has_elec ~ "Has electricity", 
+                             has_floor ~ "Has a cement floor",
+                             has_roof ~ "Has an iron roof", 
+                             has_asset_phone ~ "Owns a mobile phone",
+                             has_asset_moto ~ "Owns a motorcycle",
+                             hfiacat ~ "Household food insecurity"),
+                type = list(Nlt18 ~ "continuous"), 
+                digits = list(all_categorical() ~ c(0, 2),
+                              all_continuous() ~ c(2, 2, 2),
+                              c(Ncomp, Nlt18) ~ 0 ),
+                missing = "no")
+  
+  return(list(maternal_characteristics, 
+              household_characteristics))
+}
+
+ltf_cols_bg <- c("momage", "momheight_raw", "momedu", 
+                 "hfiacat",
+                 "has_elec", "has_floor", "has_roof", 
+                 "has_asset_phone", "has_asset_moto",
+                 "Ncomp", "Nlt18")
+
+tbl_bg_main <- read_dta(here("raw-data/bangladesh/washb-bangladesh-enrol.dta")) %>% 
+  mutate(momheight_raw = momheight,
+         momedu = case_when(momedu == 0 ~ "No education", 
+                            momedu == 1 ~ "Primary (1-5y)",
+                            momedu == 2 ~ "Secondary (>5y)"),
+         hfiacat = case_match(hfiacat, 
+                              1 ~ "Food Secure",
+                              2 ~ "Mildly Food Insecure", 
+                              3 ~ "Moderately Food Insecure", 
+                              4 ~ "Severely Food Insecure"),
+         across(c(elec, floor, roof, 
+                  asset_phone, asset_moto),
+                ~ .x == 1, 
+                .names = "has_{.col}"),
+         Nlt18 = as.integer(Nlt18)) %>% 
+  distinct(dataid, hhid, 
+           pick(all_of(ltf_cols_bg))) %>% 
+  bg_ltf()
+
+tbl_bg_fullcohort <- bg %>% 
+  distinct(dataid, hhid, 
+           pick(all_of(ltf_cols_bg))) %>% 
+  bg_ltf()
+
+tbl_bg_ltf_y1 <- bg %>% 
+  filter(if_all(c(starts_with("who_"),
+                  z_age2mo_cdi_undyr1_all_no4,
+                  z_age2mo_cdi_sayyr1_all_no4),
+                ~ is.na(.))) %>% 
+  distinct(dataid, hhid, 
+           pick(all_of(ltf_cols_bg))) %>% 
+  bg_ltf()
+
+tbl_bg_ltf_y2 <- bg %>% 
+  filter(if_all(c(z_age2mo_personal_no4,
+                  z_age2mo_motor_no4,
+                  z_age2mo_combined_no4,
+                  z_age2mo_com_no4,
+                  z_age2mo_cdi_undyr2_all_no4, 
+                  z_age2mo_cdi_sayyr2_all_no4),
+                ~ is.na(.))) %>% 
+  distinct(dataid, hhid, 
+           pick(all_of(ltf_cols_bg))) %>% 
+  bg_ltf()
+
+list(tbl_bg_main, 
+     tbl_bg_fullcohort, 
+     tbl_bg_ltf_y1,
+     tbl_bg_ltf_y2) %>% 
+  pmap(function(t1, t2, t3, t4){
+    tbl_merge(list(t1, t2, t3, t4), 
+              tab_spanner = c("Full Study", 
+                              "Included", 
+                              "Lost to follow-up at Year 1",
+                              "Lost to follow-up at Year 2"))
+  }) %>% 
+  tbl_stack(group_header = c("Maternal Characteristics", 
+                             "Household Characteristics")) %>% 
+  modify_footnote_header(
+    footnote = "N corresponds to households.",
+    columns = all_stat_cols(),
+    replace = FALSE
+  ) %>% 
+  modify_footnote_body(footnote = "Any level of food insecurity assessed using the Household Food Insecurity Access Scale",
+                       columns = "label",
+                       rows = variable == "hfiacat" & row_type == "label")
+
+
+```
+
+\newpage
+
+
+## Kenya LTF
+
+```{r, tab.cap = "Enrollment characteristics within the WASH Benefits parent trial study population, EED and child development substudy population, and children lost to follow-up in Kenya"}
+
+kenya_ltf <- function(data){
+  
+  default_tbl_summary <- partial(tbl_summary, 
+                                 digits = list(all_categorical() ~ c(0, 2),
+                                               all_continuous() ~ c(2, 2, 2)),
+                                 missing = "no")
+  
+  # maternal 
+  maternal_characteristics <- data %>% 
+    default_tbl_summary(include = c(momage, momheight_raw,
+                                    momedu),
+                        label = list(momage ~ "Maternal age (years)", 
+                                     momheight_raw ~ "Maternal height (cm)",
+                                     momedu ~ "Maternal education completed"))
+  
+  # household 
+  household_characteristics <- data %>% 
+    tbl_summary(include = c(Ncomp, Nlt18,
+                            has_electricity, 
+                            has_floor, has_roof, 
+                            has_mobile, has_motorcycle, 
+                            hhs_mod_sev),
+                label = list(Ncomp ~ "Number of people per compound", 
+                             Nlt18 ~ "Number of children <18 years in the household",
+                             has_electricity ~ "Has electricity", 
+                             has_floor ~ "Has a cement floor",
+                             has_roof ~ "Has an iron roof", 
+                             has_mobile ~ "Owns a mobile phone",
+                             has_motorcycle ~ "Owns a motorcycle",
+                             hhs_mod_sev ~ "Prevalence of moderate to severe household hunger"),
+                type = list(Nlt18 ~ "continuous"), 
+                digits = list(all_categorical() ~ c(0, 2),
+                              all_continuous() ~ c(2, 2, 2),
+                              c(Ncomp, Nlt18) ~ 0 ),
+                missing = "no"
+    )
+  list(maternal_characteristics, 
+       household_characteristics)
+}
+
+ltf_cols_k <- c("momage", "momheight_raw", "momedu", 
+                "hhs_mod_sev",
+                "has_electricity", "has_floor", "has_roof", 
+                "has_mobile", "has_motorcycle",
+                "Ncomp", "Nlt18")
+
+tbl_k_main <- read_csv(here("raw-data/kenya/washb-kenya-enrol.csv")) %>% 
+  mutate(momedu = case_match(momedu, 
+                             "IncompletePrimary" ~ "Incomplete Primary",
+                             "AnySecondary"      ~ "Any Secondary",
+                             "missing"           ~ "Missing", 
+                             .default = momedu) %>% 
+           factor(c("Primary", "Incomplete Primary", "Any Secondary", "Missing")),
+         momheight_raw = momheight,
+         hhs_mod_sev = HHS %in% c(2, 3),
+         across(c(electricity, floor, roof, 
+                  mobile, motorcycle),
+                ~ .x == 1, 
+                .names = "has_{.col}"),
+         Nlt18 = as.integer(Nlt18)) %>% 
+  distinct(hhid, pick(all_of(ltf_cols_k))) %>% 
+  kenya_ltf()
+
+tbl_k_fullcohort <- k %>% 
+  kenya_ltf()
+
+tbl_k_ltf_y1 <- k %>% 
+  filter(if_all(c(starts_with("who_")),
+                ~ is.na(.))) %>% 
+  kenya_ltf()
+
+tbl_k_ltf_y2 <- k %>% 
+  filter(if_all(c(z_comtot_no4_activec,
+                  z_mottot_no4_activec,
+                  z_pstot_no4_activec,
+                  z_globaltot_no4_activec),
+                ~ is.na(.))) %>% 
+  kenya_ltf()
+
+list(tbl_k_main,
+     tbl_k_fullcohort, 
+     tbl_k_ltf_y1,
+     tbl_k_ltf_y2) %>% 
+  pmap(function(t1, t2, t3, t4){
+    tbl_merge(list(t1, t2, t3, t4), 
+              tab_spanner = c("Full Study", 
+                              "Included", 
+                              "Lost to follow-up at Year 1",
+                              "Lost to follow-up at Year 2"))
+  }) %>% 
+  tbl_stack(group_header = c("Maternal Characteristics", 
+                             "Household Characteristics")) %>% 
+  modify_footnote_header(
+    footnote = "N corresponds to households.",
+    columns = all_stat_cols(),
+    replace = FALSE
+  ) %>% 
+  modify_footnote_body(footnote = "Moderate to severe hunger defined using the Household Hunger Scale",
+                       columns = "label",
+                       rows = variable == "hhs_mod_sev" & row_type == "label")
+
+
+```
+
+
+
+```{r tab.cap = "EED and Child Development in Bangladesh"}
+bg_tables %>% 
+  prepare_tbl_for_gt() %>% 
+  gt_gam("EED and Child Development in Bangladesh") %>% 
+  add_footnotes()
+```
+
+\newpage
+
+
+```{r tab.cap = "EED and WHO Motor Milestones in Bangladesh (Hazard Ratios, Year 1)"}
+hr_h1 %>% 
+  prepare_tbl_for_gt() %>% 
+  prepare_hr_for_gt() %>% 
+  gt_hr("EED and WHO Motor Milestones in Bangladesh (Hazard Ratios, Year 1)") %>% 
+  add_footnotes()
+```
+
+
+\newpage
+
+
+
+```{r}
+create_gt_bf <- function(tbl, country){
+  tbl %>% 
+    gt(groupname_col = "outcome_domain", 
+       row_group_as_column = TRUE) %>% 
+    cols_label(outcome_domain = "Outcome Domain",
+               outcome_subdomain = "Outcome Subdomain",
+               exposure = "Exposure",
+               n_bf = "n",
+               ci_bf = "Adj. Diff (95% CI)",
+               pval_bf = "Adj. P-value",
+               n_nobf = "n",
+               ci_nobf = "Adj. Diff (95% CI)",
+               pval_nobf = "Adj. P-value") %>% 
+    tab_spanner("Exclusive Lactation Variable Included",
+                c(n_bf, ci_bf, pval_bf)) %>% 
+    tab_spanner("Exclusive Lactation Variable Not Included",
+                c(n_nobf, ci_nobf, pval_nobf)) %>% 
+    
+    tab_style(cell_text(weight = "bold"),
+              cells_column_labels()) %>% 
+    tab_style(cell_text(weight = "bold"),
+              cells_row_groups()) %>% 
+    
+    tab_footnote(footnote = "Adjusted for covariates.",
+                 location = cells_column_labels(columns = c("n_bf", "ci_bf", "pval_bf", "n_nobf", "ci_nobf", "pval_nobf"))) %>%
+    tab_footnote(footnote = "Asterisk denotes level of significance: *** <0.01, ** <0.05, * <0.2",
+                 location = cells_column_labels(columns = c("pval_bf", "pval_nobf")))%>% 
+    tab_footnote(footnote = "Milestones 2,4,5,6 correspond to hands-and-knees crawling, walking with assistance, standing alone, and walking alone, respectively.",
+                 locations = cells_body(columns = outcome_subdomain,
+                                        rows = outcome_subdomain == "Milestones 2,4,5,6")) %>% 
+    tab_header(md(glue("**Exclusive Lactation sensitivity analysis in {country}**")))
+}
+
+cleaned_ebf[1:8] %>% 
+  list_rbind() %>% 
+  create_gt_bf("Bangladesh")
+```
+
+\newpage
+
+
+```{r tab.cap = "EED and WHO Motor Milestones in Kenya (Hazard Ratios, Year 1)"}
+hr_h4 %>% 
+  prepare_tbl_for_gt() %>% 
+  prepare_hr_for_gt() %>% 
+  gt_hr("EED and WHO Motor Milestones in Kenya (Hazard Ratios, Year 1)") %>% 
+  add_footnotes()
+```
+
+
+\newpage
+
+
+```{r tab.cap = "EED and Child Development in Kenya"}
+k_tables %>% 
+  prepare_tbl_for_gt() %>% 
+  gt_gam("EED and Child Development in Kenya") %>% 
+  add_footnotes()
+```
+
+
+\newpage
+
+```{r}
+cleaned_ebf[9:15] %>% 
+  list_rbind() %>% 
+  create_gt_bf("Kenya")
+```
+
+
