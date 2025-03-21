@@ -49,115 +49,7 @@ tableone2flextable <- function(tableone){
 ```
 
 ```{r}
-bg <- readRDS(here('final-data/eed-dev_bg.RDS')) %>% 
-  rename(hh_index = HHwealth) %>% 
-  mutate(across(c(cesd_sum_t2, cesd_sum_ee_t3,
-                  pss_sum_mom_t3), 
-                as.numeric), 
-         life_viol_any_t3 = case_when(as.character(life_viol_any_t3) == "missing" ~ NA_character_, 
-                                      TRUE ~ as.character(life_viol_any_t3)) %>% 
-           factor(),
-         sex = factor(sex, c("female", "male")),
-         country = 'Bangladesh', 
-         across(c(elec, floor, roof, 
-                  asset_phone, asset_moto),
-                ~ .x == 1, 
-                .names = "has_{.col}"),
-         Nlt18 = as.integer(Nlt18)) 
-
-k <- readRDS(here('final-data/eed-dev_k.RDS')) %>% 
-  mutate(across(c(pss_score, phq_score_t3), 
-                as.numeric), 
-         sex = factor(sex, c("female", "male")),
-         country = 'Kenya',
-         across(c(electricity, floor, roof, 
-                  mobile, motorcycle),
-                ~ .x == 1, 
-                .names = "has_{.col}"),
-         Nlt18 = as.integer(Nlt18))
-```
-
-```{r}
-# filter out children without any exposure or any outcome
-
-bg <- bg %>% 
-  filter(if_any(c('ln_aat1', 'ln_mpo1', 'ln_neo1',
-                  'ln_L_conc_t1', 'ln_M_conc_t1',
-                  
-                  'ln_aat2', 'ln_mpo2', 'ln_neo2',
-                  'ln_L_conc_t2', 'ln_M_conc_t2',
-                  'ln_reg2'),
-                ~ !is.na(.)) & 
-           if_any(c(
-             starts_with("who_"),
-             z_age2mo_cdi_undyr1_all_no4,
-             z_age2mo_cdi_sayyr1_all_no4,
-             
-             z_age2mo_personal_no4,
-             z_age2mo_motor_no4,
-             z_age2mo_combined_no4,
-             z_age2mo_com_no4,
-             z_age2mo_cdi_undyr2_all_no4,
-             z_age2mo_cdi_sayyr2_all_no4),
-             ~ !is.na(.)))
-
-k <- k %>% 
-  filter(if_any(c('ln_aat1', 'ln_mpo1', 'ln_neo1',
-                  'ln_Lact1', 'ln_Mann1',
-                  
-                  'ln_aat2', 'ln_mpo2', 'ln_neo2',
-                  'ln_Lact2', 'ln_Mann2'),
-                ~ !is.na(.)) & 
-           if_any(c(
-             starts_with("who_"),
-             z_comtot_no4_activec,
-             z_mottot_no4_activec,
-             z_pstot_no4_activec,
-             z_globaltot_no4_activec),
-             ~ !is.na(.)))
-```
-
-
-```{r}
-# bg$birthord <- factor(bg$birthord, 
-#                       levels = c("first", "second or greater", "missing"),
-#                       ordered = TRUE)
-
-bg$hfiacat <- factor(bg$hfiacat, 
-                     levels = c("Mildly Food Insecure", "Moderately Food Insecure", 
-                                "Severely Food Insecure", "Food Secure"),
-                     ordered = TRUE)
-
-var_label(bg) <- list(# tr = "Treatment Arm", 
-  laz_t1 = "Length-for-age Z score (3 mo)", 
-  waz_t1 = "Weight-for-age Z score (3 mo)", 
-  laz_t2 = "Length-for-age Z score (14 mo)", 
-  waz_t2 = "Weight-for-age Z score (14 mo)", 
-  tr = "Treatment Arm",
-  diar7d_t2 = "Caregiver reported diarrhea 7-day recall (3 mo)",
-  diar7d_t3 = "Caregiver reported diarrhea 7-day recall (14 mo)",
-  cesd_sum_t2 = "Depressive symptoms (CESD-R score*) at Year 1", 
-  cesd_sum_ee_t3 = "Depressive symptoms (CESD-R score*) at Year 2",
-  pss_sum_mom_t3 = "Maternal Perceived Stress Scale (PSS) at Year 2",
-  sex = "Female (%)",
-  momage = "Age (years)", 
-  momheight_raw = "Height (cm)", 
-  momedu = "Education completed", 
-  hfiacat = "Household food insecurity**",
-  ageday_st1 = "Age at EED biomarker measurement, Follow-up 1 (months)",
-  ageday_st2 = "Age at EED biomarker measurement, Follow-up 2 (months)",
-  agedays_motor = "Age at child development measurement, Follow-up 2 (Year 1) (months)",
-  agedays_cdi3 = "Age at child development measurement, Follow-up 3 (Year 2) (months)"
-  # life_viol_any_t3 = "Cumulative maternal exposure to intimate partner violence",
-  # floor = "Housing material, improved floor" 
-  # birthord = "Birth Order", 
-  # Nlt18 = "Number of children < 18 years old", 
-  # Ncomp = "Total individuals in compound",
-  # watmin = "Minutes to primary water source", 
-  # walls = "Housing material, improved walls", 
-  # roof = "Housing material, improved roof", 
-  # hh_index = "Household wealth index"
-)
+source(here("src/0_table-characteristics-prep.R"))
 ```
 
 # Table 1. Characteristics of participants in Bangladesh
@@ -222,7 +114,7 @@ baselinechar_bg <- function(data){
                              has_roof ~ "Has an iron roof", 
                              has_asset_phone ~ "Owns a mobile phone",
                              has_asset_moto ~ "Owns a motorcycle",
-                             hfiacat ~ "Household food insecurity**"),
+                             hfiacat ~ "Household food insecurity"),
                 type = list(Nlt18 ~ "continuous"),
                 digits = list(all_categorical() ~ c(0, 2),
                               all_continuous() ~ c(2, 2, 2),
@@ -244,6 +136,12 @@ tbl_all_bg <- bg %>%
 
 tbl_all_bg %>% 
   tbl_stack(group_header = c("Child", "Mother", "Household")) %>%
+  modify_footnote_body(footnote = "Any level of food insecurity assessed using the Household Food Insecurity Access Scale",
+                       columns = "label",
+                       rows = variable == "hfiacat" & row_type == "label") %>% 
+  modify_footnote_body(footnote = "CESD-R = Center for Epidemiologic Studies Depression Scale Revised",
+                       columns = "label",
+                       rows = str_detect(variable, "cesd_") & row_type == "label") %>% 
   as_gt() %>%
   gt::tab_style(
     style = gt::cell_text(weight = "bold"),
@@ -252,52 +150,10 @@ tbl_all_bg %>%
 ```
 
 
-\* CESD-R = Center for Epidemiologic Studies Depression Scale Revised.
+\* 
 
 ** Any level of food insecurity assessed using the Household Food Insecurity Access Scale 
 
-
-```{r}
-k <- k %>% 
-  mutate(momedu = factor(momedu, 
-                         levels = c("Primary", "IncompletePrimary", 
-                                    "AnySecondary", "missing"),
-                         labels = c("Primary", "Incomplete Primary", 
-                                    "Any Secondary", "Missing"), 
-                         ordered = T),
-         hhs_mod_sev = HHS %in% c(2, 3),
-         across(starts_with("diarr7_t"), 
-                ~ factor(.x, c("0", "1"))))
-
-var_label(k) <- list(# tr = "Treatment Arm", 
-  laz_t1 = "Length-for-age Z score (6 mo)", 
-  waz_t1 = "Weight-for-age Z score (6 mo)", 
-  laz_t2 = "Length-for-age Z score (17 mo)", 
-  waz_t2 = "Weight-for-age Z score (17 mo)", 
-  tr = "Treatment Arm", 
-  # diarr7_t0 = "Caregiver reported diarrhea 7-day recall (6 mo)",
-  # diarr7_t1 = "Caregiver reported diarrhea 7-day recall (17 mo)",
-  pss_score = "Maternal Perceived Stress Scale (PSS) at Year 2",
-  phq_score_t3 = "Depressive symptoms (PHQ*) at Year 2",
-  sex = "Female (%)",
-  momage = "Age (years)", 
-  momheight_raw = "Height (cm)", 
-  momedu = "Education completed", 
-  hhs_mod_sev = "Prevalence of moderate to severe household hunger**",
-  aged1 = "Age at EED biomarker measurement, Follow-up 1 (months)",
-  aged2 = "Age at EED biomarker measurement, Follow-up 2 (months)",
-  agedays_motor = "Age at child development measurement, Follow-up 2 (Year 1) (months)",
-  childage_dev = "Age at child development measurement, Follow-up 3 (Year 2) (months)"
-  # Nlt18 = "Number of children < 18 years old", 
-  # Ncomp = "Total individuals in compound",
-  # water_time = "Minutes to primary water source", 
-  # wall = "Housing material, walls", 
-  # floor = "Housing material, floor"
-  # roof = "Housing material, roof", 
-  # hh_index = "Household wealth index"
-)
-
-```
 
 \newpage
 
@@ -373,251 +229,16 @@ tbl_all_k <- k %>%
 
 tbl_all_k %>% 
   tbl_stack(group_header = c("Child", "Mother", "Household")) %>%
+  modify_footnote_body(footnote = "Moderate to severe hunger defined using the Household Hunger Scale",
+                       columns = "label",
+                       rows = variable == "hhs_mod_sev" & row_type == "label") %>% 
+  modify_footnote_body(footnote = "PHQ = Patient Health Questionnaire",
+                       columns = "label",
+                       rows = str_detect(variable, "phq_") & row_type == "label") %>% 
   as_gt() %>%
   gt::tab_style(
     style = gt::cell_text(weight = "bold"),
     locations = gt::cells_row_groups(groups = everything())
-  ) 
-
-
-```
-
-
-\* PHQ = Patient Health Questionnaire 
-
-** Moderate to severe hunger defined using the Household Hunger Scale
-
-
-# Supplementary Tables 
-
-## Bangladesh LTF
-
-
-```{r, tab.cap = "Bangladesh LTF"}
-
-bg_ltf <- function(data){
-  default_tbl_summary <- partial(tbl_summary, 
-                                 digits = list(all_categorical() ~ c(0, 2),
-                                               all_continuous() ~ c(2, 2, 2)),
-                                 missing = "no")
-  
-  # maternal 
-  maternal_characteristics <- data %>% 
-    default_tbl_summary(include = c(momage, 
-                                    momheight_raw,
-                                    momedu),
-                        label = list(momage ~ "Maternal age (years)", 
-                                     momheight_raw ~ "Maternal height (cm)",
-                                     momedu ~ "Maternal education completed"),
-                        type = list(momage ~ "continuous"))
-  
-  # household 
-  household_characteristics <- data %>% 
-    tbl_summary(include = c(Ncomp, Nlt18,
-                            has_elec, 
-                            has_floor, has_roof, 
-                            has_asset_phone, has_asset_moto, 
-                            hfiacat),
-                label = list(Ncomp ~ "Number of people per compound", 
-                             Nlt18 ~ "Number of children <18 years in the household",
-                             has_elec ~ "Has electricity", 
-                             has_floor ~ "Has a cement floor",
-                             has_roof ~ "Has an iron roof", 
-                             has_asset_phone ~ "Owns a mobile phone",
-                             has_asset_moto ~ "Owns a motorcycle",
-                             hfiacat ~ "Household food insecurity**"),
-                type = list(Nlt18 ~ "continuous"), 
-                digits = list(all_categorical() ~ c(0, 2),
-                              all_continuous() ~ c(2, 2, 2),
-                              c(Ncomp, Nlt18) ~ 0 ),
-                missing = "no")
-  
-  return(list(maternal_characteristics, 
-              household_characteristics))
-}
-
-ltf_cols_bg <- c("momage", "momheight_raw", "momedu", 
-                 "hfiacat",
-                 "has_elec", "has_floor", "has_roof", 
-                 "has_asset_phone", "has_asset_moto",
-                 "Ncomp", "Nlt18")
-
-tbl_bg_main <- read_dta(here("raw-data/bangladesh/washb-bangladesh-enrol.dta")) %>% 
-  mutate(momheight_raw = momheight,
-         momedu = case_when(momedu == 0 ~ "No education", 
-                            momedu == 1 ~ "Primary (1-5y)",
-                            momedu == 2 ~ "Secondary (>5y)"),
-         hfiacat = case_match(hfiacat, 
-                              1 ~ "Food Secure",
-                              2 ~ "Mildly Food Insecure", 
-                              3 ~ "Moderately Food Insecure", 
-                              4 ~ "Severely Food Insecure"),
-         across(c(elec, floor, roof, 
-                  asset_phone, asset_moto),
-                ~ .x == 1, 
-                .names = "has_{.col}"),
-         Nlt18 = as.integer(Nlt18)) %>% 
-  distinct(dataid, hhid, 
-           pick(all_of(ltf_cols_bg))) %>% 
-  bg_ltf()
-
-tbl_bg_fullcohort <- bg %>% 
-  distinct(dataid, hhid, 
-           pick(all_of(ltf_cols_bg))) %>% 
-  bg_ltf()
-
-tbl_bg_ltf_y1 <- bg %>% 
-  filter(if_all(c(starts_with("who_"),
-                  z_age2mo_cdi_undyr1_all_no4,
-                  z_age2mo_cdi_sayyr1_all_no4),
-                ~ is.na(.))) %>% 
-  distinct(dataid, hhid, 
-           pick(all_of(ltf_cols_bg))) %>% 
-  bg_ltf()
-
-tbl_bg_ltf_y2 <- bg %>% 
-  filter(if_all(c(z_age2mo_personal_no4,
-                  z_age2mo_motor_no4,
-                  z_age2mo_combined_no4,
-                  z_age2mo_com_no4,
-                  z_age2mo_cdi_undyr2_all_no4, 
-                  z_age2mo_cdi_sayyr2_all_no4),
-                ~ is.na(.))) %>% 
-  distinct(dataid, hhid, 
-           pick(all_of(ltf_cols_bg))) %>% 
-  bg_ltf()
-
-list(tbl_bg_main, 
-     tbl_bg_fullcohort, 
-     tbl_bg_ltf_y1,
-     tbl_bg_ltf_y2) %>% 
-  pmap(function(t1, t2, t3, t4){
-    tbl_merge(list(t1, t2, t3, t4), 
-              tab_spanner = c("Full Study", 
-                              "Included", 
-                              "Lost to follow-up at Year 1",
-                              "Lost to follow-up at Year 2"))
-  }) %>% 
-  tbl_stack(group_header = c("Maternal Characteristics", 
-                             "Household Characteristics")) %>% 
-  modify_footnote_header(
-    footnote = "N corresponds to households.",
-    columns = all_stat_cols(),
-    replace = FALSE
-  ) 
-
-
-```
-
-
-\* CESD-R = Center for Epidemiologic Studies Depression Scale Revised.
-
-** Any level of food insecurity assessed using the Household Food Insecurity Access Scale 
-
-
-\newpage
-
-
-## Kenya LTF
-
-```{r, tab.cap = "Kenya LTF"}
-
-kenya_ltf <- function(data){
-  
-  default_tbl_summary <- partial(tbl_summary, 
-                                 digits = list(all_categorical() ~ c(0, 2),
-                                               all_continuous() ~ c(2, 2, 2)),
-                                 missing = "no")
-  
-  # maternal 
-  maternal_characteristics <- data %>% 
-    default_tbl_summary(include = c(momage, momheight_raw,
-                                    momedu),
-                        label = list(momage ~ "Maternal age (years)", 
-                                     momheight_raw ~ "Maternal height (cm)",
-                                     momedu ~ "Maternal education completed"))
-  
-  # household 
-  household_characteristics <- data %>% 
-    tbl_summary(include = c(Ncomp, Nlt18,
-                            has_electricity, 
-                            has_floor, has_roof, 
-                            has_mobile, has_motorcycle, 
-                            hhs_mod_sev),
-                label = list(Ncomp ~ "Number of people per compound", 
-                             Nlt18 ~ "Number of children <18 years in the household",
-                             has_electricity ~ "Has electricity", 
-                             has_floor ~ "Has a cement floor",
-                             has_roof ~ "Has an iron roof", 
-                             has_mobile ~ "Owns a mobile phone",
-                             has_motorcycle ~ "Owns a motorcycle",
-                             hhs_mod_sev ~ "Prevalence of moderate to severe household hunger**"),
-                type = list(Nlt18 ~ "continuous"), 
-                digits = list(all_categorical() ~ c(0, 2),
-                              all_continuous() ~ c(2, 2, 2),
-                              c(Ncomp, Nlt18) ~ 0 ),
-                missing = "no"
-    )
-  list(maternal_characteristics, 
-       household_characteristics)
-}
-
-ltf_cols_k <- c("momage", "momheight_raw", "momedu", 
-                "hhs_mod_sev",
-                "has_electricity", "has_floor", "has_roof", 
-                "has_mobile", "has_motorcycle",
-                "Ncomp", "Nlt18")
-
-tbl_k_main <- read_csv(here("raw-data/kenya/washb-kenya-enrol.csv")) %>% 
-  mutate(momedu = case_match(momedu, 
-                             "IncompletePrimary" ~ "Incomplete Primary",
-                             "AnySecondary"      ~ "Any Secondary",
-                             "missing"           ~ "Missing", 
-                             .default = momedu) %>% 
-           factor(c("Primary", "Incomplete Primary", "Any Secondary", "Missing")),
-         momheight_raw = momheight,
-         hhs_mod_sev = HHS %in% c(2, 3),
-         across(c(electricity, floor, roof, 
-                  mobile, motorcycle),
-                ~ .x == 1, 
-                .names = "has_{.col}"),
-         Nlt18 = as.integer(Nlt18)) %>% 
-  distinct(hhid, pick(all_of(ltf_cols_k))) %>% 
-  kenya_ltf()
-
-tbl_k_fullcohort <- k %>% 
-  kenya_ltf()
-
-tbl_k_ltf_y1 <- k %>% 
-  filter(if_all(c(starts_with("who_")),
-                ~ is.na(.))) %>% 
-  kenya_ltf()
-
-tbl_k_ltf_y2 <- k %>% 
-  filter(if_all(c(z_comtot_no4_activec,
-                  z_mottot_no4_activec,
-                  z_pstot_no4_activec,
-                  z_globaltot_no4_activec),
-                ~ is.na(.))) %>% 
-  kenya_ltf()
-
-list(tbl_k_main,
-     tbl_k_fullcohort, 
-     tbl_k_ltf_y1,
-     tbl_k_ltf_y2) %>% 
-  pmap(function(t1, t2, t3, t4){
-    tbl_merge(list(t1, t2, t3, t4), 
-              tab_spanner = c("Full Study", 
-                              "Included", 
-                              "Lost to follow-up at Year 1",
-                              "Lost to follow-up at Year 2"))
-  }) %>% 
-  tbl_stack(group_header = c("Maternal Characteristics", 
-                             "Household Characteristics")) %>% 
-  modify_footnote_header(
-    footnote = "N corresponds to households.",
-    columns = all_stat_cols(),
-    replace = FALSE
   ) 
 
 
