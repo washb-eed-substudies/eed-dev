@@ -311,7 +311,7 @@ bg_hr_tab <- flextable(bg_hr_tbl,
                        col_keys = c("Motor Milestone", 
                                     append(keep_cols, "Adj. HR (95% CI)", 6))) %>% 
   flex_format(1+9) %>% 
-  set_caption("Individual WHO Motor Milestones - Hazard Ratios, Year 1 (Bangladesh)", style = "Table Caption",
+  set_caption("EED and WHO Motor Milestones in Bangladesh (Hazard Ratios, Year 1)", style = "Table Caption",
               autonum = autonum)
 ```
 
@@ -324,7 +324,7 @@ k_hr_tab <- flextable(k_hr_tbl,
                       col_keys = c("Motor Milestone", 
                                    append(keep_cols, "Adj. HR (95% CI)", 6))) %>% 
   flex_format(1+9) %>% 
-  set_caption("Individual WHO Motor Milestones - Hazard Ratios, Year 1 (Kenya)", style = "Table Caption",
+  set_caption("EED and WHO Motor Milestones in Kenya (Hazard Ratios, Year 1)", style = "Table Caption",
               autonum = autonum)
 ```
 
@@ -342,7 +342,7 @@ bg_tables_tab <- bg_tables %>%
   width(j = "Outcome Domain", 
         width = 2.9) %>% 
   # fit_to_width(max_width=10.75) %>% 
-  set_caption("Bangladesh Analyses", style = "Table Caption",
+  set_caption("EED and Child Development in Bangladesh", style = "Table Caption",
               autonum = autonum)
 ```
 
@@ -354,7 +354,7 @@ k_tables_tab <- k_tables %>%
   merge_v("Outcome Domain") %>% 
   width(j = "Outcome Domain", 
         width = 2.9) %>% 
-  set_caption("Kenya Analyses", style = "Table Caption",
+  set_caption("EED and Child Development in Kenya", style = "Table Caption",
               autonum = autonum)
 ```
 
@@ -387,6 +387,26 @@ save_as_docx(bg_who_tab, k_who_tab,
              bg_tables_tab, k_tables_tab,
              
              path = here::here('tables/eed-dev-tables.docx'), 
+             pr_section = prop_section(
+               page_size = page_size(orient = 'landscape'), 
+               page_margins = page_mar(bottom = 1, 
+                                       top = 1, 
+                                       right = 0.1, 
+                                       left = 0.1), 
+               type = 'nextPage'
+             ) )
+```
+
+```{r}
+# ordered for supplemental tables
+save_as_docx(bg_tables_tab, 
+             bg_hr_tab,
+             
+             k_hr_tab,
+             
+             k_tables_tab,
+             
+             path = here::here('tables/eed-dev-supptables.docx'), 
              pr_section = prop_section(
                page_size = page_size(orient = 'landscape'), 
                page_margins = page_mar(bottom = 1, 
