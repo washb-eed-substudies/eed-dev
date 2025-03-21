@@ -569,7 +569,7 @@ d <- d %>% mutate(
   cesd_sum_t2=as.numeric(as.character(cesd_sum_t2)),
   cesd_sum_t2 = factor(case_when(is.na(cesd_sum_t2) ~ "Missing",
                                  cesd_sum_t2 < 16 ~ "Not depressed",
-                                 cesd_sum_t2 >= 16 ~ "Depressed"))
+                                 cesd_sum_t2 >= 16 ~ "Depressed")))
 
 
 bf_bl <- read_dta(here("raw-data/bangladesh/ffq/EE_Baseline_FFQ_Raw_data_13Sep2017_deidentified.dta"), 
