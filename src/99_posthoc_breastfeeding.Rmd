@@ -17,6 +17,7 @@ library(here)
 library(stringr)
 library(boxr)
 
+#"C:\Users\andre\OneDrive\Documents\washb_substudies\eed-dev\raw-data\bftotal.dta"
 bf <- read_dta(here("raw-data/bangladesh/bftotal.dta"))
 ```
 
@@ -384,6 +385,18 @@ rm(list = ls())
 ```{r}
 
 bg <- read_rds(here("final-data/eed-dev_bg.RDS"))
+#clean covariates to avoid high missingness
+bg <- bg %>% mutate(
+  laz_t1 = factor(case_when(is.na(laz_t1) ~ "Missing",
+                            laz_t1 < -2 ~ "Stunted",
+                            laz_t1 >= (-2) ~ "Not stunted")),
+  waz_t1 = factor(case_when(is.na(waz_t1) ~ "Missing",
+                            waz_t1 < -2 ~ "Wasted",
+                            waz_t1 >= (-2) ~ "Not wasted")),
+  cesd_sum_t2=as.numeric(as.character(cesd_sum_t2)),
+  cesd_sum_t2 = factor(case_when(is.na(cesd_sum_t2) ~ "Missing",
+                                 cesd_sum_t2 < 16 ~ "Not depressed",
+                                 cesd_sum_t2 >= 16 ~ "Depressed")))
 
 bf_bl <- read_dta(here("raw-data/bangladesh/ffq/EE_Baseline_FFQ_Raw_data_13Sep2017_deidentified.dta"), 
                   col_select = c(contains("id"), starts_with("child"),
@@ -743,7 +756,7 @@ H2_W <- c(Wvars, 'laz_t2', 'waz_t2',
 ```
 
 
-```{r results = FALSE}
+```{r, results=FALSE}
 ##########################
 # adjustment sets 14-15
 ## exposure: urine markers t1
@@ -764,13 +777,19 @@ for(i in Xvars){
   for(j in Yvars){
     print(i)
     print(j)
-    res_adj <- fit_RE_gam(d=d, X=i, Y=j,  W=H2b_W, forcedW = 'curr_bf_bl')
+    res_adj = NULL
+    try(res_adj <- fit_RE_gam(d=d, X=i, Y=j,  W=H2b_W, forcedW = 'curr_bf_bl'))
+    if(is.null(res_adj)){
+      try(res_adj <- fit_RE_gam(d=d, X=i, Y=j,  W=H2b_W, forcedW = 'curr_bf_bl', vim=FALSE))
+    }
     res <- data.frame(X=i, Y=j, fit=I(list(res_adj$fit)), dat=I(list(res_adj$dat)))
     H2b_adj_models <- bind_rows(H2b_adj_models, res)
   }
 }
+```
 
 
+```{r, results=FALSE}
 
 #Get primary contrasts
 H2b_adj_res <- NULL
@@ -779,7 +798,10 @@ for(i in 1:nrow(H2b_adj_models)){
   preds <- predict_gam_diff(fit=H2b_adj_models$fit[i][[1]], d=H2b_adj_models$dat[i][[1]], quantile_diff=c(0.25,0.75), Xvar=res$X, Yvar=res$Y)
   H2b_adj_res <-  bind_rows(H2b_adj_res , preds$res)
 }
+```
 
+
+```{r, results=FALSE}
 #Make list of plots
 H2b_adj_plot_list <- NULL
 H2b_adj_plot_data <- NULL
@@ -826,7 +848,11 @@ for(i in Xvars){
   for(j in Yvars){
     print(i)
     print(j)
-    res_adj <- fit_RE_gam(d=d, X=i, Y=j,  W=H2d_W, forcedW = 'curr_bf_bl')
+     res_adj = NULL
+    try(res_adj <- fit_RE_gam(d=d, X=i, Y=j,  W=H2d_W, forcedW = 'curr_bf_bl'))
+    if(is.null(res_adj)){
+      try(res_adj <- fit_RE_gam(d=d, X=i, Y=j,  W=H2d_W, forcedW = 'curr_bf_bl', vim=FALSE))
+    }
     res <- data.frame(X=i, Y=j, fit=I(list(res_adj$fit)), dat=I(list(res_adj$dat)))
     H2d_adj_models <- bind_rows(H2d_adj_models, res)
   }

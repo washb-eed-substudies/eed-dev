@@ -28,6 +28,7 @@ d_bd <- d_bd %>% mutate(
 sth_bd <- read_csv("C:/Users/andre/OneDrive/Documents/washb_substudies/eed-substudy-data/sth data/washb-bangladesh-sth-public.csv") %>% rename(block_r=block, clusterid_r=clusterid, dataid_r=dataid) %>% filter(personid=="T1") %>% mutate(personid=as.numeric(gsub("T","",personid)))
 bd_public_ID <- read_csv("C:/Users/andre/OneDrive/Documents/washb_substudies/eed-substudy-data/public-ids.csv")
 d_k <- readRDS(here('final-data/eed-dev_k.RDS'))
+
 #need to merge in Kenya STH data
 sth_k <- read_dta("C:/Users/andre/OneDrive/Documents/washb_substudies/eed-substudy-data/sth data/parasites_kenya_public_ca20230105.dta") 
 head(sth_k)
@@ -58,7 +59,7 @@ sth_bd$childid[1:10]
 
 sth_bd <- sth_bd %>% select(block, dataid,  clusterid, childid, aged, alepg, hwepg, ttepg) %>% rename(sth_aged=aged)
 sth_k <- sth_k %>% select(block, hhid,  clusterid, childid, ascaris_yn , trichuris_yn, hook_yn, sth_yn) %>%
-  rename( ascaris=ascaris_yn,trichuris=trichuris_yn,hookworm=hook_yn)
+  rename( ascaris=ascaris_yn,trichuris=trichuris_yn,hookworm=hook_yn, anySTH=sth_yn)
 
 d <- left_join(d_bd, sth_bd, by = c("block","dataid","clusterid","childid"))
 d_k <- left_join(d_k, sth_k, by = c("childid"))
@@ -80,6 +81,7 @@ table(d$ttepg > 0)
 d$ascaris <- 1*(d$alepg > 0)
 d$trichuris <- 1*(d$ttepg > 0)
 d$hookworm <- 1*(d$hwepg > 0)
+d$anySTH <- ifelse(d$ascaris==1 | d$trichuris==1 | d$hookworm==1, 1, 0)
 
 
 Wvars<-c("sex","birthord", "momage","momheight","momedu", 
@@ -94,6 +96,10 @@ H1a_W <- c(H1_W, 'ageday_st1', 'agedays_motor',
            'month_st1', 'month_mm')
 H1a_W[!(H1a_W %in% colnames(d))]
 
+Wvars_K=c("sex","birthord", "momage","momheight","momedu", 
+                  "HHS", "Nlt18","Ncomp", "water_time", 
+                  "floor", 'roof', "hh_index", 
+                  "tr")
 
   
   
@@ -108,7 +114,7 @@ get_emm_res <- function(d, Xvars, Yvars, Wvars, Vvar){
       print(i)
       print(j) 
       res=NULL
-      res <- fit_RE_gam(d=d, X=i, Y=j,  W=H1a_W,  forcedW=NULL, V=k)
+      res <- fit_RE_gam(d=d, X=i, Y=j,  W=Wvars,  forcedW=NULL, V=k)
       res <- data.frame(X=i, Y=j, V=k, int.p =res$int.p, fit=I(list(res$fit)), dat=I(list(res$dat)))
       H1a_models <- bind_rows(H1a_models, res)
       }
@@ -149,9 +155,9 @@ d$z_age2mo_personal_all
 # Since STH were assessed in these children, you can (at minimum) compare infection rates in the two settings. 
 # Furthermore, might you test if helminth positivity modified the effect of mannitol on personal social domain score?
 
-Xvar=c("ln_M_conc_t1","ln_M_conc_t2","ln_mpo1","ln_mpo2")
+Xvar=c("ln_M_conc_t1","ln_M_conc_t2","ln_M_conc_t3")
 Yvar =  c('z_age2mo_personal_no4')
-Vvars= c("ascaris","trichuris","hookworm")
+Vvars= c("ascaris","trichuris","hookworm","anySTH")
 
 
 Wvars = c("sex","birthord", "momage","momheight","momedu", 
@@ -164,9 +170,23 @@ H2_W <- c(Wvars, 'laz_t2', 'waz_t2',
 H2a_W <- c(H2_W, 'ageday_st1',	'agedays_easq', 
            'month_st1',	'month_easq')
 
+res_Mann=get_emm_res(d=d, Xvars=Xvar, Yvars=Yvar, Wvars=H2a_W, Vvar=Vvars)
+res_Mann
 
-res=get_emm_res(d=d, Xvars=Xvar, Yvars=Yvar, Wvars=H2a_W, Vvar=Vvars)
-res
+res_Mann %>% filter(V=="anySTH")
+
+
+#------------------------------------------------------------------------------
+#Loop at all exposure outcome pairs, with any STH as the outcome
+#------------------------------------------------------------------------------
+Vvars= c("anySTH")
+Yvar_BD =  c('z_age2mo_personal_no4')
+
+
+res_K=get_emm_res(d=d_k, Xvars=Xvar, Yvars=Yvar, Wvars=Wvars_K, Vvar=Vvars)
+res_K
+
+
 
 table(d$ascaris)
 table(d$trichuris)
@@ -193,11 +213,19 @@ H2_W <- c(Wvars, 'laz_t2', 'waz_t2',
 H2a_W <- c(H2_W, 'ageday_st1',	'agedays_easq', 
            'month_st1',	'month_easq')
 
+Wvars_K<-c("sex","birthord", "momage","momheight","momedu", 
+         "HHS", "Nlt18","Ncomp", "water_time", 
+         "hh_index", # "floor", 'roof', 
+         "tr",
+         
+         'laz_t1', 'waz_t1')
+
+
 
 res=get_emm_res(d=d, Xvars=Xvar, Yvars=Yvar, Wvars=H2a_W, Vvar=Vvars)
 res
 
-res_K=get_emm_res(d=d_k, Xvars=Xvar, Yvars=Yvar, Wvars=H2a_W, Vvar=Vvars)
+res_K=get_emm_res(d=d_k, Xvars=Xvar, Yvars=Yvar, Wvars=Wvars_K, Vvar=Vvars)
 res_K
 
 # Maternal perceived stress (Kenya, Follow-up 3)Maternal depressive symptoms(Bangladesh and Kenya, Follow-up 2 and Follow-up 3)
