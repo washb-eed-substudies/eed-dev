@@ -88,7 +88,15 @@ bg_tables <- bg_tables %>%
   mutate(`Outcome Subdomain` = case_match(`Outcome Subdomain`,
                                           "Understanding" ~ "Receptive", 
                                           "Expressing" ~ "Expressive without Language",
-                                          .default = `Outcome Subdomain`))
+                                          .default = `Outcome Subdomain`),
+         across(contains("val"), 
+                ~ round(., 2))) %>% 
+  rename(`FDR Corrected P-value` = corrected.Pval_adj)
+
+k_tables <- k_tables %>% 
+  mutate(across(contains("val"), 
+                ~ round(., 2))) %>% 
+  rename(`FDR Corrected P-value` = corrected.Pval_adj)
 ```
 
 
@@ -189,62 +197,13 @@ k_hr <- hr_h4 %>%
 ```
 
 
-# Table 1
-
-```{r eval = F}
-
-
-bg <- readRDS(here('final-data/eed-dev_bg.RDS')) %>% 
-  rename(hh_index = HHwealth) %>% 
-  mutate(across(c(cesd_sum_t2, cesd_sum_ee_t3,
-                  pss_sum_mom_t3), 
-                as.numeric), 
-         life_viol_any_t3 = case_when(as.character(life_viol_any_t3) == "missing" ~ NA_character_, 
-                                      TRUE ~ as.character(life_viol_any_t3)),
-         across(c(sex, life_viol_any_t3), 
-                as.factor), 
-         country = 'Bangladesh', 
-  )
-
-k <- readRDS(here('final-data/eed-dev_k.RDS')) %>% 
-  mutate(across(c(quantile_phq, quantile_pss), 
-                as.numeric), 
-         across(c(sex), 
-                as.factor), 
-         country = 'Kenya')
-
-both = bind_rows(bg, k)
-
-
-myVars <- c("tr", "laz_t1", "waz_t1", "laz_t2", "waz_t2", 
-            "cesd_sum_t2", "cesd_sum_ee_t3", "pss_sum_mom_t3",
-            "quantile_phq", "quantile_pss", 
-            "sex", "life_viol_any_t3", "birthord", "momage", "momheight", 
-            "momedu", "hfiacat", "Nlt18", "Ncomp", "watmin", "walls", 
-            "floor", "roof", "hh_index")
-
-tab1 <- CreateTableOne(vars = myVars, data = both, strata = 'country', test = FALSE)
-
-print(tab1, nonnormal = myVars)
-```
-
-```{r eval = F}
-# print(tab1, nonnormal = myVars, quote = FALSE, noSpaces = TRUE, printToggle = FALSE) %>% 
-#   write.csv(here('tables/tableone.csv'))
-# 
-# table_1 <- read_csv(here('tables/tableone.csv')) %>% 
-#   mutate(across(.fns = ~ case_when(str_detect(., "NA|NaN") ~ NA_character_, 
-#                                    TRUE ~ .)))
-```
-
-
 # Flextables
 
 ```{r}
 keep_cols <- c('Outcome Domain', 'Outcome Subdomain',
                'Exposure', 'n', 
                'Q1', 'Q3', # append(x, value, after = 6)
-               'Adj. P-value', 'corrected.Pval_adj')
+               'Adj. P-value', "FDR Corrected P-value")
 
 ft_default <- set_flextable_defaults(
   font.size = 10
@@ -253,7 +212,7 @@ ft_default <- set_flextable_defaults(
 
 do.call(set_flextable_defaults, ft_default)
 
-flex_format <- function(ft, len_col_keys = 8){
+flex_format <- function(ft, len_col_keys = 9){
   ft %>% 
     bold(i = ~ str_detect(`Adj. P-value`, "\\*")) %>% 
     hline(part="header", border=fp_border(color="black")) %>% 
@@ -371,8 +330,9 @@ k_hr_tab <- flextable(k_hr_tbl,
 
 # Full Tables
 ```{r}
-bg_tables_tab <- flextable(bg_tables, 
-                           col_keys = append(keep_cols, "Adj. Diff (95% CI)", 6)) %>% 
+bg_tables_tab <- bg_tables %>% 
+  as_grouped_data(groups= "Outcome Domain") %>% 
+  flextable(col_keys = append(keep_cols, "Adj. Diff (95% CI)", 6)) %>% 
   flex_format(1+8) %>% 
   merge_v("Outcome Domain") %>% 
   valign(j = "Outcome Domain", valign = 'top') %>% 
@@ -387,8 +347,9 @@ bg_tables_tab <- flextable(bg_tables,
 ```
 
 ```{r}
-k_tables_tab <- flextable(k_tables, 
-                          col_keys = append(keep_cols, "Adj. Diff (95% CI)", 6)) %>% 
+k_tables_tab <- k_tables %>% 
+  as_grouped_data(groups= "Outcome Domain") %>% 
+  flextable(col_keys = append(keep_cols, "Adj. Diff (95% CI)", 6)) %>%
   flex_format(1+8) %>% 
   merge_v("Outcome Domain") %>% 
   width(j = "Outcome Domain", 
