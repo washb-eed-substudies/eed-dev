@@ -1,5 +1,6 @@
 ---
 title: "EED-Development Draft Table 1"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:
   officedown::rdocx_document: 
     tables:
@@ -10,7 +11,8 @@ output:
 ```{r setup, include = F}
 rm(list = ls())
 
-knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(echo = FALSE,
+                      message = FALSE)
 
 library(tidyverse)
 library(kableExtra)
@@ -57,13 +59,22 @@ bg <- readRDS(here('final-data/eed-dev_bg.RDS')) %>%
            factor(),
          sex = factor(sex, c("female", "male")),
          country = 'Bangladesh', 
-  )
+         across(c(elec, floor, roof, 
+                  asset_phone, asset_moto),
+                ~ .x == 1, 
+                .names = "has_{.col}"),
+         Nlt18 = as.integer(Nlt18)) 
 
 k <- readRDS(here('final-data/eed-dev_k.RDS')) %>% 
   mutate(across(c(pss_score, phq_score_t3), 
                 as.numeric), 
          sex = factor(sex, c("female", "male")),
-         country = 'Kenya')
+         country = 'Kenya',
+         across(c(electricity, floor, roof, 
+                  mobile, motorcycle),
+                ~ .x == 1, 
+                .names = "has_{.col}"),
+         Nlt18 = as.integer(Nlt18))
 ```
 
 ```{r}
@@ -175,6 +186,10 @@ baselinechar_bg <- function(data){
                 missing = "no")
   
   bg_mom <- data %>% 
+    distinct(dataid, hhid, 
+             momage, momheight_raw,
+             cesd_sum_t2, cesd_sum_ee_t3,
+             pss_sum_mom_t3, momedu) %>% 
     tbl_summary(include = c(momage, momheight_raw,
                             cesd_sum_t2, cesd_sum_ee_t3,
                             pss_sum_mom_t3, momedu),
@@ -187,9 +202,31 @@ baselinechar_bg <- function(data){
                 missing = "no")
   
   bg_house <- data %>% 
-    tbl_summary(include = c(hfiacat, 
+    distinct(dataid, hhid, 
+             Ncomp, Nlt18,
+             has_elec, 
+             has_floor, has_roof, 
+             has_asset_phone, has_asset_moto,
+             hfiacat, 
+             tr) %>% 
+    tbl_summary(include = c(Ncomp, Nlt18,
+                            has_elec, 
+                            has_floor, has_roof, 
+                            has_asset_phone, has_asset_moto,
+                            hfiacat, 
                             tr),
-                digits = list(all_categorical() ~ c(0, 2)),
+                label = list(Ncomp ~ "Number of people per compound", 
+                             Nlt18 ~ "Number of children <18 years in the household",
+                             has_elec ~ "Has electricity", 
+                             has_floor ~ "Has a cement floor",
+                             has_roof ~ "Has an iron roof", 
+                             has_asset_phone ~ "Owns a mobile phone",
+                             has_asset_moto ~ "Owns a motorcycle",
+                             hfiacat ~ "Household food insecurity**"),
+                type = list(Nlt18 ~ "continuous"),
+                digits = list(all_categorical() ~ c(0, 2),
+                              all_continuous() ~ c(2, 2, 2),
+                              c(Ncomp, Nlt18) ~ 0),
                 missing = "no")
   
   return(
@@ -290,6 +327,9 @@ baselinechar_kenya <- function(k_data){
                 missing = "no")
   
   k_mom <- k_data %>% 
+    distinct(hhid, momage, momheight_raw,
+             phq_score_t3,
+             pss_score, momedu) %>% 
     tbl_summary(include = c(momage, momheight_raw,
                             phq_score_t3,
                             pss_score, momedu),
@@ -298,9 +338,29 @@ baselinechar_kenya <- function(k_data){
                 missing = "no")
   
   k_house <- k_data %>% 
-    tbl_summary(include = c(hhs_mod_sev,
+    distinct(hhid, Ncomp, Nlt18,
+             has_electricity, 
+             has_floor, has_roof, 
+             has_mobile, has_motorcycle,
+             hhs_mod_sev,
+             tr) %>% 
+    tbl_summary(include = c(Ncomp, Nlt18,
+                            has_electricity, 
+                            has_floor, has_roof, 
+                            has_mobile, has_motorcycle,
+                            hhs_mod_sev,
                             tr),
-                digits = list(all_categorical() ~ c(0, 2)),
+                label = list(Ncomp ~ "Number of people per compound", 
+                             Nlt18 ~ "Number of children <18 years in the household",
+                             has_electricity ~ "Has electricity", 
+                             has_floor ~ "Has a cement floor",
+                             has_roof ~ "Has an iron roof", 
+                             has_mobile ~ "Owns a mobile phone",
+                             has_motorcycle ~ "Owns a motorcycle"),
+                type = list(Nlt18 ~ "continuous"), 
+                digits = list(all_categorical() ~ c(0, 2),
+                              all_continuous() ~ c(2, 2, 2),
+                              c(Ncomp, Nlt18) ~ 0 ),
                 missing = "no")
   
   list("k_child" = k_child,
@@ -345,32 +405,27 @@ bg_ltf <- function(data){
   maternal_characteristics <- data %>% 
     default_tbl_summary(include = c(momage, 
                                     momheight_raw,
-                                    momedu, 
-                                    hfiacat),
+                                    momedu),
                         label = list(momage ~ "Maternal age (years)", 
                                      momheight_raw ~ "Maternal height (cm)",
-                                     momedu ~ "Maternal education completed",
-                                     hfiacat ~ "Household food insecurity**"),
+                                     momedu ~ "Maternal education completed"),
                         type = list(momage ~ "continuous"))
   
   # household 
   household_characteristics <- data %>% 
-    mutate(across(c(elec, floor, roof, 
-                    asset_phone, asset_moto),
-                  ~ .x == 1, 
-                  .names = "has_{.col}"),
-           Nlt18 = as.integer(Nlt18)) %>% 
     tbl_summary(include = c(Ncomp, Nlt18,
                             has_elec, 
                             has_floor, has_roof, 
-                            has_asset_phone, has_asset_moto),
+                            has_asset_phone, has_asset_moto, 
+                            hfiacat),
                 label = list(Ncomp ~ "Number of people per compound", 
                              Nlt18 ~ "Number of children <18 years in the household",
                              has_elec ~ "Has electricity", 
                              has_floor ~ "Has a cement floor",
                              has_roof ~ "Has an iron roof", 
                              has_asset_phone ~ "Owns a mobile phone",
-                             has_asset_moto ~ "Owns a motorcycle"),
+                             has_asset_moto ~ "Owns a motorcycle",
+                             hfiacat ~ "Household food insecurity**"),
                 type = list(Nlt18 ~ "continuous"), 
                 digits = list(all_categorical() ~ c(0, 2),
                               all_continuous() ~ c(2, 2, 2),
@@ -383,8 +438,8 @@ bg_ltf <- function(data){
 
 ltf_cols_bg <- c("momage", "momheight_raw", "momedu", 
                  "hfiacat",
-                 "elec", "floor", "roof", 
-                 "asset_phone", "asset_moto",
+                 "has_elec", "has_floor", "has_roof", 
+                 "has_asset_phone", "has_asset_moto",
                  "Ncomp", "Nlt18")
 
 tbl_bg_main <- read_dta(here("raw-data/bangladesh/washb-bangladesh-enrol.dta")) %>% 
@@ -396,7 +451,12 @@ tbl_bg_main <- read_dta(here("raw-data/bangladesh/washb-bangladesh-enrol.dta")) 
                               1 ~ "Food Secure",
                               2 ~ "Mildly Food Insecure", 
                               3 ~ "Moderately Food Insecure", 
-                              4 ~ "Severely Food Insecure")) %>% 
+                              4 ~ "Severely Food Insecure"),
+         across(c(elec, floor, roof, 
+                  asset_phone, asset_moto),
+                ~ .x == 1, 
+                .names = "has_{.col}"),
+         Nlt18 = as.integer(Nlt18)) %>% 
   distinct(dataid, hhid, 
            pick(all_of(ltf_cols_bg))) %>% 
   bg_ltf()
@@ -472,31 +532,26 @@ kenya_ltf <- function(data){
   # maternal 
   maternal_characteristics <- data %>% 
     default_tbl_summary(include = c(momage, momheight_raw,
-                                    momedu, 
-                                    hhs_mod_sev),
+                                    momedu),
                         label = list(momage ~ "Maternal age (years)", 
                                      momheight_raw ~ "Maternal height (cm)",
-                                     momedu ~ "Maternal education completed",
-                                     hhs_mod_sev ~ "Prevalence of moderate to severe household hunger**"))
+                                     momedu ~ "Maternal education completed"))
   
   # household 
   household_characteristics <- data %>% 
-    mutate(across(c(electricity, floor, roof, 
-                    mobile, motorcycle),
-                  ~ .x == 1, 
-                  .names = "has_{.col}"),
-           Nlt18 = as.integer(Nlt18)) %>% 
     tbl_summary(include = c(Ncomp, Nlt18,
                             has_electricity, 
                             has_floor, has_roof, 
-                            has_mobile, has_motorcycle),
+                            has_mobile, has_motorcycle, 
+                            hhs_mod_sev),
                 label = list(Ncomp ~ "Number of people per compound", 
                              Nlt18 ~ "Number of children <18 years in the household",
                              has_electricity ~ "Has electricity", 
                              has_floor ~ "Has a cement floor",
                              has_roof ~ "Has an iron roof", 
                              has_mobile ~ "Owns a mobile phone",
-                             has_motorcycle ~ "Owns a motorcycle"),
+                             has_motorcycle ~ "Owns a motorcycle",
+                             hhs_mod_sev ~ "Prevalence of moderate to severe household hunger**"),
                 type = list(Nlt18 ~ "continuous"), 
                 digits = list(all_categorical() ~ c(0, 2),
                               all_continuous() ~ c(2, 2, 2),
@@ -508,10 +563,10 @@ kenya_ltf <- function(data){
 }
 
 ltf_cols_k <- c("momage", "momheight_raw", "momedu", 
-                 "hhs_mod_sev",
-                 "elec", "floor", "roof", 
-                 "mobile", "motorcycle",
-                 "Ncomp", "Nlt18")
+                "hhs_mod_sev",
+                "has_electricity", "has_floor", "has_roof", 
+                "has_mobile", "has_motorcycle",
+                "Ncomp", "Nlt18")
 
 tbl_k_main <- read_csv(here("raw-data/kenya/washb-kenya-enrol.csv")) %>% 
   mutate(momedu = case_match(momedu, 
@@ -521,7 +576,13 @@ tbl_k_main <- read_csv(here("raw-data/kenya/washb-kenya-enrol.csv")) %>%
                              .default = momedu) %>% 
            factor(c("Primary", "Incomplete Primary", "Any Secondary", "Missing")),
          momheight_raw = momheight,
-         hhs_mod_sev = HHS %in% c(2, 3)) %>% 
+         hhs_mod_sev = HHS %in% c(2, 3),
+         across(c(electricity, floor, roof, 
+                  mobile, motorcycle),
+                ~ .x == 1, 
+                .names = "has_{.col}"),
+         Nlt18 = as.integer(Nlt18)) %>% 
+  distinct(hhid, pick(all_of(ltf_cols_k))) %>% 
   kenya_ltf()
 
 tbl_k_fullcohort <- k %>% 
