@@ -1,5 +1,6 @@
 ---
-title: "R Notebook"
+title: "Analysis Tables"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:
   html_document:
     df_print: paged
