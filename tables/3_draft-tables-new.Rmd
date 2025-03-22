@@ -163,18 +163,15 @@ prepare_tbl_for_gt <- function(tbl){
     select(-c(hyp, t_exp, fdr_significance, adj_p_significance))
 }
 
-prepare_hr_for_gt <- function(tbl){
-  tbl %>% 
-    mutate(`Adj. HR (95% CI)` = if_else(str_detect(`Adj. HR (95% CI)`, "Inf"), "--^", `Adj. HR (95% CI)`)) %>% 
-    select(-`Outcome Domain`)
-}
-
 gt_gam <- function(tbl, caption){
   tbl %>% 
     gt(groupname_col = "Outcome Domain",
        row_group_as_column = TRUE) %>% 
-    cols_label(corrected.Pval_adj = "FDR Corrected P-value") %>% 
+    cols_merge_range(confint.lb, confint.ub, sep = ", ") %>% 
+    cols_merge(c(point.est, confint.lb), pattern = "{1} ({2})") %>% 
     
+    cols_label(corrected.Pval_adj = "FDR Corrected P-value",
+               point.est = "Adj. Diff (95% CI)") %>% 
     tab_style(cell_text(weight = "bold"),
               cells_row_groups()) %>% 
     
@@ -183,32 +180,23 @@ gt_gam <- function(tbl, caption){
     fmt_markdown(columns = "Exposure")
 }
 
-gt_hr <- function(tbl, caption){
-  tbl %>% 
-    gt() %>% 
-    cols_label(corrected.Pval_adj = "FDR Corrected P-value") %>% 
-    tab_header(md(paste0("**", caption, "**"))) %>% 
-    fmt_markdown(columns = "Exposure")
-}
 
-
-add_footnotes <- function(gt){
+add_footnotes <- function(gt, point.est){
   
-  point_est_col <- c("Adj. Diff (95% CI)", "Adj. HR (95% CI)")[c("Adj. Diff (95% CI)", "Adj. HR (95% CI)") %in% colnames(gt$`_data`)]
   
   gt <- gt %>%
     tab_footnote(footnote = "Adjusted for prespecified and prescreened covariates: child sex, child age, child birth order, mother’s age, mother’s height, mother’s education, household food security, number of children < 18 y old in the household, number of people living in the compound, distance (in minutes) to the primary water source, household materials (floor, roof), asset-based household wealth (electricity, clock, working radio, working black/white or color television, bicycle, motorcycle, sewing machine, mobile phone, land phone, stove, number of cows, number of goats, number of dogs, and number of poultry), treatment arm, prior length-for-age Z-score and weight-for-age Z-score, month of measurement, and mother’s perceived stress, mother’s depressive symptoms, and mother’s exposure to intimate partner violence (IPV) during lifetime. See Supplementary Table 1 for more details. ",
-                 location = cells_column_labels(columns = c("n", "Q1", "Q3", "Adj. P-value", "corrected.Pval_adj", point_est_col))) %>%
+                 location = cells_column_labels(columns = c("Adj. P-value", "corrected.Pval_adj", "point.est"))) %>%
     tab_footnote(footnote = "Asterisk denotes level of significance: *** <0.001, ** <0.05, * <0.2",
                  location = cells_column_labels(columns = c("Adj. P-value", "corrected.Pval_adj")))
   
-  if(point_est_col == "Adj. HR (95% CI)"){
+  if(point.est == "hr"){
     gt <- gt %>% 
       tab_footnote(footnote = "--^ indicates hazard ratio not calculated due to data sparsity.",
-                   locations = cells_column_labels("Adj. HR (95% CI)"))
+                   locations = cells_column_labels("point.est"))
   }
   
-  if(point_est_col == "Adj. Diff (95% CI)"){
+  if(point.est == "diff"){
     gt <- gt %>% 
       tab_footnote(footnote = "Milestones 2,4,5,6 correspond to hands-and-knees crawling, walking with assistance, standing alone, and walking alone, respectively.",
                    locations = cells_body(columns = `Outcome Subdomain`,
@@ -504,10 +492,42 @@ list(tbl_k_main,
 bg_tables %>% 
   prepare_tbl_for_gt() %>% 
   gt_gam("EED and Child Development in Bangladesh") %>% 
-  add_footnotes()
+  add_footnotes("diff")
 ```
 
 \newpage
+
+```{r}
+prepare_hr_for_gt <- function(tbl){
+  tbl %>% 
+    mutate(across(c(point.est, confint.lb, confint.ub), 
+                  function(col) {
+                    if_any(c(point.est, confint.lb, confint.ub), 
+                           ~ .x >= 100) %>%
+                      if_else(NA, col)
+                  })) %>% 
+    # mutate(`Adj. HR (95% CI)` = if_else(str_detect(`Adj. HR (95% CI)`, "Inf"), "--^", `Adj. HR (95% CI)`)) %>% 
+    select(-`Outcome Domain`)
+}
+
+gt_hr <- function(tbl, caption){
+  tbl %>% 
+    gt() %>% 
+    
+    fmt_number(columns = c(point.est, 
+                           confint.lb, confint.ub),
+               use_seps = FALSE) %>%
+    text_case_match("NA (NA)" ~ "--^") %>% 
+    
+    cols_merge_range(confint.lb, confint.ub, sep = ", ") %>% 
+    cols_merge(c(point.est, confint.lb), pattern = "{1} ({2})") %>% 
+    
+    cols_label(corrected.Pval_adj = "FDR Corrected P-value",
+               point.est = "Adj. Diff (95% CI)") %>% 
+    tab_header(md(paste0("**", caption, "**"))) %>% 
+    fmt_markdown(columns = "Exposure")
+}
+```
 
 
 ```{r tab.cap = "EED and WHO Motor Milestones in Bangladesh (Hazard Ratios, Year 1)"}
@@ -515,7 +535,7 @@ hr_h1 %>%
   prepare_tbl_for_gt() %>% 
   prepare_hr_for_gt() %>% 
   gt_hr("EED and WHO Motor Milestones in Bangladesh (Hazard Ratios, Year 1)") %>% 
-  add_footnotes()
+  add_footnotes("hr")
 ```
 
 
@@ -570,7 +590,7 @@ hr_h4 %>%
   prepare_tbl_for_gt() %>% 
   prepare_hr_for_gt() %>% 
   gt_hr("EED and WHO Motor Milestones in Kenya (Hazard Ratios, Year 1)") %>% 
-  add_footnotes()
+  add_footnotes("hr")
 ```
 
 
@@ -581,7 +601,7 @@ hr_h4 %>%
 k_tables %>% 
   prepare_tbl_for_gt() %>% 
   gt_gam("EED and Child Development in Kenya") %>% 
-  add_footnotes()
+  add_footnotes("diff")
 ```
 
 

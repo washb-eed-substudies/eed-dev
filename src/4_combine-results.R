@@ -31,9 +31,9 @@ clean_results <- function(data, hyp_num, measure = "gam"){
   pasted_var <- case_when(measure == "gam" ~ "Adj. Diff (95% CI)", 
                           measure == "hr" ~ "Adj. HR (95% CI)")
   
-  ub <- case_when(measure == "gam" ~ "ub.diff", 
+  ub <- case_when(measure == "gam" ~ "ub.diff",
                  measure == "hr" ~ "ub.HR")
-  lb <- case_when(measure == "gam" ~ "lb.diff", 
+  lb <- case_when(measure == "gam" ~ "lb.diff",
                   measure == "hr" ~ "lb.HR")
   
   point <- case_when(measure == "gam" ~ "point.diff", 
@@ -42,22 +42,22 @@ clean_results <- function(data, hyp_num, measure = "gam"){
   y_sd_name <- case_when(measure == "gam" ~ "Outcome Subdomain", 
                          measure == "hr" ~ "Motor Milestone")
   
-  format_ci <- function(point.est, lower, upper){
-    format_num <- function(number, digits = 2){
-      rounded_num <- round(number, digits = digits)
-      # ifelse(rounded_num == 0,
-      #        case_when(sign(number) == -1 ~ paste0(">-0.", rep.int("0", digits - 1), "1"),
-      #                  sign(number) == 1  ~ paste0("<0.", rep.int("0", digits - 1), "1"),
-      #                  sign(number) == 0  ~ "0.000"),
-      #        as.character(rounded_num))
-    }
-    
-    fmt_point <- format_num(point.est)
-    fmt_lb <- format_num(lower)
-    fmt_ub <- format_num(upper)
-    
-    paste0(fmt_point, " (", fmt_lb, ", ", fmt_ub, ")")
-  }
+  # format_ci <- function(point.est, lower, upper){
+  #   format_num <- function(number, digits = 2){
+  #     rounded_num <- round(number, digits = digits)
+  #     # ifelse(rounded_num == 0,
+  #     #        case_when(sign(number) == -1 ~ paste0(">-0.", rep.int("0", digits - 1), "1"),
+  #     #                  sign(number) == 1  ~ paste0("<0.", rep.int("0", digits - 1), "1"),
+  #     #                  sign(number) == 0  ~ "0.000"),
+  #     #        as.character(rounded_num))
+  #   }
+  #   
+  #   fmt_point <- format_num(point.est)
+  #   fmt_lb <- format_num(lower)
+  #   fmt_ub <- format_num(upper)
+  #   
+  #   paste0(fmt_point, " (", fmt_lb, ", ", fmt_ub, ")")
+  # }
   
   
   data %>% 
@@ -108,14 +108,18 @@ clean_results <- function(data, hyp_num, measure = "gam"){
            y_subdomain = case_when(str_detect(Y, "nosupp") ~ str_c(y_subdomain, " (w/o support)"), 
                                    str_detect(Y, "supp") ~ str_c(y_subdomain, " (w/ support)"), 
                                    TRUE ~ y_subdomain),
-           pasted_results := format_ci(!!rlang::sym(point), !!rlang::sym(lb), !!rlang::sym(ub))) %>% 
+           # pasted_results := format_ci(!!rlang::sym(point), !!rlang::sym(lb), !!rlang::sym(ub))
+           ) %>% 
     select(hyp,
            "Outcome Domain" = outcome_domain, 
            !!y_sd_name := y_subdomain, 
            "Exposure" = x_human, t_exp,
            "n" = N, 
            "Q1" = q1, "Q3" = q3, 
-           !!pasted_var := pasted_results, 
+           "point.est" := !!rlang::sym(point), 
+           "confint.lb" := !!rlang::sym(lb), 
+           "confint.ub" := !!rlang::sym(ub),
+           # !!pasted_var := pasted_results, 
            "Adj. P-value" = Pval)
 }
 
