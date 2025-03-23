@@ -252,6 +252,7 @@ tribble(~ category, ~ covariate, ~ notes,
 
 ```
 
+\newpage
 
 ## Bangladesh LTF
 
@@ -370,10 +371,15 @@ list(tbl_bg_main,
   ) %>% 
   modify_footnote_body(footnote = "Any level of food insecurity assessed using the Household Food Insecurity Access Scale",
                        columns = "label",
-                       rows = variable == "hfiacat" & row_type == "label")
+                       rows = variable == "hfiacat" & row_type == "label") %>% 
+  as_gt() %>% 
+  tab_header(md(paste0("**", 
+                       "Enrollment characteristics within the WASH Benefits parent trial study population, EED and child development substudy population, and children lost to follow-up in Bangladesh", 
+                       "**")))
 
 
 ```
+
 
 \newpage
 
@@ -481,12 +487,18 @@ list(tbl_k_main,
   ) %>% 
   modify_footnote_body(footnote = "Moderate to severe hunger defined using the Household Hunger Scale",
                        columns = "label",
-                       rows = variable == "hhs_mod_sev" & row_type == "label")
+                       rows = variable == "hhs_mod_sev" & row_type == "label") %>% 
+  as_gt() %>% 
+  tab_header(md(paste0("**", 
+                       "Enrollment characteristics within the WASH Benefits parent trial study population, EED and child development substudy population, and children lost to follow-up in Kenya", 
+                       "**")))
 
 
 ```
 
+\newpage
 
+# Results
 
 ```{r tab.cap = "EED and Child Development in Bangladesh"}
 bg_tables %>% 
