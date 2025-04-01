@@ -11,46 +11,17 @@ library(tidyverse)
 ```
 
 
-# Hypothesis 1 splines
+# Section 1: Spline plots
 
 ```{r, echo=F}
-# "C:\Users\andre\OneDrive\Documents\washb_substudies\eed-dev\figure-data\H2b_adj_spline_data.RDS"
-# "C:\Users\andre\OneDrive\Documents\washb_substudies\eed-dev\figure-data\H2c_adj_spline_data.RDS"
-# "C:\Users\andre\OneDrive\Documents\washb_substudies\eed-dev\figure-data\H2d_adj_spline_data.RDS"
-# "C:\Users\andre\OneDrive\Documents\washb_substudies\eed-dev\figure-data\H2e_adj_spline_data.RDS"
-# "C:\Users\andre\OneDrive\Documents\washb_substudies\eed-dev\figure-data\H2f_adj_spline_data.RDS"
-# "C:\Users\andre\OneDrive\Documents\washb_substudies\eed-dev\figure-data\H2g_adj_spline_data.RDS"
-# "C:\Users\andre\OneDrive\Documents\washb_substudies\eed-dev\figure-data\H2h_adj_spline_data.RDS"
 
-# "C:\Users\andre\OneDrive\Documents\washb_substudies\eed-dev\figure-data\H3_unadj_spline_data.RDS"
-# "C:\Users\andre\OneDrive\Documents\washb_substudies\eed-dev\figure-data\H3a_adj_spline_data.RDS"
-# "C:\Users\andre\OneDrive\Documents\washb_substudies\eed-dev\figure-data\H3b_adj_spline_data.RDS"
-# "C:\Users\andre\OneDrive\Documents\washb_substudies\eed-dev\figure-data\H4_unadj_spline_data.RDS"
-# "C:\Users\andre\OneDrive\Documents\washb_substudies\eed-dev\figure-data\H4_who_unadj_spline_data.RDS"
-# "C:\Users\andre\OneDrive\Documents\washb_substudies\eed-dev\figure-data\H4_who-hr_unadj_spline_data.RDS"
-# "C:\Users\andre\OneDrive\Documents\washb_substudies\eed-dev\figure-data\H4a_adj_spline_data.RDS"
-# "C:\Users\andre\OneDrive\Documents\washb_substudies\eed-dev\figure-data\H4b_adj_spline_data.RDS"
-# "C:\Users\andre\OneDrive\Documents\washb_substudies\eed-dev\figure-data\H5_unadj_spline_data.RDS"
-# "C:\Users\andre\OneDrive\Documents\washb_substudies\eed-dev\figure-data\H5a_adj_spline_data.RDS"
-# "C:\Users\andre\OneDrive\Documents\washb_substudies\eed-dev\figure-data\H5b_adj_spline_data.RDS"
-# "C:\Users\andre\OneDrive\Documents\washb_substudies\eed-dev\figure-data\H5c_adj_spline_data.RDS"
-# "C:\Users\andre\OneDrive\Documents\washb_substudies\eed-dev\figure-data\H5d_adj_spline_data.RDS"
-# "C:\Users\andre\OneDrive\Documents\washb_substudies\eed-dev\figure-data\main_figures_heatmaps.nb.html"
-# "C:\Users\andre\OneDrive\Documents\washb_substudies\eed-dev\figure-data\main_figures_heatmaps.Rmd"
-# "C:\Users\andre\OneDrive\Documents\washb_substudies\eed-dev\figure-data\H1_unadj_spline_data.RDS"
 # "C:\Users\andre\OneDrive\Documents\washb_substudies\eed-dev\figure-data\H1_who_unadj_spline_data.RDS"
 # "C:\Users\andre\OneDrive\Documents\washb_substudies\eed-dev\figure-data\H1_who-hr_unadj_spline_data.RDS"
-# "C:\Users\andre\OneDrive\Documents\washb_substudies\eed-dev\figure-data\H1a_adj_spline_data.RDS"
-# "C:\Users\andre\OneDrive\Documents\washb_substudies\eed-dev\figure-data\H1b_adj_spline_data.RDS"
-# "C:\Users\andre\OneDrive\Documents\washb_substudies\eed-dev\figure-data\H1c_adj_spline_data.RDS"
 
 h1a<-readRDS(here("figure-data", "H1a_adj_spline_data.RDS")) 
 h1b<-readRDS(here("figure-data", "H1b_adj_spline_data.RDS")) 
 h1c<-readRDS(here("figure-data", "H1c_adj_spline_data.RDS")) 
 h1d<-readRDS(here("figure-data", "H1d_adj_spline_data.RDS")) 
-h2a<-readRDS(here("figure-data", "H2a_adj_spline_data.RDS")) 
-h3a<-readRDS(here("figure-data", "H3a_adj_spline_data.RDS")) 
-h4a<-readRDS(here("figure-data", "H4a_adj_spline_data.RDS")) 
 H1a_adj_res <- readRDS(here("results/adjusted/H1a_adj_res.RDS")) %>% rename(Yvar=Y, Xvar=X)
 H1b_adj_res <- readRDS(here("results/adjusted/H1b_adj_res.RDS")) %>% rename(Yvar=Y, Xvar=X)
 H1c_adj_res <- readRDS(here("results/adjusted/H1c_adj_res.RDS")) %>% rename(Yvar=Y, Xvar=X)
@@ -60,6 +31,65 @@ h1a <- left_join(h1a, H1a_adj_res, by = c("Xvar", "Yvar"))
 h1b <- left_join(h1b, H1b_adj_res, by = c("Xvar", "Yvar")) 
 h1c <- left_join(h1c, H1c_adj_res, by = c("Xvar", "Yvar")) 
 h1d <- left_join(h1d, H1d_adj_res, by = c("Xvar", "Yvar")) 
+
+
+h2a<-readRDS(here("figure-data", "H2a_adj_spline_data.RDS")) 
+h2b<-readRDS(here("figure-data", "H2b_adj_spline_data.RDS"))
+h2c<-readRDS(here("figure-data", "H2c_adj_spline_data.RDS"))
+h2d<-readRDS(here("figure-data", "H2d_adj_spline_data.RDS"))
+h2e<-readRDS(here("figure-data", "H2e_adj_spline_data.RDS"))
+h2f<-readRDS(here("figure-data", "H2f_adj_spline_data.RDS"))
+h2g<-readRDS(here("figure-data", "H2g_adj_spline_data.RDS"))
+h2h<-readRDS(here("figure-data", "H2h_adj_spline_data.RDS"))
+
+H2a_adj_res <- readRDS(here("results/adjusted/H2a_adj_res.RDS")) %>% rename(Yvar=Y, Xvar=X)
+H2b_adj_res <- readRDS(here("results/adjusted/H2b_adj_res.RDS")) %>% rename(Yvar=Y, Xvar=X)
+H2c_adj_res <- readRDS(here("results/adjusted/H2c_adj_res.RDS")) %>% rename(Yvar=Y, Xvar=X)
+H2d_adj_res <- readRDS(here("results/adjusted/H2d_adj_res.RDS")) %>% rename(Yvar=Y, Xvar=X)
+H2e_adj_res <- readRDS(here("results/adjusted/H2e_adj_res.RDS")) %>% rename(Yvar=Y, Xvar=X)
+H2f_adj_res <- readRDS(here("results/adjusted/H2f_adj_res.RDS")) %>% rename(Yvar=Y, Xvar=X)
+H2g_adj_res <- readRDS(here("results/adjusted/H2g_adj_res.RDS")) %>% rename(Yvar=Y, Xvar=X)
+H2h_adj_res <- readRDS(here("results/adjusted/H2h_adj_res.RDS")) %>% rename(Yvar=Y, Xvar=X)
+
+h2a <- left_join(h2a, H2a_adj_res, by = c("Xvar", "Yvar"))
+h2b <- left_join(h2b, H2b_adj_res, by = c("Xvar", "Yvar"))
+h2c <- left_join(h2c, H2c_adj_res, by = c("Xvar", "Yvar"))
+h2d <- left_join(h2d, H2d_adj_res, by = c("Xvar", "Yvar"))
+h2e <- left_join(h2e, H2e_adj_res, by = c("Xvar", "Yvar"))
+h2f <- left_join(h2f, H2f_adj_res, by = c("Xvar", "Yvar"))
+h2g <- left_join(h2g, H2g_adj_res, by = c("Xvar", "Yvar"))
+h2h <- left_join(h2h, H2h_adj_res, by = c("Xvar", "Yvar"))
+
+h3a<-readRDS(here("figure-data", "H3a_adj_spline_data.RDS"))
+h3b<-readRDS(here("figure-data", "H3b_adj_spline_data.RDS"))
+H3a_adj_res <- readRDS(here("results/adjusted/H3a_adj_res.RDS")) %>% rename(Yvar=Y, Xvar=X)
+H3b_adj_res <- readRDS(here("results/adjusted/H3b_adj_res.RDS")) %>% rename(Yvar=Y, Xvar=X)
+
+h3a <- left_join(h3a, H3a_adj_res, by = c("Xvar", "Yvar"))
+h3b <- left_join(h3b, H3b_adj_res, by = c("Xvar", "Yvar"))
+
+h4a<-readRDS(here("figure-data", "H4a_adj_spline_data.RDS"))
+h4b<-readRDS(here("figure-data", "H4b_adj_spline_data.RDS"))
+H4a_adj_res <- readRDS(here("results/adjusted/H4a_adj_res.RDS")) %>% rename(Yvar=Y, Xvar=X)
+H4b_adj_res <- readRDS(here("results/adjusted/H4b_adj_res.RDS")) %>% rename(Yvar=Y, Xvar=X)
+
+h4a <- left_join(h4a, H4a_adj_res, by = c("Xvar", "Yvar"))
+h4b <- left_join(h4b, H4b_adj_res, by = c("Xvar", "Yvar"))
+
+h5a<-readRDS(here("figure-data", "H5a_adj_spline_data.RDS"))
+h5b<-readRDS(here("figure-data", "H5b_adj_spline_data.RDS"))
+h5c<-readRDS(here("figure-data", "H5c_adj_spline_data.RDS"))
+h5d<-readRDS(here("figure-data", "H5d_adj_spline_data.RDS"))
+H5a_adj_res <- readRDS(here("results/adjusted/H5a_adj_res.RDS")) %>% rename(Yvar=Y, Xvar=X)
+H5b_adj_res <- readRDS(here("results/adjusted/H5b_adj_res.RDS")) %>% rename(Yvar=Y, Xvar=X)
+H5c_adj_res <- readRDS(here("results/adjusted/H5c_adj_res.RDS")) %>% rename(Yvar=Y, Xvar=X)
+H5d_adj_res <- readRDS(here("results/adjusted/H5d_adj_res.RDS")) %>% rename(Yvar=Y, Xvar=X)
+
+h5a <- left_join(h5a, H5a_adj_res, by = c("Xvar", "Yvar"))
+h5b <- left_join(h5b, H5b_adj_res, by = c("Xvar", "Yvar"))
+h5c <- left_join(h5c, H5c_adj_res, by = c("Xvar", "Yvar"))
+h5d <- left_join(h5d, H5d_adj_res, by = c("Xvar", "Yvar"))
+
 
 plot_splines <- function(d, title){
   p <- ggplot(d) + geom_ribbon(aes(x = X, ymin = lwrS, ymax = uprS), 
@@ -74,11 +104,93 @@ plot_splines <- function(d, title){
   return(p)
 }
 
+
+```
+
+
+### Hypothesis 1
+
+```{r, echo=FALSE}
 plot_splines(h1a, "H1a")
 plot_splines(h1b, "H1b")
 plot_splines(h1c, "H1c")
 plot_splines(h1d, "H1d")
 
+```
+
+### Hypothesis 2
+
+```{r, echo=FALSE}
+plot_splines(h2a, "H2a")
+plot_splines(h2b, "H2b")
+plot_splines(h2c, "H2c")
+plot_splines(h2d, "H2d")
+plot_splines(h2e, "H2e")
+plot_splines(h2f, "H2f")
+plot_splines(h2g, "H2g")
+plot_splines(h2h, "H2h")
 
 ```
 
+### Hypothesis 3
+
+```{r, echo=FALSE}
+plot_splines(h3a, "H3a")
+plot_splines(h3b, "H3b")
+
+```
+
+
+### Hypothesis 4
+
+```{r, echo=FALSE}
+plot_splines(h4a, "H4a")
+plot_splines(h4b, "H4b")
+
+```
+
+### Hypothesis 5
+
+```{r, echo=FALSE}
+plot_splines(h5a, "H5a")
+plot_splines(h5b, "H5b")
+plot_splines(h5c, "H5c")
+plot_splines(h5d, "H5d")
+
+```
+
+
+# Section 2: GLM-GAM comparison
+
+
+```{r, echo=FALSE}
+
+load(file=here("figure-data/glm_gam_comparison_plots.Rdata"))
+d <- readRDS(file=here("results/glm_gam_comparison.RDS"))   
+
+
+glm_comp_p1
+glm_comp_p2
+glm_comp_p3
+glm_comp_p4
+glm_comp_p5
+
+```
+
+
+# Section 3: Diarrhea sensitivity analysis
+
+
+```{r, echo=FALSE}
+
+load(file=here("figure-data/diarrhea_sens_comparison_plots.Rdata"))
+d <- readRDS(file=here("results/diarrhea_main_comparison.RDS"))   
+
+
+diarrhea_comp_p1
+diarrhea_comp_p2
+diarrhea_comp_p3
+diarrhea_comp_p4
+diarrhea_comp_p5
+
+```

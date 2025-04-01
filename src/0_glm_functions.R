@@ -191,7 +191,7 @@ fit_cowboy_glm <- function (data, Y, X, W = NULL, forcedW = NULL, V = NULL, clus
       bootcoef <- tryCatch(coef(glm(model, family = family, 
                                     data = dboot)), error = function(x) rep(as.numeric(NA), 
                                                                             p))
-      coefs[i, which(names(res.or$coef) %in% names(bootcoef))] <- bootcoef
+      coefs[i, which(names(res.or$coef) %in% names(bootcoef))] <- bootcoef[(names(bootcoef) %in% names(res.or$coef))] 
     }
   }else {
     cluster <- as.character(data[[clusterid]])
@@ -220,7 +220,7 @@ fit_cowboy_glm <- function (data, Y, X, W = NULL, forcedW = NULL, V = NULL, clus
       bootcoef <- tryCatch(coef(glm(model, family = family, 
                                     data = dboot)), error = function(x) rep(as.numeric(NA), 
                                                                             p))
-      coefs[i, which(names(res.or$coef) %in% names(bootcoef))] <- bootcoef
+      coefs[i, which(names(res.or$coef) %in% names(bootcoef))] <- bootcoef[(names(bootcoef) %in% names(res.or$coef))] 
     }
   }
   invalid.samples <- colSums(is.na(coefs))

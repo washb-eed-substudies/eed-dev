@@ -330,9 +330,34 @@ H2a_W <- c(H2_W, 'ageday_st1',	'agedays_easq',
 
 res_Mann=get_emm_res(d=d, Xvars=Xvar, Yvars=Yvar, Wvars=H2a_W, Vvar=Vvars)
 res_Mann
+res_Mann$corrected_p <-  p.adjust(res_Mann$int.Pval, "BH")
 
-res_Mann %>% filter(V=="anySTH")
+res_Mann <- res_Mann %>%
+  mutate(`Any STH\ninfection` = factor(Vlevel))
 
+head(res_Mann %>% filter(V=="anySTH"))
+
+ggplot(res_Mann %>% filter(V=="anySTH"), aes(x=X, y=point.diff, ymin=lb.diff, ymax=ub.diff, group=`Any STH\ninfection`, colour =`Any STH\ninfection`)) +
+  geom_pointrange(position = position_dodge(0.5)) +
+  geom_hline(yintercept=0, linetype="dashed") +
+  facet_wrap(~Y) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(title="Effect of mannitol on personal social domain score by STH status",
+       x="Mannitol measurement",
+       y="Difference in z-score between 25th and 75th\npercentile of mannitol concentration (ln)",
+       caption="95% CI")
+
+ggplot(res_Mann , aes(x=X, y=point.diff, ymin=lb.diff, ymax=ub.diff, group=`Any STH\ninfection`, colour =`Any STH\ninfection`)) +
+  geom_pointrange(position = position_dodge(0.5)) +
+  facet_wrap(~V) +
+  geom_hline(yintercept=0, linetype="dashed") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(title="Effect of mannitol on personal social domain score by STH status",
+       x="Mannitol concentration (ln)",
+       y="Difference in z-score",
+       caption="95% CI")
 
 
 
@@ -363,16 +388,15 @@ saveRDS(full_res_tr, here('results/tr-emm-results.RDS'))
 #------------------------------------------------------------------------------
 #Loop at all exposure outcome pairs, with any STH as the outcome
 #------------------------------------------------------------------------------
-Vvars= c("anySTH")
-
 
 
 full_res_sth = NULL
 for(i in 1:length(H_list)){
+  res=NULL
   if(grepl("4",names(H_list)[i])|grepl("5",names(H_list)[i])){
-    res <- get_emm_res(d=d_k, Xvars=H_list[[i]][[1]], Yvars=H_list[[i]][[2]], Wvars=H_list[[i]][[3]], Vvar="tr")
+    try(res <- get_emm_res(d=d_k, Xvars=H_list[[i]][[1]], Yvars=H_list[[i]][[2]], Wvars=H_list[[i]][[3]], Vvar="anySTH"))
   }else{
-    res <- get_emm_res(d=d, Xvars=H_list[[i]][[1]], Yvars=H_list[[i]][[2]], Wvars=H_list[[i]][[3]], Vvar="tr")
+    try(res<- get_emm_res(d=d, Xvars=H_list[[i]][[1]], Yvars=H_list[[i]][[2]], Wvars=H_list[[i]][[3]], Vvar="anySTH"))
   }
   res$H <- names(H_list)[i]
   full_res_sth <- bind_rows(full_res_sth, res)

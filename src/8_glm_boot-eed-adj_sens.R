@@ -12,7 +12,6 @@ Wvars<-c("sex","birthord", "momage","momheight","momedu",
          "hfiacat", "Nlt18","Ncomp", "watmin", "walls", 
          "floor", 'roof', "HHwealth", 
          "life_viol_any_t3", "tr",
-         
          'laz_t1', 'waz_t1', "cesd_sum_t2")
 
 table(d$laz_t1)
@@ -548,6 +547,8 @@ Yvars <- c("who_sub_total", "who_sum_total")
 H4a_W <- c(H4_W, 'month_st1')
 H4a_W[!(H4a_W %in% colnames(d))]
 
+i=Xvars[1]
+j=Yvars[1]
 #Fit models
 H4a_adj_res <- NULL
 for(i in Xvars){
@@ -555,7 +556,7 @@ for(i in Xvars){
     print(i)
     print(j)
     res=NULL
-    try(res<- fit_cowboy_glm(data=d, X=i, Y=j,  W=H4a_W[1:18]))#drop month_st1 because colinearity with month_mn causes error
+    try(res<- fit_cowboy_glm(data=d, X=i, Y=j,  W=H4a_W))
     res$X <- i
     res$Y <- j
     H4a_adj_res <- bind_rows(H4a_adj_res, res)
