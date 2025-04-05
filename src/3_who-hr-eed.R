@@ -158,7 +158,7 @@ saveRDS(H1a_who_adj_res, here("results/adjusted/H1a_who-hr_adj_res.RDS"))
 
 
 #Save plots
-saveRDS(H1a_who_adj_plot_list, paste0(dropboxDir,"results/stress-growth-models/figure-objects/H1a_who_adj_splines.RDS"))
+#saveRDS(H1a_who_adj_plot_list, paste0(dropboxDir,"results/stress-growth-models/figure-objects/H1a_who_adj_splines.RDS"))
 
 #Save plot data
 saveRDS(H1a_who_adj_plot_data, paste0(dropboxDir,"results/stress-growth-models/figure-data/H1a_who_adj_spline_data.RDS"))
@@ -216,7 +216,7 @@ saveRDS(H1b_who_adj_res, here("results/adjusted/H1b_who-hr_adj_res.RDS"))
 
 
 #Save plots
-saveRDS(H1b_who_adj_plot_list, paste0(dropboxDir,"results/stress-growth-models/figure-objects/H1b_who_adj_splines.RDS"))
+#saveRDS(H1b_who_adj_plot_list, paste0(dropboxDir,"results/stress-growth-models/figure-objects/H1b_who_adj_splines.RDS"))
 
 #Save plot data
 saveRDS(H1b_who_adj_plot_data, paste0(dropboxDir,"results/stress-growth-models/figure-data/H1b_who_adj_spline_data.RDS"))
@@ -272,14 +272,14 @@ for(i in 1:nrow(H4_who_models)){
 }
 
 #Save models
-saveRDS(H4_who_models, here("models/H4_who-hr_models.RDS"))
+#saveRDS(H4_who_models, here("models/H4_who-hr_models.RDS"))
 
 #Save results
 saveRDS(H4_who_res, here("results/unadjusted/H4_who-hr_res.RDS"))
 
 
 #Save plots
-saveRDS(H4_who_plot_list, paste0(dropboxDir,"results/stress-growth-models/figure-objects/H4_who_unadj_splines.RDS"))
+#saveRDS(H4_who_plot_list, paste0(dropboxDir,"results/stress-growth-models/figure-objects/H4_who_unadj_splines.RDS"))
 
 #Save plot data
 saveRDS(H4_who_plot_data, paste0(dropboxDir,"results/stress-growth-models/figure-data/H4_who-hr_unadj_spline_data.RDS"))
@@ -364,7 +364,7 @@ saveRDS(H4a_who_adj_res, here("results/adjusted/H4a_who-hr_adj_res.RDS"))
 
 
 #Save plots
-saveRDS(H4a_who_adj_plot_list, paste0(dropboxDir,"results/stress-growth-models/figure-objects/H4a_who_adj_splines.RDS"))
+#saveRDS(H4a_who_adj_plot_list, paste0(dropboxDir,"results/stress-growth-models/figure-objects/H4a_who_adj_splines.RDS"))
 
 #Save plot data
 saveRDS(H4a_who_adj_plot_data, paste0(dropboxDir,"results/stress-growth-models/figure-data/H4a_who_adj_spline_data.RDS"))
@@ -419,7 +419,7 @@ saveRDS(H4b_who_adj_res, here("results/adjusted/H4b_who-hr_adj_res.RDS"))
 
 
 #Save plots
-saveRDS(H4b_who_adj_plot_list, paste0(dropboxDir,"results/stress-growth-models/figure-objects/H4b_who_adj_splines.RDS"))
+#saveRDS(H4b_who_adj_plot_list, paste0(dropboxDir,"results/stress-growth-models/figure-objects/H4b_who_adj_splines.RDS"))
 
 #Save plot data
 saveRDS(H4b_who_adj_plot_data, paste0(dropboxDir,"results/stress-growth-models/figure-data/H4b_who_adj_spline_data.RDS"))

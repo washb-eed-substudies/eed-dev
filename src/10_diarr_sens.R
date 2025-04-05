@@ -64,7 +64,7 @@ for(i in Xvars){
   for(j in Yvars){
     print(i)
     print(j)
-    res_adj <- fit_RE_gam(d=d, X=i, Y=j,  W=H1a_W)
+    res_adj <- fit_RE_gam(forcedW = "diar7d_t2",d=d, X=i, Y=j,  W=H1a_W)
     res <- data.frame(X=i, Y=j, fit=I(list(res_adj$fit)), dat=I(list(res_adj$dat)))
     H1a_adj_models <- bind_rows(H1a_adj_models, res)
   }
@@ -101,7 +101,7 @@ for(i in Xvars){
   for(j in Yvars){
     print(i)
     print(j)
-    res_adj <- fit_RE_gam(d=d, X=i, Y=j,  W=H1b_W)
+    res_adj <- fit_RE_gam(forcedW = "diar7d_t2",d=d, X=i, Y=j,  W=H1b_W)
     res <- data.frame(X=i, Y=j, fit=I(list(res_adj$fit)), dat=I(list(res_adj$dat)))
     H1b_adj_models <- bind_rows(H1b_adj_models, res)
   }
@@ -138,7 +138,7 @@ for(i in Xvars){
   for(j in Yvars){
     print(i)
     print(j)
-    res_adj <- fit_RE_gam(d=d, X=i, Y=j,  W=H1c_W)
+    res_adj <- fit_RE_gam(forcedW = "diar7d_t2",d=d, X=i, Y=j,  W=H1c_W)
     res <- data.frame(X=i, Y=j, fit=I(list(res_adj$fit)), dat=I(list(res_adj$dat)))
     H1c_adj_models <- bind_rows(H1c_adj_models, res)
   }
@@ -174,7 +174,7 @@ for(i in Xvars){
   for(j in Yvars){
     print(i)
     print(j)
-    res_adj <- fit_RE_gam(d=d, X=i, Y=j,  W=H1d_W)
+    res_adj <- fit_RE_gam(forcedW = "diar7d_t2",d=d, X=i, Y=j,  W=H1d_W)
     res <- data.frame(X=i, Y=j, fit=I(list(res_adj$fit)), dat=I(list(res_adj$dat)))
     H1d_adj_models <- bind_rows(H1d_adj_models, res)
   }
@@ -219,7 +219,7 @@ for(i in Xvars){
   for(j in Yvars){
     print(i)
     print(j)
-    res_adj <- fit_RE_gam(d=d, X=i, Y=j,  W=H2a_W)
+    res_adj <- fit_RE_gam(forcedW = "diar7d_t2",d=d, X=i, Y=j,  W=H2a_W)
     res <- data.frame(X=i, Y=j, fit=I(list(res_adj$fit)), dat=I(list(res_adj$dat)))
     H2a_adj_models <- bind_rows(H2a_adj_models, res)
   }
@@ -255,7 +255,7 @@ for(i in Xvars){
   for(j in Yvars){
     print(i)
     print(j)
-    res_adj <- fit_RE_gam(d=d, X=i, Y=j,  W=H2b_W)
+    res_adj <- fit_RE_gam(forcedW = "diar7d_t2",d=d, X=i, Y=j,  W=H2b_W)
     res <- data.frame(X=i, Y=j, fit=I(list(res_adj$fit)), dat=I(list(res_adj$dat)))
     H2b_adj_models <- bind_rows(H2b_adj_models, res)
   }
@@ -290,7 +290,7 @@ for(i in Xvars){
   for(j in Yvars){
     print(i)
     print(j)
-    res_adj <- fit_RE_gam(d=d, X=i, Y=j,  W=H2c_W)
+    res_adj <- fit_RE_gam(forcedW = "diar7d_t2",d=d, X=i, Y=j,  W=H2c_W)
     res <- data.frame(X=i, Y=j, fit=I(list(res_adj$fit)), dat=I(list(res_adj$dat)))
     H2c_adj_models <- bind_rows(H2c_adj_models, res)
   }
@@ -325,7 +325,7 @@ for(i in Xvars){
   for(j in Yvars){
     print(i)
     print(j)
-    res_adj <- fit_RE_gam(d=d, X=i, Y=j,  W=H2d_W)
+    res_adj <- fit_RE_gam(forcedW = "diar7d_t2",d=d, X=i, Y=j,  W=H2d_W)
     res <- data.frame(X=i, Y=j, fit=I(list(res_adj$fit)), dat=I(list(res_adj$dat)))
     H2d_adj_models <- bind_rows(H2d_adj_models, res)
   }
@@ -361,7 +361,7 @@ for(i in Xvars){
   for(j in Yvars){
     print(i)
     print(j)
-    res_adj <- fit_RE_gam(d=d, X=i, Y=j,  W=H2e_W)
+    res_adj <- fit_RE_gam(forcedW = "diar7d_t2",d=d, X=i, Y=j,  W=H2e_W)
     res <- data.frame(X=i, Y=j, fit=I(list(res_adj$fit)), dat=I(list(res_adj$dat)))
     H2e_adj_models <- bind_rows(H2e_adj_models, res)
   }
@@ -397,7 +397,7 @@ for(i in Xvars){
   for(j in Yvars){
     print(i)
     print(j)
-    res_adj <- fit_RE_gam(d=d, X=i, Y=j,  W=H2f_W)
+    res_adj <- fit_RE_gam(forcedW = "diar7d_t2",d=d, X=i, Y=j,  W=H2f_W)
     res <- data.frame(X=i, Y=j, fit=I(list(res_adj$fit)), dat=I(list(res_adj$dat)))
     H2f_adj_models <- bind_rows(H2f_adj_models, res)
   }
@@ -433,7 +433,7 @@ for(i in Xvars){
   for(j in Yvars){
     print(i)
     print(j)
-    res_adj <- fit_RE_gam(d=d, X=i, Y=j,  W=H2g_W)
+    res_adj <- fit_RE_gam(forcedW = "diar7d_t2",d=d, X=i, Y=j,  W=H2g_W)
     res <- data.frame(X=i, Y=j, fit=I(list(res_adj$fit)), dat=I(list(res_adj$dat)))
     H2g_adj_models <- bind_rows(H2g_adj_models, res)
   }
@@ -468,7 +468,7 @@ for(i in Xvars){
   for(j in Yvars){
     print(i)
     print(j)
-    res_adj <- fit_RE_gam(d=d, X=i, Y=j,  W=H2h_W)
+    res_adj <- fit_RE_gam(forcedW = "diar7d_t2",d=d, X=i, Y=j,  W=H2h_W)
     res <- data.frame(X=i, Y=j, fit=I(list(res_adj$fit)), dat=I(list(res_adj$dat)))
     H2h_adj_models <- bind_rows(H2h_adj_models, res)
   }
@@ -512,7 +512,7 @@ for(i in Xvars){
   for(j in Yvars){
     print(i)
     print(j)
-    res_adj <- fit_RE_gam(d=d, X=i, Y=j,  W=H3a_W)
+    res_adj <- fit_RE_gam(forcedW = "diar7d_t2",d=d, X=i, Y=j,  W=H3a_W)
     res <- data.frame(X=i, Y=j, fit=I(list(res_adj$fit)), dat=I(list(res_adj$dat)))
     H3a_adj_models <- bind_rows(H3a_adj_models, res)
   }
@@ -547,7 +547,7 @@ for(i in Xvars){
   for(j in Yvars){
     print(i)
     print(j)
-    res_adj <- fit_RE_gam(d=d, X=i, Y=j,  W=H3b_W)
+    res_adj <- fit_RE_gam(forcedW = "diar7d_t2",d=d, X=i, Y=j,  W=H3b_W)
     res <- data.frame(X=i, Y=j, fit=I(list(res_adj$fit)), dat=I(list(res_adj$dat)))
     H3b_adj_models <- bind_rows(H3b_adj_models, res)
   }
@@ -614,7 +614,7 @@ for(i in Xvars){
   for(j in Yvars){
     print(i)
     print(j)
-    res_adj <- fit_RE_gam(d=d, X=i, Y=j,  W=H4a_W[1:18])
+    res_adj <- fit_RE_gam(forcedW = "diarr7_t1",d=d, X=i, Y=j,  W=H4a_W[1:18])
     res <- data.frame(X=i, Y=j, fit=I(list(res_adj$fit)), dat=I(list(res_adj$dat)))
     H4a_adj_models <- bind_rows(H4a_adj_models, res)
   }
@@ -672,7 +672,7 @@ for(i in Xvars){
   for(j in Yvars){
     print(i)
     print(j)
-    res_adj <- fit_RE_gam(d=d, X=i, Y=j,  W=H4b_W)
+    res_adj <- fit_RE_gam(forcedW = "diarr7_t1",d=d, X=i, Y=j,  W=H4b_W)
     res <- data.frame(X=i, Y=j, fit=I(list(res_adj$fit)), dat=I(list(res_adj$dat)))
     H4b_adj_models <- bind_rows(H4b_adj_models, res)
   }
@@ -741,7 +741,7 @@ for(i in Xvars){
   for(j in Yvars){
     print(i)
     print(j)
-    res_adj <- fit_RE_gam(d=d, X=i, Y=j,  W=H5a_W)
+    res_adj <- fit_RE_gam(forcedW = "diarr7_t1",d=d, X=i, Y=j,  W=H5a_W)
     res <- data.frame(X=i, Y=j, fit=I(list(res_adj$fit)), dat=I(list(res_adj$dat)))
     H5a_adj_models <- bind_rows(H5a_adj_models, res)
   }
@@ -799,7 +799,7 @@ for(i in Xvars){
   for(j in Yvars){
     print(i)
     print(j)
-    res_adj <- fit_RE_gam(d=d, X=i, Y=j,  W=H5b_W)
+    res_adj <- fit_RE_gam(forcedW = "diarr7_t1",d=d, X=i, Y=j,  W=H5b_W)
     res <- data.frame(X=i, Y=j, fit=I(list(res_adj$fit)), dat=I(list(res_adj$dat)))
     H5b_adj_models <- bind_rows(H5b_adj_models, res)
   }
@@ -825,19 +825,6 @@ for(i in 1:nrow(H5b_adj_models)){
   H5b_adj_plot_data <-  rbind(H5b_adj_plot_data, data.frame(Xvar=res$X, Yvar=res$Y, adj=0, simul_plot$pred %>% subset(., select = c(Y,X,id,fit,se.fit,uprP, lwrP,uprS,lwrS))))
 }
 
- 
-# #Save models
-# saveRDS(H5b_adj_models, paste0(dropboxDir,"results/eed-dev-models/models/H5b_adj_models.RDS"))
-# 
-# #Save results
-# saveRDS(H5b_adj_res, here("results/adjusted/H5b_adj_res.RDS"))
-# 
-# 
-# #Save plots
-# saveRDS(H5b_adj_plot_list, paste0(dropboxDir,"results/eed-dev-models/figure-objects/H5b_adj_splines.RDS"))
-# 
-# #Save plot data
-# saveRDS(H5b_adj_plot_data,  here("figure-data/H5b_adj_spline_data.RDS"))
 
 
 ##########################
@@ -859,9 +846,9 @@ for(i in Xvars){
     print(i)
     print(j)
     res_adj=NULL
-    try(res_adj <- fit_RE_gam(d=d, X=i, Y=j,  W=H5c_W))
+    try(res_adj <- fit_RE_gam(forcedW = "diarr7_t1",d=d, X=i, Y=j,  W=H5c_W))
     if(is.null(res_adj)){
-      try(res_adj <- fit_RE_gam(d=d, X=i, Y=j,  W=H5c_W, vim=FALSE))
+      try(res_adj <- fit_RE_gam(forcedW = "diarr7_t1",d=d, X=i, Y=j,  W=H5c_W, vim=FALSE))
     }
     res <- data.frame(X=i, Y=j, fit=I(list(res_adj$fit)), dat=I(list(res_adj$dat)))
     H5c_adj_models <- bind_rows(H5c_adj_models, res)
@@ -898,7 +885,7 @@ for(i in Xvars){
   for(j in Yvars){
     print(i)
     print(j)
-    res_adj <- fit_RE_gam(d=d, X=i, Y=j,  W=H5d_W)
+    res_adj <- fit_RE_gam(forcedW = "diarr7_t2",d=d, X=i, Y=j,  W=H5d_W)
     res <- data.frame(X=i, Y=j, fit=I(list(res_adj$fit)), dat=I(list(res_adj$dat)))
     H5d_adj_models <- bind_rows(H5d_adj_models, res)
   }

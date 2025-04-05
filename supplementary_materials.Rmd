@@ -1,6 +1,6 @@
 ---
 title: "EED Development  supplementary materials"
-output: html_document
+output: word_document
 ---
 
 ```{r setup, include=FALSE}
@@ -8,15 +8,102 @@ knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 
 library(here)
 library(tidyverse)
+ dropboxDir="C:/Users/andre/Dropbox/WASHB-EE-analysis/WBB-EE-analysis/"
 ```
 
 
-# Section 1: Spline plots
+
+
+# Supplementary Appendix A: Spline plots
+
+Each panel of the plots below show the generalized additive model fit between the exposure and outcome denoted in the panel header, with simultaneous confidence intervals for the fitted line. The dashed vertical lines indicate the first and third quartiles of the exposure distribution. The plots are faceted by exposure and outcome subdomain, with the x-axis limits set to the 5th and 95th percentiles of the exposure distribution within each facet to remove tail effects in the outlier ranges of the exposure distributions.
 
 ```{r, echo=F}
 
-# "C:\Users\andre\OneDrive\Documents\washb_substudies\eed-dev\figure-data\H1_who_unadj_spline_data.RDS"
-# "C:\Users\andre\OneDrive\Documents\washb_substudies\eed-dev\figure-data\H1_who-hr_unadj_spline_data.RDS"
+
+clean_results <- function(data, hyp_num, measure = "gam"){
+  
+  pasted_var <- case_when(measure == "gam" ~ "Adj. Diff (95% CI)", 
+                          measure == "hr" ~ "Adj. HR (95% CI)")
+  
+  ub <- case_when(measure == "gam" ~ "ub.diff",
+                  measure == "hr" ~ "ub.HR")
+  lb <- case_when(measure == "gam" ~ "lb.diff",
+                  measure == "hr" ~ "lb.HR")
+  
+  point <- case_when(measure == "gam" ~ "point.diff", 
+                     measure == "hr" ~ "point.HR")
+  
+  y_sd_name <- case_when(measure == "gam" ~ "Outcome Subdomain", 
+                         measure == "hr" ~ "Motor Milestone")
+  
+  data %>% 
+    select(-starts_with("pred")) %>% 
+    mutate(# across(.cols = where(is.numeric),
+      # .fns = ~ round(., 2)), 
+      hyp = hyp_num, 
+      t_exp = str_sub(Xvar,start = -1, end = -1),
+      outcome_domain = case_when(str_detect(Yvar,"who") ~ "WHO Motor Milestones", 
+                                 str_detect(Yvar,"supp") ~ "WHO Motor Milestones", 
+                                 str_detect(Yvar,"cdi") ~ "Communicative Development Inventory",
+                                 str_detect(Yvar,"(personal|motor|combined|com|pstot|mottot|globaltot|comtot)") ~ 
+                                   "Extended Ages and Stages"), 
+      # add timepoint
+      outcome_domain = case_when(hyp_num %in% c(1, 4) ~ str_c(outcome_domain, " (Year 1)"), 
+                                 hyp_num %in% c(2, 3, 5) ~ str_c(outcome_domain, " (Year 2)")),
+      x_human = case_when(str_detect(Xvar,"aat") ~ "alpha-1 antitrypsin", 
+                          str_detect(Xvar,"mpo") ~ "myeloperoxidase", 
+                          str_detect(Xvar,"neo") ~ "neopterin", 
+                          str_detect(Xvar,"reg") ~ "regenerating gene 1B", 
+                          str_detect(Xvar,"_L") ~ "lactulose", 
+                          str_detect(Xvar,"_M") ~ "mannitol"),
+      x_human = case_when(between(hyp_num, 1, 3) ~ case_when(t_exp == 1 ~ str_c(x_human, " (3 mo)"),
+                                                             t_exp == 2 ~ str_c(x_human, " (14 mo)")),
+                          between(hyp_num, 4, 5) ~ case_when(t_exp == 1 ~ str_c(x_human, " (6 mo)"),
+                                                             t_exp == 2 ~ str_c(x_human, " (17 mo)"))),
+      y_subdomain = case_when(# WHO MM
+        str_detect(Yvar,"sum") ~ "Sum Total", 
+        str_detect(Yvar,"sub") ~ "Milestones 2,4,5,6", 
+        
+        str_detect(Yvar,"sit") ~ "Sitting", 
+        str_detect(Yvar,"crawl") ~ "Crawling", 
+        str_detect(Yvar,"walk") ~ "Walking", 
+        str_detect(Yvar,"stand") ~ "Standing", 
+        
+        # CDI
+        str_detect(Yvar,"und") ~ "Understanding", 
+        str_detect(Yvar,"say") ~ "Expressing", 
+        # EASQ Bangladesh
+        str_detect(Yvar,"personal") ~ "Personal Social", 
+        str_detect(Yvar,"motor") ~ "Motor", 
+        str_detect(Yvar,"combined") ~ "Combined", 
+        str_detect(Yvar,"com") ~ "Communication", 
+        # EASQ Kenya
+        str_detect(Yvar,"pstot") ~ "Personal Social", 
+        str_detect(Yvar,"mottot") ~ "Motor", 
+        str_detect(Yvar,"globaltot") ~ "Combined", 
+        str_detect(Yvar,"comtot") ~ "Communication"),
+      y_subdomain = case_when(str_detect(Yvar,"nosupp") ~ str_c(y_subdomain, " (w/o support)"), 
+                              str_detect(Yvar,"supp") ~ str_c(y_subdomain, " (w/ support)"), 
+                              TRUE ~ y_subdomain),
+      # pasted_results := format_ci(!!rlang::sym(point), !!rlang::sym(lb), !!rlang::sym(ub))
+    ) %>% 
+    select(hyp,
+           "Outcome Domain" = outcome_domain, 
+           !!y_sd_name := y_subdomain, 
+           "Exposure" = x_human, t_exp,
+           "n" = N, 
+           "Q1" = q1, "Q3" = q3, 
+           "point.est" := !!rlang::sym(point), 
+           "confint.lb" := !!rlang::sym(lb), 
+           "confint.ub" := !!rlang::sym(ub),
+           X=X, lwrS, uprS,lwrP, uprP, q1, q3, fit,
+           # !!pasted_var := pasted_results, 
+           "Adj. P-value" = Pval)
+}
+
+
+
 
 h1a<-readRDS(here("figure-data", "H1a_adj_spline_data.RDS")) 
 h1b<-readRDS(here("figure-data", "H1b_adj_spline_data.RDS")) 
@@ -91,97 +178,266 @@ h5c <- left_join(h5c, H5c_adj_res, by = c("Xvar", "Yvar"))
 h5d <- left_join(h5d, H5d_adj_res, by = c("Xvar", "Yvar"))
 
 
-plot_splines <- function(d, title){
-  p <- ggplot(d) + geom_ribbon(aes(x = X, ymin = lwrS, ymax = uprS), 
-        alpha = 0.5, fill="grey70") + geom_path(aes(x = X, y = lwrS), color = "grey70") + 
-        facet_wrap(Xvar~Yvar, scale="free") +
-        geom_path(aes(x = X, y = uprS), color = "grey70") + 
-        geom_path(aes(x = X, 
-        y = fit), color = "black") + xlab("") + ylab("") + 
-  geom_vline(aes(xintercept = q1), linetype="dashed") + 
-  geom_vline(aes(xintercept = q3), linetype="dashed") +
-    ggtitle(title)
+h1a <- clean_results(h1a, 1, measure = "gam")
+h1b <- clean_results(h1b, 1, measure = "gam")
+h1c <- clean_results(h1c, 1, measure = "gam")
+h1d <- clean_results(h1d, 1, measure = "gam")
+h2a <- clean_results(h2a, 2, measure = "gam")
+h2b <- clean_results(h2b, 2, measure = "gam")
+h2c <- clean_results(h2c, 2, measure = "gam")
+h2d <- clean_results(h2d, 2, measure = "gam")
+h2e <- clean_results(h2e, 2, measure = "gam")
+h2f <- clean_results(h2f, 2, measure = "gam")
+h2g <- clean_results(h2g, 2, measure = "gam")
+h2h <- clean_results(h2h, 2, measure = "gam")
+h3a <- clean_results(h3a, 3, measure = "gam")
+h3b <- clean_results(h3b, 3, measure = "gam")
+h4a <- clean_results(h4a, 4, measure = "gam")
+h4b <- clean_results(h4b, 4, measure = "gam")
+h5a <- clean_results(h5a, 5, measure = "gam")
+h5b <- clean_results(h5b, 5, measure = "gam")
+h5c <- clean_results(h5c, 5, measure = "gam")
+h5d <- clean_results(h5d, 5, measure = "gam")
+
+# plot_splines <- function(d, title){
+#   p <- ggplot(d) + geom_ribbon(aes(x = X, ymin = lwrS, ymax = uprS), 
+#         alpha = 0.5, fill="grey70") + geom_path(aes(x = X, y = lwrS), color = "grey70") + 
+#         facet_wrap(Exposure~`Outcome Subdomain`, scale="free") +
+#         geom_path(aes(x = X, y = uprS), color = "grey70") + 
+#         geom_path(aes(x = X, 
+#         y = fit), color = "black") + xlab("") + ylab("") + 
+#   geom_vline(aes(xintercept = Q1), linetype="dashed") + 
+#   geom_vline(aes(xintercept = Q3), linetype="dashed") +
+#     ggtitle(title) + theme_bw()
+#   return(p)
+# }
+plot_splines <- function(d, title, percentile_min = 0.05, percentile_max = 0.95){
+  
+  title=paste0(title,"-measured EED exposures\nand ",d$`Outcome Domain`[1]," outcomes")
+  # Calculate percentiles by group
+  x_limits <- d %>%
+    group_by(Exposure, `Outcome Subdomain`) %>%
+    summarise(
+      x_min = quantile(X, percentile_min),
+      x_max = quantile(X, percentile_max),
+      .groups = "drop"
+    )
+  
+  # Join the limits back to the main dataset
+  d <- d %>%
+    left_join(x_limits, by = c("Exposure", "Outcome Subdomain"))  %>% 
+    filter(X>x_min & X<x_max)
+  
+  # Create plot with limits
+  p <- ggplot(d) + 
+    geom_ribbon(aes(x = X, ymin = lwrS, ymax = uprS), 
+                alpha = 0.5, fill="grey70") + 
+    geom_path(aes(x = X, y = lwrS), color = "grey70") + 
+    facet_wrap(Exposure~`Outcome Subdomain`, scales="free", ncol=2) +
+    geom_path(aes(x = X, y = uprS), color = "grey70") + 
+    geom_path(aes(x = X, y = fit), color = "black") + 
+    xlab("") + ylab("") + 
+    geom_vline(aes(xintercept = Q1), linetype="dashed") + 
+    geom_vline(aes(xintercept = Q3), linetype="dashed") +
+    ggtitle(title) + 
+    theme_bw() +
+    # Apply limits per facet
+    geom_blank(aes(x = x_min)) +
+    geom_blank(aes(x = x_max)) +
+    theme( strip.text = element_text(size = 8))
+  
   return(p)
 }
 
+# plot_HR_splines <- function(d, title){
+#   p <- ggplot(d) + geom_ribbon(aes(x = X, ymin = lwrS, ymax = uprS), 
+#         alpha = 0.5, fill="grey70") + geom_path(aes(x = X, y = lwrS), color = "grey70") + 
+#         facet_wrap(Exposure~`Motor Milestone`, scale="free") +
+#         geom_path(aes(x = X, y = uprS), color = "grey70") + 
+#         geom_path(aes(x = X, 
+#         y = fit), color = "black") + xlab("") + ylab("") + 
+#   geom_vline(aes(xintercept = Q1), linetype="dashed") + 
+#   geom_vline(aes(xintercept = Q3), linetype="dashed") +
+#     ggtitle(title) + theme_bw()
+#   return(p)
+# }
+
+plot_HR_splines <- function(d, title, percentile_min = 0.05, percentile_max = 0.95){
+  
+    title=paste0(title," EED exposure\nand motor milestone outcomes")
+
+  # Calculate percentiles by group
+  x_limits <- d %>%
+    group_by(Exposure, `Motor Milestone`) %>%
+    summarise(
+      x_min = quantile(X, percentile_min),
+      x_max = quantile(X, percentile_max),
+      .groups = "drop"
+    )
+  
+  # Join the limits back to the main dataset
+  d <- d %>%
+    left_join(x_limits, by = c("Exposure", "Motor Milestone"))  %>% filter(X>x_min & X<x_max)
+  
+  # Create plot with limits
+  p <- ggplot(d) + 
+    geom_ribbon(aes(x = X, ymin = lwrS, ymax = uprS), 
+                alpha = 0.5, fill="grey70") + 
+    geom_path(aes(x = X, y = lwrS), color = "grey70") + 
+    facet_wrap(Exposure~`Motor Milestone`, scales="free") +
+    geom_path(aes(x = X, y = uprS), color = "grey70") + 
+    geom_path(aes(x = X, y = fit), color = "black") + 
+    xlab("") + ylab("") + 
+    geom_vline(aes(xintercept = Q1), linetype="dashed") + 
+    geom_vline(aes(xintercept = Q3), linetype="dashed") +
+    ggtitle(title) + 
+    theme_bw() +
+    # Apply limits per facet
+    geom_blank(aes(x = x_min)) +
+    geom_blank(aes(x = x_max)) +
+    theme( strip.text = element_text(size = 8))
+  
+  return(p)
+}
 
 ```
 
 
-### Hypothesis 1
+```{r, echo=FALSE, fig.width=6.5, fig.height=8}
 
-```{r, echo=FALSE}
-plot_splines(h1a, "H1a")
-plot_splines(h1b, "H1b")
-plot_splines(h1c, "H1c")
-plot_splines(h1d, "H1d")
 
-```
+H1_who_res <- readRDS(here("results/adjusted/H1_who-hr_all_adj_res.RDS")) %>% rename(Yvar=Y, Xvar=X)
+H4_who_res <- readRDS(here("results/adjusted/H4_who-hr_all_adj_res.RDS")) %>% rename(Yvar=Y, Xvar=X)
+H1a_who_plot_data <- readRDS(paste0(dropboxDir,"results/stress-growth-models/figure-data/H1a_who_adj_spline_data.RDS")) 
+H1b_who_plot_data <- readRDS(paste0(dropboxDir,"results/stress-growth-models/figure-data/H1b_who_adj_spline_data.RDS")) 
+H4a_who_plot_data <- readRDS(paste0(dropboxDir,"results/stress-growth-models/figure-data/H4a_who_adj_spline_data.RDS")) 
+H4b_who_plot_data <- readRDS(paste0(dropboxDir,"results/stress-growth-models/figure-data/H4b_who_adj_spline_data.RDS")) 
 
-### Hypothesis 2
 
-```{r, echo=FALSE}
-plot_splines(h2a, "H2a")
-plot_splines(h2b, "H2b")
-plot_splines(h2c, "H2c")
-plot_splines(h2d, "H2d")
-plot_splines(h2e, "H2e")
-plot_splines(h2f, "H2f")
-plot_splines(h2g, "H2g")
-plot_splines(h2h, "H2h")
+H1a_hr_df <- left_join(H1a_who_plot_data, H1_who_res, by = c("Xvar", "Yvar"))
+H1b_hr_df <- left_join(H1b_who_plot_data, H1_who_res, by = c("Xvar", "Yvar"))
+H4a_hr_df <- left_join(H4a_who_plot_data, H4_who_res, by = c("Xvar", "Yvar"))
+H4b_hr_df <- left_join(H4b_who_plot_data, H4_who_res, by = c("Xvar", "Yvar"))
 
-```
+H1a_hr_df <- clean_results(H1a_hr_df, 1, measure = "hr")
+H1b_hr_df <- clean_results(H1b_hr_df, 1, measure = "hr")
+H4a_hr_df <- clean_results(H4a_hr_df, 4, measure = "hr")
+H4b_hr_df <- clean_results(H4b_hr_df, 4, measure = "hr")
 
-### Hypothesis 3
 
-```{r, echo=FALSE}
-plot_splines(h3a, "H3a")
-plot_splines(h3b, "H3b")
 
 ```
 
 
-### Hypothesis 4
 
-```{r, echo=FALSE}
-plot_splines(h4a, "H4a")
-plot_splines(h4b, "H4b")
 
-```
-
-### Hypothesis 5
-
-```{r, echo=FALSE}
-plot_splines(h5a, "H5a")
-plot_splines(h5b, "H5b")
-plot_splines(h5c, "H5c")
-plot_splines(h5d, "H5d")
+```{r, echo=FALSE, fig.width=6.5, fig.height=8}
+plot_splines(h1a, "Bangladesh 3-month stool")
+plot_splines(h1b, "Bangladesh 3-month urine")
+plot_splines(h1c, "Bangladesh 3-month stool")
+plot_splines(h1d, "Bangladesh 3-month urine")
 
 ```
 
 
-# Section 2: GLM-GAM comparison
+```{r, echo=FALSE, fig.width=6.5, fig.height=8}
+plot_splines(h2a, "Bangladesh 3-month stool")
+plot_splines(h2b, "Bangladesh 3-month urine")
+plot_splines(h2c, "Bangladesh 3-month stool")
+plot_splines(h2d, "Bangladesh 3-month urine")
+plot_splines(h2e, "Bangladesh 14-month stool")
+plot_splines(h2f, "Bangladesh 14-month urine")
+plot_splines(h2g, "Bangladesh 14-month stool")
+plot_splines(h2h, "Bangladesh 14-month urine")
+
+```
 
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, fig.width=6.5, fig.height=8}
+plot_splines(h3a, "Bangladesh Regenerating gene 1B")
+plot_splines(h3b, "Bangladesh Regenerating gene 1B")
+
+```
+
+
+
+```{r, echo=FALSE, fig.width=6.5, fig.height=8}
+plot_splines(h4a, "Kenya 6-month stool")
+plot_splines(h4b, "Kenya 6-month urine")
+
+```
+
+
+```{r, echo=FALSE, fig.width=6.5, fig.height=8}
+plot_splines(h5a, "Kenya 6-month stool")
+plot_splines(h5b, "Kenya 6-month urine")
+plot_splines(h5c, "Kenya 17-month stool")
+plot_splines(h5d, "Kenya 17-month urine")
+
+```
+
+
+```{r, echo=FALSE, fig.width=6.5, fig.height=8}
+
+
+plot_HR_splines(H1a_hr_df %>% filter(!is.na(uprS)&!is.infinite(uprS),`Exposure`=="alpha-1 antitrypsin (3 mo)"), "Bangladesh alpha-1 antitrypsin (3 mo)")
+plot_HR_splines(H1a_hr_df %>% filter(!is.na(uprS)&!is.infinite(uprS),`Exposure`=="myeloperoxidase (3 mo)"), "Bangladesh myeloperoxidase (3 mo)")
+plot_HR_splines(H1a_hr_df %>% filter(!is.na(uprS)&!is.infinite(uprS),`Exposure`=="neopterin (3 mo)"), "Bangladesh neopterin (3 mo)")
+
+
+plot_HR_splines(H1b_hr_df %>% filter(!is.na(uprS)&!is.infinite(uprS),`Exposure`=="lactulose (3 mo)"),"Bangladesh lactulose (3 mo)")
+plot_HR_splines(H1b_hr_df %>% filter(!is.na(uprS)&!is.infinite(uprS),`Exposure`=="mannitol (3 mo)"),"Bangladesh mannitol (3 mo)")
+
+plot_HR_splines(H4a_hr_df %>% filter(!is.na(uprS)&!is.infinite(uprS),`Exposure`=="alpha-1 antitrypsin (6 mo)"), "Kenya alpha-1 antitrypsin (6 mo)")
+plot_HR_splines(H4a_hr_df %>% filter(!is.na(uprS)&!is.infinite(uprS),`Exposure`=="myeloperoxidase (6 mo)"), "Kenya myeloperoxidase (6 mo)")
+plot_HR_splines(H4a_hr_df %>% filter(!is.na(uprS)&!is.infinite(uprS),`Exposure`=="neopterin (6 mo)"), "Kenya neopterin (6 mo)")
+
+plot_HR_splines(H4b_hr_df %>% filter(!is.na(uprS)&!is.infinite(uprS),`Exposure`=="lactulose (6 mo)"),"Kenya lactulose (6 mo)")
+plot_HR_splines(H4b_hr_df %>% filter(!is.na(uprS)&!is.infinite(uprS),`Exposure`=="mannitol (6 mo)"),"Kenya mannitol (6 mo)")
+
+
+
+```
+
+
+
+# Supplementary Appendix B: GLM-GAM comparison sensitivity analysis
+
+The plots below show the comparison of the GLM and GAM models for the EED exposures and outcomes. The GLM model is shown in blue, while the GAM model is shown in red. The X-axes are labeled with the exposures and each panel is a different outcome, with the panel title indicating the exposure and outcome. The y-axes are labeled with the model estimates, with the GLM estimates being the coefficient of the exposure and corresponding bootstrap-based 95% confidence interval, while the GAM estimates are the contrast between the 25th and 7th percentiles of the exposure distribution and corresponding bootstrap-based 95% confidence interval. The dashed vertical lines indicate the first and third quartiles of the exposure distribution, with the corresponding confidence interval around the estimated difference. 
+
+
+### Bangladesh cohort 
+
+```{r, echo=FALSE, fig.width=6.5, fig.height=8}
 
 load(file=here("figure-data/glm_gam_comparison_plots.Rdata"))
 d <- readRDS(file=here("results/glm_gam_comparison.RDS"))   
 
 
 glm_comp_p1
-glm_comp_p2
-glm_comp_p3
+glm_comp_p2 %+% theme( axis.text.x = element_text(size = 7))
+glm_comp_p3 %+% theme( axis.text.x = element_text(size = 7))
+
+```
+
+### Kenya cohort 
+
+```{r, echo=FALSE, fig.width=6.5, fig.height=8}
+
 glm_comp_p4
 glm_comp_p5
 
 ```
 
 
-# Section 3: Diarrhea sensitivity analysis
+# Supplementary Appendix C: Diarrhea sensitivity analysis
+
+The plots below show the comparison of models fit without prior diarrheal disease included in the model as a confounder (main analysis) versus a sensitivity analysis of models adjusting for  prior diarrheal disease.
+
+### Bangladesh cohort 
 
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, fig.width=6.5, fig.height=8}
 
 load(file=here("figure-data/diarrhea_sens_comparison_plots.Rdata"))
 d <- readRDS(file=here("results/diarrhea_main_comparison.RDS"))   
@@ -189,7 +445,14 @@ d <- readRDS(file=here("results/diarrhea_main_comparison.RDS"))
 
 diarrhea_comp_p1
 diarrhea_comp_p2
-diarrhea_comp_p3
+diarrhea_comp_p3 %+% theme( axis.text.x = element_text(size = 7))
+
+```
+
+
+### Kenya cohort 
+
+```{r, echo=FALSE, fig.width=6.5, fig.height=8}
 diarrhea_comp_p4
 diarrhea_comp_p5
 
