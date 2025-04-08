@@ -92,12 +92,15 @@ tables_cleaned <- list(bg_tables, k_tables, hr_h1, hr_h4) %>%
                                                 "Standing (w/o support)" ~ "Standing alone",
                                                 "Walking (w/ support)"   ~ "Walking with assistance",
                                                 "Walking (w/o support)"  ~ "Walking alone",
-                                                .default = `Outcome Subdomain`),
-               pointest_ci_cleaned = str_squish(str_remove_all(pointest_ci, "\\(|\\)"))) %>%
-        separate(pointest_ci_cleaned, 
-                 c("point.est", "lb", "ub"),
-                 sep = "[,]? +",
-                 remove = F) %>%
+                                                .default = `Outcome Subdomain`)
+               #pointest_ci_cleaned = str_squish(str_remove_all(pointest_ci, "\\(|\\)"))
+               ) %>%
+        rename(lb=confint.lb,
+               ub=confint.ub) %>%
+        # separate(pointest_ci_cleaned, 
+        #          c("point.est", "lb", "ub"),
+        #          sep = "[,]? +",
+        #          remove = F) %>%
         mutate(across(c(point.est, lb, ub),
                       as.numeric)) %>% 
         group_by(`Outcome Domain`) %>% 
@@ -248,7 +251,7 @@ plot_list$bg_who_hr <- tables_cleaned$bg_who_hr %>%
   plot_hr(ylab = "Hazard Ratios of Motor \nMilestone Attainment \nat Year 1",
           xlab = "EED Biomarkers at 3 Months",
           caption = "p-value corrected for false discovery rate: *** <0.01, ** <0.05, * <0.2 \n
-^ Hazard ratio of development outcome comparing the 25th and 75th percentile of the \n   EED exposure marker distribution\n
+^ Hazard ratio of development outcome comparing the 25th and 75th\npercentile of the EED exposure marker distribution\n
 -- Hazard ratio was not calculated due to data sparsity")
 
 plot_list$bg_who_hr
@@ -274,7 +277,7 @@ plot_list$k_who_hr <- tables_cleaned$k_who_hr %>%
   plot_hr(ylab = "Hazard Ratios of Motor \nMilestone Attainment \nat Year 1",
           xlab = "EED Biomarkers at 6 Months",
           caption = "p-value corrected for false discovery rate: *** <0.01, ** <0.05, * <0.2 \n
-^ Hazard ratio of development outcome comparing the 25th and 75th percentile of the \n   EED exposure marker distribution\n
+^ Hazard ratio of development outcome comparing the 25th and 75th\npercentile of the EED exposure marker distribution\n
 -- Hazard ratio was not calculated due to data sparsity")
 
 plot_list$k_who_hr
@@ -309,11 +312,60 @@ plot_list$bg_cdi_y2
 
 
 ```{r save plots, eval = F}
-plot_list %>% 
-  imap(~ save_plot(file.path(here("figures", paste0(.y, ".png"))), 
-                   .x,
-                   base_width = 6,
-                   base_asp = 5))
+# plot_list %>% 
+#   imap(~ save_plot(file.path(here("figures", paste0(.y, ".png"))), 
+#                    .x,
+#                    base_width = 6,
+#                    base_asp = 5))
+
+
+names(plot_list)
+#"bg_cdi_y1"  "bg_who_y1"  "bg_who_hr"  "bg_easq_y2" "k_who_hr"   "k_easq_y2"  "bg_cdi_y2" 
+#save to get plot sizing right
+ggsave(here("figures", "bg_cdi_y1.png"), 
+       plot_list$bg_cdi_y1, 
+       width = 6, 
+       height = 4)
+
+
+ggsave(here("figures", "bg_cdi_y2.png"),
+       plot_list$bg_cdi_y2, 
+       width = 6, 
+       height = 4)
+
+ggsave(here("figures", "bg_easq_y2.png"),
+       plot_list$bg_easq_y2, 
+       width = 6, 
+       height = 5)
+
+ggsave(here("figures", "k_easq_y2.png"),
+       plot_list$k_easq_y2, 
+       width = 6, 
+       height = 5)
+
+
+ggsave(here("figures", "bg_who_y1.png"),
+       plot_list$bg_who_y1, 
+       width = 6, 
+       height = 4)
+
+ggsave(here("figures", "bg_who_hr.png"),
+       plot_list$bg_who_hr, 
+       width = 6, 
+       height =5)
+
+
+
+ggsave(here("figures", "k_who_hr.png"),
+       plot_list$k_who_hr , 
+       width = 6, 
+       height = 5)
+
+
+
+
+
+
 
 ```
 
